@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Argumenttårnet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE everyday learning game for 13-15 year olds, bright but clear
+   IDEA a toy building-block tower: every good choice adds a block in the colour of its part
+   PICTURE the tower itself, growing beside the question card; on phone a strip of blocks on top
+   COLOUR warm white ground, ink; påstand red, begrunnelse blue, eksempel yellow; night = deep ink ground
+   TYPE Rubik 800 display + Rubik text
+   LAYOUT laptop: card left, tower column right; phone: title, block strip, card */
+:root{color-scheme:light dark;--bg:light-dark(#fffaf2,#141824);--ink:light-dark(#1b1d26,#f3f1ec);--soft:light-dark(#6a6d78,#a9adbb);--card:light-dark(#ffffff,#1f2433);--line:light-dark(#e6dfd2,#323a4f);--p:#e23d3d;--b:#2f6fdb;--e:#f0b400;--ok:#1f9d55;--bad:#d64545;--pt:light-dark(#fde8e8,#3a2026);--bt:light-dark(#e6efff,#1d2b4a);--et:light-dark(#fff3cc,#3a3218)}
+:root[data-theme=light]{color-scheme:light}
+:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:17px/1.55 Rubik,system-ui,sans-serif;overflow-x:clip}
+.wrap{max-width:1180px;margin:0 auto;padding:clamp(20px,3vw,40px) max(4vw,16px)}
+header{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:12px 24px;margin-bottom:22px}
+h1{font-weight:800;font-size:clamp(32px,5vw,48px);line-height:1.05;letter-spacing:-.02em;margin:0}
+.legend{display:flex;flex-wrap:wrap;gap:8px}
+.tag{display:inline-flex;align-items:center;gap:6px;font-weight:500;font-size:14px;padding:4px 10px;border-radius:999px;white-space:nowrap}
+.tag i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.tP{background:var(--pt)}.tP i{background:var(--p)}
+.tB{background:var(--bt)}.tB i{background:var(--b)}
+.tE{background:var(--et)}.tE i{background:var(--e)}
+.game{display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:24px;align-items:stretch}
+.card{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:clamp(18px,3vw,32px);min-height:480px;display:flex;flex-direction:column}
+.step{font-size:14px;color:var(--soft);margin:0 0 6px}
+h2{font-weight:800;font-size:clamp(24px,3vw,32px);line-height:1.1;letter-spacing:-.01em;margin:0 0 10px}
+.lead{margin:0 0 18px;max-width:62ch}
+.big{font-size:clamp(20px,2.4vw,25px);font-weight:500;line-height:1.35;background:var(--bg);border-radius:14px;padding:20px 22px;margin:4px 0 20px;border:2px dashed var(--line)}
+.ctx{display:grid;gap:8px;margin-bottom:16px}
+.ctx div{border-radius:12px;padding:10px 14px;border-left:8px solid}
+.ctx .cP{background:var(--pt);border-color:var(--p)}
+.ctx .cB{background:var(--bt);border-color:var(--b)}
+.ctx b{display:block;font-size:13px;font-weight:700}
+.btns{display:flex;flex-wrap:wrap;gap:10px}
+button{font:inherit;cursor:pointer;border-radius:12px;min-height:48px;padding:10px 18px;border:2px solid var(--line);background:var(--card);color:var(--ink);font-weight:500}
+button:hover{border-color:var(--soft)}
+button:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--b);outline-offset:2px}
+button:disabled{cursor:default}
+.kP{background:var(--p);border-color:var(--p);color:#fff}
+.kB{background:var(--b);border-color:var(--b);color:#fff}
+.kE{background:var(--e);border-color:var(--e);color:#1b1d26}
+.kind{flex:1 1 140px;font-weight:700;font-size:18px}
+.opts{display:grid;gap:10px}
+.opt{text-align:left;width:100%;font-weight:400;line-height:1.4}
+.opt.right{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 14%,var(--card))}
+.opt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 14%,var(--card))}
+.picked{outline:3px solid var(--ink);outline-offset:2px}
+.fb{margin-top:18px;border-radius:14px;padding:14px 18px;background:var(--bg);border:2px solid var(--line)}
+.fb p{margin:0 0 8px}.fb p:last-child{margin:0}
+.fb .v{font-weight:700}
+.fb.good .v{color:var(--ok)}.fb.miss .v{color:var(--bad)}
+.next{margin-top:auto;padding-top:18px;display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+.go{background:var(--ink);color:var(--bg);border-color:var(--ink);font-weight:700}
+.levels{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:6px}
+.lv{text-align:left;padding:16px;display:flex;flex-direction:column;gap:4px;align-items:flex-start}
+.lv strong{font-size:18px}
+.lv span{font-size:15px;color:var(--soft);font-weight:400}
+.lv .done{color:var(--ok);font-weight:700;font-size:14px}
+.tower{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:16px;display:flex;flex-direction:column}
+.tower h3{margin:0 0 4px;font-size:17px}
+.tower .sc{font-size:14px;color:var(--soft);margin:0 0 10px}
+.stack{flex:1;display:flex;flex-direction:column-reverse;align-items:center;gap:4px;min-height:300px;padding-bottom:6px;border-bottom:6px solid var(--line)}
+.brick{width:70%;height:22px;border-radius:5px;box-shadow:inset 0 -5px 0 rgba(0,0,0,.18),inset 0 3px 0 rgba(255,255,255,.35)}
+.brick:nth-child(odd){transform:translateX(-9%)}.brick:nth-child(even){transform:translateX(9%)}
+.brick.P{background:var(--p)}.brick.B{background:var(--b)}.brick.E{background:var(--e)}
+.brick.new{animation:drop .45s cubic-bezier(.3,1.4,.6,1)}
+@keyframes drop{from{opacity:0;translate:0 -60px}to{opacity:1;translate:0 0}}
+@media(prefers-reduced-motion:reduce){.brick.new{animation:none}}
+.empty{color:var(--soft);font-size:14px;text-align:center;margin:auto 0}
+label{font-weight:700;display:block;margin:14px 0 6px}
+label small{font-weight:400;color:var(--soft)}
+textarea{width:100%;font:16px/1.45 Rubik,system-ui,sans-serif;border-radius:12px;border:2px solid var(--line);padding:10px 12px;background:var(--bg);color:var(--ink);resize:vertical;min-height:64px}
+.wP{border-left:8px solid var(--p)}.wB{border-left:8px solid var(--b)}.wE{border-left:8px solid var(--e)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:44px;font-size:15px;padding:8px 14px}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.prev{margin-top:18px;background:var(--bg);border-radius:14px;padding:16px 18px;border:2px solid var(--line);line-height:1.7}
+.prev .sP{background:var(--pt);box-shadow:inset 0 -3px 0 var(--p)}
+.prev .sB{background:var(--bt);box-shadow:inset 0 -3px 0 var(--b)}
+.prev .sE{background:var(--et);box-shadow:inset 0 -3px 0 var(--e)}
+.checks{display:grid;gap:8px;margin-top:14px}
+.checks label{font-weight:400;margin:0;display:flex;gap:10px;align-items:flex-start}
+.checks input{width:22px;height:22px;flex:none;margin-top:2px}
+.note{font-size:14px;color:var(--soft);margin-top:10px}
+.credit{margin-top:24px;font-size:14px;color:var(--soft)}.credit a{color:inherit}
+@media(max-width:760px){
+.game{grid-template-columns:minmax(0,1fr)}
+.tower{order:-1;padding:12px}
+.stack{flex-direction:row;flex-wrap:wrap;min-height:30px;border-bottom:0;justify-content:flex-start;padding:0}
+.brick{width:28px;height:18px}
+.brick:nth-child(odd),.brick:nth-child(even){transform:none}
+.card{min-height:0}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<h1>Argumenttårnet</h1>
+<div class="legend"><span class="tag tP"><i></i>Påstand</span><span class="tag tB"><i></i>Begrunnelse</span><span class="tag tE"><i></i>Eksempel</span></div>
+</header>
+<div class="game">
+<main class="card" id="card" aria-live="polite"></main>
+<aside class="tower" aria-label="Tårnet ditt">
+<h3>Tårnet ditt</h3>
+<p class="sc" id="sc"></p>
+<div class="stack" id="stack"></div>
+</aside>
+</div>
+<footer class="credit">Idé: Alfred. Utviklet av Anne Katrine Westbye med Claude (KI). Lisens: <a href="https://creativecommons.org/licenses/by/4.0/deed.no">CC BY 4.0</a>. Du kan fritt dele og endre spillet så lenge du oppgir hvem som har laget det.</footer>
+</div>
+<script>
+{
+const NAME={P:'påstand',B:'begrunnelse',E:'eksempel'};
+const RULE={
+P:'En påstand er det skribenten mener og vil overbevise leseren om. Du kan være enig eller uenig i den.',
+B:'En begrunnelse svarer på spørsmålet «hvorfor?». Den forklarer hvorfor påstanden er riktig.',
+E:'Et eksempel er noe konkret: en situasjon, en person eller noe som har skjedd. Det viser at begrunnelsen stemmer i virkeligheten.'};
+const L1=[
+{t:'Skolen bør innføre mobilforbud i friminuttene.',k:'P',h:'Ordet «bør» er et tegn på at noen mener noe.'},
+{t:'Når mobilen ligger i sekken, snakker elevene mer med hverandre.',k:'B',h:'Setningen forklarer hvorfor et mobilforbud kan være lurt.'},
+{t:'Forrige uke satt seks av oss på benken og scrollet hele storefri uten å si et ord.',k:'E',h:'Her får vi en bestemt situasjon: en uke, seks elever, en benk.'},
+{t:'Alle elever burde få gratis skolemat.',k:'P',h:'«Burde» viser at dette er en mening noen kan være uenig i.'},
+{t:'Sultne elever klarer ikke å konsentrere seg i timene.',k:'B',h:'Setningen gir en grunn til at skolemat er en god idé.'},
+{t:'Da Jonas glemte matpakken i går, la han hodet på pulten i hele norsktimen.',k:'E',h:'En bestemt person på en bestemt dag. Det er konkret.'},
+{t:'Ungdomsskolen bør ha mindre lekser.',k:'P',h:'Dette er standpunktet. Resten av teksten må forsvare det.'},
+{t:'Elever trenger fritid til å trene, hvile og være med venner.',k:'B',h:'Den forklarer hvorfor mindre lekser kan være bra.'},
+{t:'Søstera mi har fotballtrening fire dager i uka og sitter med lekser til halv elleve.',k:'E',h:'En bestemt person og et bestemt klokkeslett gjør det konkret.'}];
+const L2=[
+{p:'16-åringer bør få stemme ved kommunevalg.',o:[
+{t:'Mange avgjørelser i kommunen, som skolebygg og bussruter, handler direkte om ungdom.',ok:1,w:'Riktig valg. Den forklarer hvorfor ungdom bør få være med og bestemme.'},
+{t:'16-åringer bør få stemme fordi de burde få lov til å stemme.',w:'Dette er et sirkelargument. Setningen sier bare påstanden en gang til med andre ord.'},
+{t:'Jeg synes det er urettferdig at de ikke får stemme.',w:'Dette er en følelse. Den sier ikke hvorfor det er urettferdig.'},
+{t:'Mange 16-åringer følger med på sosiale medier.',w:'Det kan være sant, men det handler ikke om hvorfor de bør få stemme.'}]},
+{p:'Skolen bør ha lengre storefri.',o:[
+{t:'Lengre storefri er bedre enn kort storefri.',w:'Sirkelargument. Den sier bare at lengre er bedre, ikke hvorfor.'},
+{t:'Elever som får bevege seg og lufte hodet, konsentrerer seg bedre i timene etterpå.',ok:1,w:'Riktig valg. Den gir en grunn som leseren kan sjekke og bli overbevist av.'},
+{t:'Alle elevene jeg kjenner vil ha det.',w:'At mange vil noe, forklarer ikke hvorfor det er lurt. Elever vil kanskje også ha fri hele fredagen.'},
+{t:'Skolegården ble pusset opp i fjor.',w:'Dette handler om noe annet enn hvorfor friminuttet bør være lengre.'}]},
+{p:'Kantina bør ha en kjøttfri dag i uka.',o:[
+{t:'Kjøtt er ekkelt.',w:'Dette er smak og følelser. Mange liker kjøtt, så det overbeviser ikke dem.'},
+{t:'Kantina bør ha kjøttfri dag fordi det er lurt med en dag uten kjøtt.',w:'Sirkelargument. «Det er lurt» er bare påstanden en gang til.'},
+{t:'Kantina åpner klokka elleve.',w:'Dette har ingenting med kjøtt å gjøre.'},
+{t:'Produksjon av kjøtt gir store klimagassutslipp, så å spise mindre kjøtt er bra for klimaet.',ok:1,w:'Riktig valg. Den forklarer hvorfor en kjøttfri dag kan gjøre en forskjell.'}]},
+{p:'Norske skoler bør ikke innføre skoleuniform.',o:[
+{t:'Uniformer er stygge.',w:'En smakssak. Noen synes uniformer er fine, og da faller argumentet.'},
+{t:'Klær er en måte å vise hvem man er på, og den muligheten forsvinner med uniform.',ok:1,w:'Riktig valg. Den sier hvorfor uniform er et problem.'},
+{t:'Det finnes mange skoler i Norge.',w:'Sant, men det sier ingenting om uniform.'},
+{t:'Vi bør ikke ha uniform, fordi uniform ikke passer for oss.',w:'Nesten sirkel. «Passer ikke for oss» forklarer ikke hva problemet er.'}]}];
+const L3=[
+{p:'Skolen bør innføre mobilforbud i friminuttene.',b:'Når mobilen ligger i sekken, snakker elevene mer med hverandre.',o:[
+{t:'Mobiler blir dyrere og dyrere.',w:'Dette handler om pris, ikke om at elever snakker mer sammen.'},
+{t:'Da klassen vår var på leirskole uten mobil, spilte vi kort og pratet sammen hver kveld.',ok:1,w:'Riktig valg. En konkret situasjon som viser akkurat det begrunnelsen sier.'},
+{t:'Alle vet jo at mobil er dårlig for oss.',w:'Dette er ikke et eksempel, bare en ny påstand. Og «alle vet» er ikke bevis.'},
+{t:'En gang mistet jeg mobilen i friminuttet.',w:'Konkret, men det viser ikke at folk snakker mer uten mobil.'}]},
+{p:'Ungdomsskolen bør ha mindre lekser.',b:'Elever trenger fritid til å trene, hvile og være med venner.',o:[
+{t:'Lekser er kjedelig.',w:'En følelse, ikke et eksempel. Det viser ikke at elever mangler fritid.'},
+{t:'Mange elever har veldig mye å gjøre.',w:'Ikke konkret. Hvem? Hva? Den sier nesten det samme som begrunnelsen.'},
+{t:'Kompisen min har håndball tre kvelder i uka og rekker ofte ikke å se vennene sine.',ok:1,w:'Riktig valg. En bestemt person i en bestemt situasjon, og det passer med begrunnelsen.'},
+{t:'Besteforeldrene våre hadde også lekser.',w:'Dette handler om noe annet, og det kan til og med brukes mot påstanden.'}]},
+{p:'Alle elever burde få gratis skolemat.',b:'Sultne elever klarer ikke å konsentrere seg i timene.',o:[
+{t:'De dagene jeg glemmer matpakken, tenker jeg bare på mat i siste time før lunsj.',ok:1,w:'Riktig valg. En situasjon du selv har opplevd, som viser at sult går ut over konsentrasjonen.'},
+{t:'Pizza er den beste maten som finnes.',w:'Dette handler om smak, ikke om konsentrasjon.'},
+{t:'Skolemat er viktig for alle.',w:'Dette er en påstand, ikke et eksempel. Det er ikke noe konkret her.'},
+{t:'Vennen min liker ikke brødskiver.',w:'Konkret, men det handler om smak, ikke om at sult gjør det vanskelig å følge med.'}]}];
+const TOPICS=['Mobilforbud på skolen','Mindre lekser','Gratis skolemat','Stemmerett ved 16 år','Firedagers skoleuke','Lengre storefri','Eget tema'];
+const MAX=L1.length+L2.length+L3.length;
+const card=document.getElementById('card'),stackEl=document.getElementById('stack'),sc=document.getElementById('sc');
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let S;
+function start(d){
+S=Object.assign({screen:'menu',i:0,pick:null,bricks:[],owner:[],done:{},right:{},w:{topic:TOPICS[0],p:'',b:'',e:'',c:[]}},d||{});
+render(true);
+}
+function addBrick(k){S.bricks.push(k)}
+function renderTower(anim){
+stackEl.innerHTML=S.bricks.length?S.bricks.map((k,i)=>`<div class="brick ${k}${anim&&i===S.bricks.length-1?' new':''}" title="${NAME[k]}"></div>`).join(''):'<p class="empty">Svar riktig, så bygger du tårnet.</p>';
+sc.textContent=`${S.bricks.length} av ${MAX} klosser`;
+}
+function menu(){
+const lv=[['l1','Nivå 1: Hva er hva?','Sorter setninger i påstand, begrunnelse og eksempel.',L1.length],['l2','Nivå 2: Hvorfor da?','Velg begrunnelsen som faktisk holder.',L2.length],['l3','Nivå 3: Vis meg!','Finn eksemplet som passer til begrunnelsen.',L3.length],['l4','Nivå 4: Skriv selv','Skriv ditt eget argument og sjekk det.',0]];
+return `<p class="step">Velg nivå</p><h2>Bygg et argument som står støtt</h2>
+<p class="lead">Et godt argument har tre deler. <b>Påstanden</b> er det du mener. <b>Begrunnelsen</b> sier hvorfor. <b>Eksemplet</b> viser at det stemmer. Mangler en del, blir argumentet vaklevorent.</p>
+<div class="levels">${lv.map(([id,t,d,n])=>`<button class="lv" data-go="${id}"><strong>${t}</strong><span>${d}</span>${S.done[id]?`<span class="done">Ferdig${n?`: ${S.right[id]||0} av ${n} riktige`:''}</span>`:''}</button>`).join('')}</div>`;
+}
+function l1(){
+const q=L1[S.i],a=S.pick;
+let fb='';
+if(a){const ok=a===q.k;fb=`<div class="fb ${ok?'good':'miss'}"><p class="v">${ok?'Riktig!':'Ikke helt. Dette er en '+NAME[q.k]+'.'}</p><p>${q.h}</p><p>${RULE[q.k]}</p></div>`}
+return `<p class="step">Nivå 1 · Setning ${S.i+1} av ${L1.length}</p><h2>Hva slags setning er dette?</h2>
+<div class="big">${q.t}</div>
+<div class="btns">${['P','B','E'].map(k=>`<button class="kind ${a?(k===q.k?'k'+k:''):'k'+k} ${a===k?'picked':''}" data-k="${k}" ${a?'disabled':''}>${NAME[k][0].toUpperCase()+NAME[k].slice(1)}</button>`).join('')}</div>
+${fb}${a?`<div class="next"><button class="go" data-next>${S.i<L1.length-1?'Neste setning':'Se resultat'}</button></div>`:''}`;
+}
+function choice(list,lvl){
+const q=list[S.i],a=S.pick;
+const ctx=`<div class="ctx"><div class="cP"><b>Påstand</b>${q.p}</div>${q.b?`<div class="cB"><b>Begrunnelse</b>${q.b}</div>`:''}</div>`;
+const opts=q.o.map((o,j)=>{let c='';if(a!==null){if(o.ok)c='right';else if(j===a)c='wrong'}return `<button class="opt ${c} ${a===j?'picked':''}" data-o="${j}" ${a!==null?'disabled':''}>${o.t}</button>`}).join('');
+let fb='';
+if(a!==null){const o=q.o[a],r=q.o.find(x=>x.ok);fb=`<div class="fb ${o.ok?'good':'miss'}"><p class="v">${o.ok?'Det holder!':'Den vakler.'}</p><p>${o.w}</p>${o.ok?'':`<p><b>Bedre valg:</b> «${r.t}» ${r.w.replace('Riktig valg. ','')}</p>`}</div>`}
+const head=lvl==='l2'?['Nivå 2','Hvilken begrunnelse holder?']:['Nivå 3','Hvilket eksempel passer?'];
+return `<p class="step">${head[0]} · Oppgave ${S.i+1} av ${list.length}</p><h2>${head[1]}</h2>${ctx}<div class="opts">${opts}</div>${fb}${a!==null?`<div class="next"><button class="go" data-next>${S.i<list.length-1?'Neste oppgave':'Se resultat'}</button></div>`:''}`;
+}
+function result(){
+const id=S.last,n={l1:L1.length,l2:L2.length,l3:L3.length}[id],r=S.right[id]||0;
+const nx={l1:'l2',l2:'l3',l3:'l4'}[id];
+const msg=r===n?'Alle riktige. Tårnet står støtt.':r>=n/2?'Godt jobbet. Se over forklaringene på de du bommet på.':'Prøv nivået en gang til, og les forklaringene nøye.';
+return `<p class="step">Resultat</p><h2>${r} av ${n} riktige</h2><p class="lead">${msg}</p>
+<div class="next" style="justify-content:flex-start"><button data-go="${id}">Prøv igjen</button><button class="go" data-go="${nx}">Gå videre</button><button data-go="menu">Til menyen</button></div>`;
+}
+function l4(){
+const w=S.w;
+const checks=['Påstanden sier tydelig hva jeg mener, og noen kan være uenig.','Begrunnelsen svarer på «hvorfor?» og gjentar ikke bare påstanden.','Eksemplet er konkret: en person, en situasjon eller noe som har skjedd.','Eksemplet passer til begrunnelsen, ikke bare til temaet.'];
+return `<p class="step">Nivå 4</p><h2>Skriv ditt eget argument</h2>
+<p class="lead">Velg et tema og skriv ett argument med alle tre delene. Setningsstarterne er bare til hjelp, du kan skrive helt fritt.</p>
+<div class="chips">${TOPICS.map(t=>`<button class="chip ${t===w.topic?'on':''}" data-t="${esc(t)}">${t}</button>`).join('')}</div>
+<label for="wp">Påstand <small>Jeg mener at … / Skolen bør …</small></label><textarea id="wp" class="wP" data-f="p">${esc(w.p)}</textarea>
+<label for="wb">Begrunnelse <small>Grunnen er at … / Dette er viktig fordi …</small></label><textarea id="wb" class="wB" data-f="b">${esc(w.b)}</textarea>
+<label for="we">Eksempel <small>For eksempel … / Da jeg …</small></label><textarea id="we" class="wE" data-f="e">${esc(w.e)}</textarea>
+<div class="prev" id="prev"></div>
+<div class="checks">${checks.map((c,i)=>`<label><input type="checkbox" id="c${i}" data-c="${i}" ${w.c.includes(i)?'checked':''}>${c}</label>`).join('')}</div>
+<div class="next"><button data-go="menu">Til menyen</button><button class="go" id="copy">Kopier avsnittet</button></div>
+<p class="note" id="cn">Sjekklisten fyller du ut selv. Spillet kan ikke vurdere teksten din, så vis den gjerne til en medelev eller læreren.</p>`;
+}
+function prev(){
+const w=S.w,el=document.getElementById('prev');if(!el)return;
+const parts=[['P',w.p],['B',w.b],['E',w.e]].filter(x=>x[1].trim());
+el.innerHTML=parts.length?`<b>Avsnittet ditt${w.topic!=='Eget tema'?' om '+esc(w.topic.toLowerCase()):''}:</b><br>`+parts.map(([k,t])=>`<span class="s${k}">${esc(t.trim())}</span>`).join(' '):'<span style="color:var(--soft)">Avsnittet ditt dukker opp her, med fargene til hver del.</span>';
+}
+function render(full){
+const s=S.screen;
+card.innerHTML=s==='menu'?menu():s==='l1'?l1():s==='l2'?choice(L2,'l2'):s==='l3'?choice(L3,'l3'):s==='l4'?l4():result();
+if(s==='l4')prev();
+renderTower(!full&&S.justAdded);S.justAdded=false;
+}
+card.addEventListener('click',ev=>{
+const b=ev.target.closest('button');if(!b||b.disabled)return;
+if(b.dataset.go){const g=b.dataset.go;if(g!=='menu'&&g!=='l4'){S.right[g]=0;S.bricks=S.bricks.filter((_,i)=>S.owner?.[i]!==g);S.owner=(S.owner||[]).filter(o=>o!==g)}S.screen=g;S.i=0;S.pick=null;render();card.scrollIntoView({block:'nearest'});return}
+if(b.dataset.k){const q=L1[S.i];S.pick=b.dataset.k;if(S.pick===q.k){S.right.l1=(S.right.l1||0)+1;addBrick(q.k);(S.owner=S.owner||[]).push('l1');S.justAdded=true}render();return}
+if(b.dataset.o!==undefined){const list=S.screen==='l2'?L2:L3,j=+b.dataset.o;S.pick=j;if(list[S.i].o[j].ok){S.right[S.screen]=(S.right[S.screen]||0)+1;addBrick(S.screen==='l2'?'B':'E');(S.owner=S.owner||[]).push(S.screen);S.justAdded=true}render();return}
+if(b.hasAttribute('data-next')){const n={l1:L1,l2:L2,l3:L3}[S.screen].length;if(S.i<n-1){S.i++;S.pick=null}else{S.done[S.screen]=true;S.last=S.screen;S.screen='res'}render();return}
+if(b.dataset.t){S.w.topic=b.dataset.t;render();return}
+if(b.id==='copy'){const w=S.w,txt=[w.p,w.b,w.e].map(x=>x.trim()).filter(Boolean).join(' ');const cn=document.getElementById('cn');
+try{navigator.clipboard.writeText(txt).then(()=>{cn.textContent='Kopiert. Lim inn avsnittet der læreren vil ha det.'},()=>{cn.textContent='Kopieringen ble stoppet av nettleseren. Merk teksten i forhåndsvisningen og kopier den selv.'})}catch(e){cn.textContent='Kopieringen ble stoppet av nettleseren. Merk teksten i forhåndsvisningen og kopier den selv.'}
+S.done.l4=true}
+});
+card.addEventListener('input',ev=>{
+const t=ev.target;
+if(t.dataset.f){S.w[t.dataset.f]=t.value;prev()}
+if(t.dataset.c!==undefined){const i=+t.dataset.c;S.w.c=t.checked?[...new Set([...S.w.c,i])]:S.w.c.filter(x=>x!==i)}
+});
+window.claude?.hot?.snapshot?.(()=>S);
+window.claude?.hot?.ready?window.claude.hot.ready(start):start(window.claude?.hot?.data??{});
+}
+</script>
+</body>
+</html>

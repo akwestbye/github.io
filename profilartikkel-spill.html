@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Redaksjonen: profilartikkel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Rubik:wght@400;500;700&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+/* VOICE: kjapp redaktør som snakker til en 13-åring, ærlig tilbakemelding
+   IDEA: en avisside som bygges bit for bit mens du tar redaksjonelle valg
+   PICTURE: selve avissiden, med gule merkepenn-felt som fylles inn
+   COLOUR and TYPE: nattblå redaksjon, hvitt avispapir, gul merkepenn, rød rettepenn. Oswald, Source Serif, Rubik
+   LAYOUT: oppgavekort til venstre, avisside til høyre, stables under 860px */
+:root{color-scheme:light dark;--bg:#14243b;--bg2:#1d3352;--ink:#eef3fa;--muted:#a9b9cf;--paper:#fdfdfb;--pink:#14181f;--hl:#ffd23f;--red:#e5484d;--ok:#3ccf8e}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Rubik,system-ui,sans-serif;overflow-x:clip}
+header{padding:22px max(4vw,16px) 6px;display:flex;flex-wrap:wrap;gap:12px 24px;align-items:end;justify-content:space-between;max-width:1280px;margin:auto}
+h1{font:700 clamp(28px,4.4vw,44px)/1.05 Oswald,sans-serif;margin:0;text-wrap:balance}
+h1 span{background:linear-gradient(transparent 55%,rgba(255,210,63,.55) 55%)}
+.meta{display:flex;gap:18px;align-items:center;color:var(--muted);font-size:15px}
+.meta b{color:var(--hl);font-size:22px;font-family:Oswald,sans-serif}
+.bar{height:8px;background:var(--bg2);border-radius:9px;width:180px;overflow:hidden}.bar i{display:block;height:100%;background:var(--hl);width:0;transition:width .4s}
+main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:28px;padding:18px max(4vw,16px) 48px;max-width:1280px;margin:auto;align-items:start}
+.card{background:var(--bg2);border-radius:18px;padding:clamp(20px,3vw,32px);position:sticky;top:16px}
+.step{font-size:14px;color:var(--hl);font-weight:500;margin:0 0 6px}
+.card h2{font:600 26px/1.15 Oswald,sans-serif;margin:0 0 10px;letter-spacing:.2px}
+.ask{margin:0 0 16px}
+.say{background:#0f1c2e;border-left:4px solid var(--hl);padding:12px 14px;border-radius:8px;margin:0 0 16px;font-family:'Source Serif 4',serif;font-size:17px}
+.say small{display:block;font-family:Rubik,sans-serif;color:var(--muted);font-size:13px;margin-bottom:2px}
+.opts{display:grid;gap:10px}
+.opt{all:unset;box-sizing:border-box;min-height:44px;padding:13px 16px;border-radius:12px;background:#264066;color:var(--ink);cursor:pointer;font-size:16px;line-height:1.4;border:2px solid transparent;transition:background .15s}
+.opt:hover{background:#2e4c78}.opt:focus-visible{outline:3px solid var(--hl);outline-offset:2px}
+.opt.no{background:transparent;border-color:var(--red);color:var(--muted);text-decoration:line-through;text-decoration-color:var(--red);cursor:default}
+.opt.yes{background:var(--ok);color:#06210f;font-weight:500}
+.opt:disabled{cursor:default}
+.who{display:grid;grid-template-columns:56px minmax(0,1fr);gap:4px 14px;align-items:center}
+.who svg{grid-row:span 2;width:56px;height:56px}
+.who b{font:600 19px Oswald,sans-serif}.who span{font-size:15px;color:var(--muted)}
+.fb{margin:14px 0 0;padding:12px 14px;border-radius:10px;font-size:15px;display:none}
+.fb.show{display:block}.fb.bad{background:rgba(229,72,77,.15);border:1px solid var(--red)}.fb.good{background:rgba(60,207,142,.14);border:1px solid var(--ok)}
+.tip{margin:16px 0 0;font-size:14px;color:var(--muted)}.tip b{color:var(--ink)}
+.next{all:unset;box-sizing:border-box;margin-top:16px;min-height:46px;padding:12px 22px;border-radius:12px;background:var(--hl);color:#1a1300;font-weight:700;cursor:pointer;display:none}
+.next.show{display:inline-block}.next:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.ghost{all:unset;box-sizing:border-box;margin:16px 0 0 10px;min-height:46px;padding:12px 18px;border-radius:12px;border:2px solid var(--muted);cursor:pointer;display:inline-block}
+.ghost:focus-visible{outline:3px solid var(--hl)}
+.paper{background:var(--paper);color:var(--pink);border-radius:4px;padding:clamp(18px,3vw,34px);box-shadow:0 30px 60px -20px rgba(0,0,0,.55),0 0 0 1px rgba(0,0,0,.05);position:relative;font-family:'Source Serif 4',serif}
+.mast{display:flex;justify-content:space-between;align-items:baseline;border-bottom:3px double #14181f;padding-bottom:6px;margin-bottom:14px;gap:8px;flex-wrap:wrap}
+.mast b{font:700 22px/1 Oswald,sans-serif;letter-spacing:.5px}.mast span{font:13px Rubik,sans-serif;color:#555}
+.kick{font:500 14px Rubik,sans-serif;color:#b3261e;margin:0 0 4px}
+.sticky{position:absolute;right:-8px;top:-18px;width:min(210px,46%);background:#fff59d;color:#3a3200;font:14px/1.35 Rubik,sans-serif;padding:10px 12px;transform:rotate(3deg);box-shadow:0 6px 14px rgba(0,0,0,.25);display:none}
+.sticky.on{display:block;animation:pop .4s}
+.slot{border-radius:4px;transition:background .6s}
+.slot.empty{background:repeating-linear-gradient(0deg,#e9ecf1 0 10px,transparent 10px 18px);color:transparent;user-select:none;min-height:36px}
+.slot.empty::after{content:attr(data-e);display:block;color:#8a93a3;font:13px Rubik,sans-serif;padding:8px 4px;background:var(--paper);width:max-content;max-width:100%}
+.slot.flash{background:rgba(255,210,63,.6)}
+.hed{font:700 clamp(28px,3.6vw,42px)/1.05 Oswald,sans-serif;margin:0 0 12px;text-wrap:balance}
+.lead{font-weight:600;font-size:18px;line-height:1.45;margin:0 0 16px}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,170px);gap:20px}
+.body p{margin:0 0 12px;font-size:16.5px}
+.fakta{background:#eef2f8;border-top:4px solid #14181f;padding:12px;font:14px/1.5 Rubik,sans-serif;align-self:start}
+.fakta h4{margin:0 0 6px;font:700 16px Oswald,sans-serif}
+.fakta dl{margin:0}.fakta dt{font-weight:700;display:inline}.fakta dd{display:inline;margin:0}.fakta dd::after{content:"";display:block}
+.pull{font:italic 600 21px/1.3 'Source Serif 4',serif;border-top:2px solid #b3261e;border-bottom:2px solid #b3261e;padding:10px 0;margin:6px 0 14px;color:#7a1712}
+.byline{font:13px Rubik,sans-serif;color:#555;margin:-6px 0 12px}
+.note{font-size:13px;color:var(--muted);margin:10px 2px 0}
+.rank{font:700 46px/1 Oswald,sans-serif;color:var(--hl);margin:4px 0 10px}
+.check{padding-left:20px;margin:12px 0}.check li{margin:0 0 8px}
+main.solo{grid-template-columns:minmax(0,760px);justify-content:center}main.solo .card{position:static}
+.review li{padding:10px 12px;border-radius:10px;margin-bottom:10px;font-size:15px}.review span{color:var(--muted)}
+.r-ok{background:rgba(60,207,142,.12);border-left:4px solid var(--ok)}.r-no{background:rgba(229,72,77,.12);border-left:4px solid var(--red)}
+.credit{max-width:1280px;margin:auto;padding:0 max(4vw,16px) 32px;font-size:13px;color:var(--muted)}.credit a{color:inherit}
+@keyframes pop{from{transform:rotate(3deg) scale(.6);opacity:0}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media(max-width:860px){main{grid-template-columns:minmax(0,1fr)}.card{position:static}}
+@media(max-width:600px){.cols{grid-template-columns:minmax(0,1fr)}.sticky{position:static;width:auto;transform:none;margin:-4px 0 12px}.bar{width:110px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Redaksjonen: <span>lag en profilartikkel</span></h1>
+  <div class="meta"><div>Poeng <b id="pts">0</b> / <span id="max"></span></div><div class="bar" aria-hidden="true"><i id="prog"></i></div></div>
+</header>
+<main id="main">
+  <section class="card" id="card" aria-live="polite"></section>
+  <section id="paperwrap">
+    <article class="paper" aria-label="Avissiden du lager">
+      <div class="sticky" id="s-vinkel"></div>
+      <div class="mast"><b>SKOLEAVISA</b><span>Portrettet · nr. 7</span></div>
+      <p class="kick">PORTRETTET</p>
+      <h3 class="hed slot empty" id="s-tittel" data-e="Tittel kommer her">x</h3>
+      <p class="byline">Tekst: deg · Foto: deg</p>
+      <p class="lead slot empty" id="s-ingress" data-e="Ingress kommer her">x</p>
+      <div class="cols">
+        <div class="body">
+          <p class="slot empty" id="s-scene" data-e="Åpningsscene">x</p>
+          <p class="slot empty" id="s-stikk" data-e="Fra intervjuet, del 1">x</p>
+          <div class="pull slot empty" id="s-sitat" data-e="Uthevet sitat">x</div>
+          <p class="slot empty" id="s-taarn" data-e="Fra intervjuet, del 2">x</p>
+          <p class="slot empty" id="s-slutt" data-e="Avslutning">x</p>
+        </div>
+        <aside class="fakta slot empty" id="s-fakta" data-e="Faktaboks">x</aside>
+      </div>
+    </article>
+    <p class="note">Alle tre personene er oppdiktet og laget for spillet.</p>
+  </section>
+</main>
+<footer class="credit">Idé: Alfred. Utviklet av Anne Katrine Westbye med Claude (KI). Lisens: <a href="https://creativecommons.org/licenses/by/4.0/deed.no">CC BY 4.0</a>. Du kan fritt dele og endre spillet så lenge du oppgir hvem som har laget det.</footer>
+<script>
+{
+/* Felles skjelett: samme sjangerregler for alle tre. f = [riktig, feil 1, feil 2] */
+const S=[
+{part:'Vinkel',h:'Hva er vinkelen?',slot:'vinkel',ask:p=>`Redaktøren: «Du skal lage portrett av ${p.intro}. En profil handler om ett menneske, men du trenger én skarp vinkel. Hvilken velger du?»`,
+f:['Konkret og litt overraskende. Leseren får lyst til å vite mer med en gang.','Det er et tema, ikke en vinkel. Hva er det spesielle med akkurat denne personen?','Altfor vidt. Med denne vinkelen ender du opp med en CV, ikke en historie.'],
+tip:'<b>Huskeregel:</b> En vinkel kan sies i én setning, og den gjør leseren nysgjerrig.'},
+{part:'Intervju',h:'Første spørsmål',slot:'stikk',ask:p=>p.sted+' Hvilket spørsmål gir deg mest stoff?',
+f:['Et åpent spørsmål som ber om en historie. Folk husker detaljer når de forteller om ett bestemt øyeblikk.','Lukket spørsmål. Svaret blir «ja» eller «nei», og så er du like langt.','Greit faktaspørsmål, men det gir et tall, ikke en historie. Slikt kan du spørre om på slutten.'],
+tip:'<b>Huskeregel:</b> Start spørsmål med hva, hvordan, fortell om. Unngå spørsmål som kan besvares med ja eller nei.'},
+{part:'Intervju',h:'Følg opp!',slot:'taarn',ask:p=>p.fornavn+' lener seg fram:',
+f:['Bra! Du hørte hva som ble sagt og grov videre. De beste historiene kommer nesten alltid på oppfølgingsspørsmålet.','Du hoppet over gull. Du fikk en åpning, og du gikk rett videre til lista di.','Du kan godt være litt kritisk, men slik stenger du samtalen i stedet for å åpne den.'],
+tip:'<b>Huskeregel:</b> Lytt mer enn du snakker. Spørsmålslista er en hjelp, ikke en plan du må følge.'},
+{part:'Skriving',h:'Velg tittel',slot:'tittel',ask:()=>'Du er tilbake i redaksjonen. Nå skal notatene bli artikkel. Hvilken tittel vil få folk til å lese?',
+f:['Kort, konkret og med et bilde leseren ser for seg.','Dette er en etikett, ikke en tittel. Den forteller ikke hvorfor jeg skal bry meg.','Klikkagn. Tittelen lover noe artikkelen ikke holder, og leseren føler seg lurt.'],
+tip:'<b>Huskeregel:</b> Tittelen skal være sann, kort og vekke nysgjerrighet. Skriv tre forslag, og velg det beste.'},
+{part:'Skriving',h:'Skriv ingressen',slot:'ingress',ask:()=>'Ingressen er de to tre setningene i fet skrift under tittelen. De skal få leseren til å fortsette. Hvilken velger du?',
+f:['Hvem, hva og hvorfor nå. Den bygger på vinkelen din, og siste setning forklarer hvorfor saken kommer akkurat nå.','Å starte med fødselen er den vanligste feilen i portretter. Leseren vil vite hvorfor personen er interessant nå.','Du forteller om artikkelen i stedet for å fortelle saken. Hopp rett inn.'],
+tip:'<b>Huskeregel:</b> Ingressen er et lite lokkemiddel. Ingen «i denne artikkelen skal jeg».'},
+{part:'Skriving',h:'Åpningsscenen',slot:'scene',ask:()=>'Brødteksten bør starte med en scene, så leseren ser det du så. Hvilket avsnitt viser i stedet for å fortelle?',
+f:['Her ser og hører leseren. Detaljene forteller hvem personen er, uten at du må skrive det rett ut.','Dette forteller, men viser ingenting. Leseren må bare tro på adjektivene dine.','En detalj uten poeng. Velg detaljer som sier noe om personen.'],
+tip:'<b>Huskeregel:</b> Vis, ikke fortell. Noter små ting du ser under intervjuet: hender, lyder, ting på veggen.'},
+{part:'Skriving',h:'Velg sitatet',slot:'sitat',ask:p=>`Ett sitat skal løftes ut med stor skrift. Hvilket viser best hvem ${p.fornavn} er?`,
+f:['Dette er personens egen stemme og måte å tenke på. Sånne setninger kan bare akkurat denne personen ha sagt.','Fakta som dette skriver du heller med egne ord eller legger i faktaboksen. Sitater skal vise personen.','Et sitat uten innhold. Du trenger ikke sitere alt som ble sagt.'],
+tip:'<b>Huskeregel:</b> I avis bruker vi tankestrek (–) foran sitater. Sjekk at du har gjengitt ordene riktig.'},
+{part:'Skriving',h:'Faktaboksen',slot:'fakta',ask:()=>'Ved siden av teksten står en liten faktaboks. Hva hører hjemme der?',
+f:['Kort og nyttig. Tallene fra intervjuet fikk endelig et hjem.','Personvern! Slikt skal ikke på trykk, selv om du vet det.','Faktaboksen skal være kort. Resten hører hjemme i teksten, eller ingen steder.'],
+tip:'<b>Huskeregel:</b> Du trenger ikke bruke alt du fikk vite. Gode journalister kaster mye.'},
+{part:'Skriving',h:'Avslutningen',slot:'slutt',ask:()=>'Siste avsnitt. Hvordan runder du av?',
+f:['En ring! Du går tilbake til noe fra starten. Leseren sitter igjen med et bilde.','Avisartikler takker ikke for seg. Slutt med noe leseren husker.','Du skriver en moral leseren ikke ba om. La historien tale for seg selv.'],
+tip:'<b>Huskeregel:</b> Gå tilbake til noe fra starten, eller slutt med et sterkt sitat eller bilde.'}
+];
+/* Personene: o = [riktig, feil 1, feil 2], fill = tekst som havner i avisa */
+const P=[
+{navn:'Sigrid Haugen',fornavn:'Sigrid',alder:68,kort:'Birøkter som snakker med biene sine',farge:'#f2b705',intro:'Sigrid Haugen, 68 år, som driver med bier',
+sted:'Du sitter ved kjøkkenbordet til Sigrid med blokka klar.',say:'– Og etter det har jeg aldri vært redd for noe.',
+r:[
+{o:['Sigrid snakker med biene sine hver morgen, og hun mener de svarer.','Sigrid Haugen er birøkter.','Sigrid har levd et langt liv med mange opplevelser.'],fill:'<b>Vinkel:</b> Sigrid snakker med biene hver morgen, og hun mener de svarer.'},
+{o:['Hva skjedde første gang du ble stukket?','Liker du bier?','Hvor mange kuber har du?'],fill:'Sigrid var ni år første gang hun ble stukket. Det var bestefaren som hadde bier. – Han sa at bien døde for å forsvare hjemmet sitt. Da kunne ikke jeg grine, sier hun.'},
+{o:['Aldri? Hva er det skumleste du har gjort likevel?','Ok. Neste spørsmål: Hva er favorittmaten din?','Det tror jeg ikke noe på.'],fill:'Det skumleste hun har gjort? Hun tenker seg om. I 2004 hentet hun en villsverm ned fra kirketårnet, uten drakt. – Presten holdt stigen og ba. Jeg vet ikke hvem av oss som var mest nervøs, sier hun og ler.'},
+{o:['Hun hvisker til 40 000 bier','Intervju med Sigrid Haugen','BIER!!! Du vil ikke tro hva som skjer'],fill:'Hun hvisker til 40 000 bier'},
+{o:['Hver morgen klokka seks går Sigrid Haugen (68) ut i hagen og sier god morgen til biene. Hun mener de svarer. Nå skal hun lære opp sin første lærling.','Sigrid Haugen ble født i 1958 på Løten. Der gikk hun på barneskolen.','I denne artikkelen skal du få lese om en dame som har bier.']},
+{o:['Røyken fra den lille blikkboksen legger seg over hagen. Sigrid løfter lokket på kube nummer sju, uten hansker. Summingen stiger, og hun nynner tilbake.','Sigrid er en veldig fin og rolig dame som er glad i bier.','Det var fint vær den dagen vi var der.']},
+{o:['– Folk tror bier er farlige. Bier er bare ærlige. Blir de sinte, så vet du hvorfor.','– Jeg har tolv kuber og lager rundt 300 kilo honning i året.','– Ja, det stemmer.']},
+{o:['Navn, alder, bosted, hva hun gjør, antall bier og hvorfor hun er aktuell nå','Adressen og telefonnummeret hennes','Alt hun sa i intervjuet, satt opp som en punktliste'],fill:['Alder: 68 år','Bor: Løten','Gjør: Birøkter i 59 år','Bier: Rundt 40 000 i tolv kuber','Aktuell: Får sin første lærling']},
+{o:['Når vi går, står Sigrid igjen ved kube nummer sju. Hun sier noe lavt vi ikke hører. Om biene svarer, får vi aldri vite. Men summingen stilner.','Det var alt om Sigrid. Takk for at du leste!','Sigrid viser oss at det er viktig å følge drømmene sine.']}
+]},
+{navn:'Emil Strand',fornavn:'Emil',alder:15,kort:'Driver sykkelverksted i garasjen',farge:'#3ccf8e',intro:'Emil Strand, 15 år, som fikser sykler for naboene',
+sted:'Du sitter på en ølkasse i garasjen til Emil med blokka på fanget.',say:'– Men det er ikke syklene som er det beste.',
+r:[
+{o:['Emil har fikset over 200 sykler i garasjen, og han tar betalt i boller.','Emil er en ungdom som liker sykler.','Emil er flink til mange ting.'],fill:'<b>Vinkel:</b> Emil har fikset over 200 sykler, og han tar betalt i boller.'},
+{o:['Hvordan fikset du den aller første sykkelen?','Er det gøy å fikse sykler?','Hvor mange sykler har du fikset?'],fill:'Den første sykkelen var lillesøsterens. Kjedet hadde hoppet av, og ingen voksne var hjemme. – Jeg så på en video tolv ganger. Den trettende gangen fikset jeg det, sier Emil.'},
+{o:['Hva er det beste, da?','Ok. Hvilken klasse går du i?','Jo, det er det sikkert.'],fill:'Det beste, sier han, er folka som kommer innom. En nabo på 91 år kommer hver lørdag med en sykkel som egentlig ikke trenger reparasjon. – Jeg tror han bare vil prate. Så vi prater, sier Emil.'},
+{o:['Han fikser sykler for boller','Intervju med Emil Strand','15-åring GJØR DETTE i garasjen'],fill:'Han fikser sykler for boller'},
+{o:['Garasjedøra hos Emil Strand (15) står åpen hver dag etter skolen. Han har fikset over 200 sykler for naboene og tar betalt i boller. Nå har kommunen spurt om han vil holde kurs.','Emil Strand ble født i 2011. Han har to søsken og en katt.','Dette er en artikkel om en gutt som liker å skru.']},
+{o:['Det lukter kjedeolje og kanelboller. Emil ligger på kne foran en rosa barnesykkel med tunga i munnviken. Bak ham henger 37 skiftenøkler, sortert etter størrelse.','Emil er en veldig flink og hyggelig gutt.','Garasjen var grå.']},
+{o:['– En sykkel lyver aldri. Er noe feil, så hører du det.','– Jeg bruker vanligvis en halvtime per sykkel.','– Ja, det er riktig.']},
+{o:['Navn, alder, bosted, hva han gjør, antall sykler og hvorfor han er aktuell nå','Hvilken skole han går på og hvilken buss han tar hjem','Alt han sa i intervjuet, satt opp som en punktliste'],fill:['Alder: 15 år','Bor: Moss','Gjør: Driver sykkelverksted i garasjen','Sykler fikset: Over 200','Aktuell: Skal holde sykkelkurs for kommunen']},
+{o:['Når vi går, triller naboen på 91 opp oppkjørselen. Sykkelen hans er helt fin. Emil henter to boller og en ølkasse til.','Det var historien om Emil. Ha en fin dag!','Emil viser at unge mennesker kan bidra mye i samfunnet.']}
+]},
+{navn:'Liv Aas',fornavn:'Liv',alder:52,kort:'Brøyter veiene mens bygda sover',farge:'#ff7a45',intro:'Liv Aas, 52 år, som kjører brøytebil om natta',
+sted:'Klokka er tre om natta, og du sitter i passasjersetet i brøytebilen.',say:'– Men den natta var det egentlig ikke snøen jeg var redd for.',
+r:[
+{o:['Liv brøyter mens hele bygda sover, og hun kjenner hver eneste postkasse langs veien.','Liv kjører brøytebil.','Liv har hatt mange forskjellige jobber.'],fill:'<b>Vinkel:</b> Liv brøyter mens bygda sover, og hun kjenner hver postkasse langs veien.'},
+{o:['Hva var det verste uværet du har kjørt i?','Er det kaldt å brøyte?','Hvor mange kilometer kjører du?'],fill:'Det verste var januar 2010. Snøen kom sidelengs, og hun så ikke lenger enn til panseret. – Jeg kjørte etter postkassene. Jeg vet hvor hver eneste en står, sier Liv.'},
+{o:['Hva var du redd for, da?','Skjønner. Hva gjør du på fritida?','Det høres litt rart ut.'],fill:'Det var en bil som sto i grøfta med lysene av. Inni satt en mann som hadde sovnet. – Jeg banket på ruta i fem minutter før han våknet. Han sender meg julekort hvert år, sier hun.'},
+{o:['Hun kjører mens bygda sover','Intervju med Liv Aas','SJOKK: Dette skjer om natta'],fill:'Hun kjører mens bygda sover'},
+{o:['Når alarmen går klokka to, vet Liv Aas (52) at det har snødd. I 24 år har hun brøytet veiene før noen andre er våkne. Denne vinteren er hennes siste.','Liv Aas ble født i 1974 i en liten bygd.','Her kan du lese om en dame som kjører en stor bil.']},
+{o:['Det knitrer i radioen. Plogen skyver en hvit vegg av snø ut i grøfta. Liv nikker mot en postkasse vi passerer: Der bor Gunnar, han er alltid oppe klokka fem.','Liv er en sterk og tøff dame.','Det var mørkt ute.']},
+{o:['– Folk merker meg bare når jeg ikke har vært der. Det er egentlig et kompliment.','– Bilen veier rundt 26 tonn med plog.','– Ja, det gjør jeg.']},
+{o:['Navn, alder, bosted, hva hun gjør, hvor lang ruta er og hvorfor hun er aktuell nå','Nøyaktig adresse og når hun er borte hjemmefra','Alt hun sa i intervjuet, satt opp som en punktliste'],fill:['Alder: 52 år','Bor: Øyer','Gjør: Brøytesjåfør i 24 år','Rute: 38 kilometer','Aktuell: Brøyter sin siste vinter']},
+{o:['Klokka halv seks passerer vi postkassa til Gunnar igjen. Kjøkkenvinduet hans er allerede tent. Han vet ikke at vi har vært der. Det er hele poenget.','Tusen takk til Liv for at vi fikk være med!','Liv lærer oss at alle jobber er like viktige.']}
+]}
+];
+/* Testen: ny person, ingen fasit underveis. o[0] er riktig */
+const T=[
+{k:'Sjanger',q:'Hva skiller en profilartikkel fra en vanlig nyhetsartikkel?',o:['Den handler om ett menneske og lar leseren bli kjent med hvem det er','Den er alltid kortere enn en nyhetsartikkel','Den har ingen sitater, bare beskrivelser'],why:'En profil (portrett) handler om én person. Målet er at leseren skal bli kjent med personen, ikke bare få vite hva som har skjedd.'},
+{k:'Vinkel',q:'Hva betyr «vinkel» i en profilartikkel?',o:['Det ene spesielle ved personen som hele artikkelen bygger på','Hvilken retning fotografen tok bildet fra','Alle fakta om personen, i riktig rekkefølge'],why:'Vinkelen er det du vil fortelle om akkurat denne personen. Du skal kunne si den i én setning.'},
+{k:'Vinkel',q:'Du skal skrive om Kasper Lie (14), keeper på håndballaget. Hvilken av disse er en god vinkel?',o:['Kasper har ikke sluppet inn et eneste straffekast i høst, og han tror det er fordi han synger inni hodet','Kasper spiller håndball','Kasper er en aktiv gutt med mange interesser'],why:'En god vinkel er konkret og gjør deg nysgjerrig. «Spiller håndball» er bare et tema, og «mange interesser» er altfor vidt.'},
+{k:'Første spørsmål',q:'Hvilket av disse spørsmålene til Kasper er et lukket spørsmål?',o:['Var det skummelt å stå i mål i finalen?','Hva tenkte du da du sto i mål i finalen?','Fortell om den første kampen du spilte.'],why:'Et lukket spørsmål kan besvares med ja eller nei. Da får du sjelden en historie.'},
+{k:'Oppfølging',q:'Kasper sier:',say:'– Egentlig var det mamma som fikk meg til å slutte med fotball.',o:['Hvordan fikk hun deg til det?','Ok. Hvor høy er du?','Liker du håndball bedre enn fotball?'],why:'Når personen sier noe overraskende, skal du grave videre med et åpent spørsmål. Det siste alternativet følger opp, men er lukket.'},
+{k:'Tittel',q:'Hva er problemet med tittelen «Portrett av Kasper Lie»?',o:['Den sier hvem det handler om, men ikke hvorfor jeg skal lese','Den er altfor lang','Den er ikke sann'],why:'En tittel som bare er en etikett, gir ikke leseren noen grunn til å lese videre.'},
+{k:'Ingress',q:'«Kasper Lie (14) er keeper på håndballaget i Ås. Han har spilt i fire år.» Hva mangler i denne ingressen?',o:['Noe som vekker nysgjerrighet, og hvorfor saken kommer akkurat nå','Mer om familien hans','Et sitat fra treneren'],why:'Ingressen skal få folk til å lese videre. Den bør bygge på vinkelen og gjerne si hvorfor saken er aktuell nå.'},
+{k:'Vis, ikke fortell',q:'Hvilken setning viser at Kasper er nervøs, uten å si det rett ut?',o:['Kasper tygger på snora i hettegenseren og ser på klokka for tredje gang.','Kasper er veldig nervøs før kampen.','Kasper sier at han pleier å være nervøs.'],why:'Når du viser, ser leseren det selv gjennom detaljer. Når du forteller, må leseren bare tro deg.'},
+{k:'Sitat',q:'Kasper sa mye i intervjuet. Hva fortjener å bli et uthevet sitat?',o:['– Ballen er bare redd for meg et halvt sekund. Det holder.','– Vi har trening tirsdag og torsdag.','– Jeg er 1,78 høy.'],why:'Gode sitater viser hvordan personen tenker og snakker. Fakta og tall skriver du med egne ord eller legger i faktaboksen.'},
+{k:'Faktaboks',q:'Hva skal IKKE stå i faktaboksen om Kasper?',o:['Mobilnummeret hans','Alderen hans','Klubben han spiller for'],why:'Personvern. Kontaktinfo, adresse og hvor noen er til faste tider skal aldri på trykk, og særlig ikke når personen er under 18.'},
+{k:'Avslutning',q:'Hva betyr det at en artikkel har en «ring»?',o:['At slutten tar opp igjen noe fra starten','At artikkelen slutter med en moral','At du takker personen til slutt'],why:'En ring gjør at artikkelen føles hel. Du kan for eksempel gå tilbake til scenen du startet med.'}
+];
+let tq=0,tAns=[],tOrder=[];
+function testStart(){
+  clear();tq=0;tAns=[];card.className='card';
+  $('paperwrap').hidden=true;$('main').classList.add('solo');
+  tOrder=T.map(t=>shuf(t.o.map((x,k)=>k)));testQ();
+}
+function testQ(){
+  const t=T[tq];
+  card.innerHTML=`<p class="step">Test · spørsmål ${tq+1} av ${T.length} · ${t.k}</p><h2>${t.q}</h2>${t.say?`<p class="say"><small>Kasper</small>${t.say}</p>`:''}<div class="opts">${tOrder[tq].map(k=>`<button class="opt" data-k="${k}">${t.o[k]}</button>`).join('')}</div><p class="tip">Du får se fasiten når du har svart på alle.</p>`;
+  card.querySelectorAll('.opt').forEach(b=>b.addEventListener('click',()=>{tAns[tq]=+b.dataset.k;tq++;tq<T.length?testQ():testEnd();card.scrollIntoView({behavior:'smooth',block:'start'})}));
+  $('prog').style.width=(tq/T.length*100)+'%';
+}
+function testEnd(){
+  const right=tAns.filter(a=>a===0).length;
+  const weak=[...new Set(T.filter((t,k)=>tAns[k]!==0).map(t=>t.k))];
+  const sv=right===T.length?'Alt riktig. Du har skjønt sjangeren, ikke bare husket svarene fra spillet.':right>=8?'Godt jobbet. Se på det du bommet på under.':right>=5?'Du har fått med deg en del, men noen begreper sitter ikke ennå.':'Her er det mye som ikke sitter. Spill gjennom en person til og les huskereglene, og ta testen igjen.';
+  card.innerHTML=`<p class="step">Testresultat</p><p class="rank">${right} av ${T.length}</p><p>${sv}</p>${weak.length?`<p><b>Øv mer på:</b> ${weak.join(', ')}</p>`:''}<ol class="check review">${T.map((t,k)=>{const ok=tAns[k]===0;return `<li class="${ok?'r-ok':'r-no'}"><b>${t.k}:</b> ${t.q}${t.say?' '+t.say:''}<br>${ok?'Riktig':'Du svarte: '+t.o[tAns[k]]+'<br>Riktig svar: '+t.o[0]}<br><span>${t.why}</span></li>`}).join('')}</ol><button class="next show" id="tagain">Ta testen igjen</button><button class="ghost" id="tback">Tilbake til spillet</button>`;
+  $('prog').style.width='100%';
+  $('tagain').addEventListener('click',testStart);
+  $('tback').addEventListener('click',()=>{$('paperwrap').hidden=false;$('main').classList.remove('solo');choose()});
+}
+const $=id=>document.getElementById(id),card=$('card');
+const MAX=S.length*3;$('max').textContent=MAX;
+let p=null,i=0,pts=0,tries=0;
+const shuf=a=>a.map(x=>[Math.random(),x]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
+const face=c=>`<svg viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="28" r="27" fill="${c}"/><circle cx="28" cy="23" r="10" fill="#14243b" opacity=".85"/><path d="M11 47c3-10 10-14 17-14s14 4 17 14" fill="#14243b" opacity=".85"/></svg>`;
+function fillFor(k){
+  const r=p.r[k],s=S[k];
+  if(s.slot==='fakta')return `<h4>${p.navn}</h4><dl>${r.fill.map(l=>{const [a,...b]=l.split(': ');return `<dt>${a}: </dt><dd>${b.join(': ')}</dd>`}).join('')}</dl>`;
+  return r.fill||r.o[0];
+}
+function choose(){
+  card.className='card';
+  card.innerHTML=`<p class="step">Velg intervjuobjekt</p><h2>Hvem vil du skrive om?</h2><p class="ask">Redaktøren har tre forslag. Du går gjennom de samme ni stegene uansett hvem du velger, men artikkelen blir helt forskjellig.</p><div class="opts">${P.map((x,k)=>`<button class="opt who" data-p="${k}">${face(x.farge)}<b>${x.navn} (${x.alder})</b><span>${x.kort}</span></button>`).join('')}</div><button class="ghost" id="skip" style="margin-left:0">Hopp rett til testen</button>`;
+  $('skip').addEventListener('click',testStart);
+  card.querySelectorAll('[data-p]').forEach(b=>b.addEventListener('click',()=>{p=P[+b.dataset.p];i=0;pts=0;$('pts').textContent=0;render()}));
+  $('prog').style.width='0%';
+}
+function render(){
+  const s=S[i],r=p.r[i];tries=0;
+  const opts=shuf(r.o.map((t,k)=>({t,k})));
+  card.innerHTML=`<p class="step">${p.navn} · steg ${i+1} av ${S.length} · ${s.part}</p><h2>${s.h}</h2><p class="ask">${s.ask(p)}</p>${s.slot==='taarn'?`<p class="say"><small>${p.fornavn}</small>${p.say}</p>`:''}<div class="opts">${opts.map(o=>`<button class="opt" data-k="${o.k}">${o.t}</button>`).join('')}</div><p class="fb" id="fb"></p><p class="tip" id="tip" hidden>${s.tip}</p><button class="next" id="next">${i<S.length-1?'Neste':'Se resultatet'}</button>`;
+  card.querySelectorAll('.opt').forEach(b=>b.addEventListener('click',()=>pick(b)));
+  $('next').addEventListener('click',()=>{i++;i<S.length?render():end();card.scrollIntoView({behavior:'smooth',block:'start'})});
+  $('prog').style.width=(i/S.length*100)+'%';
+}
+function pick(b){
+  if(b.disabled)return;
+  const s=S[i],k=+b.dataset.k,fb=$('fb');
+  if(k){tries++;fb.textContent=s.f[k];fb.className='fb show bad';b.classList.add('no');b.disabled=true;return}
+  b.classList.add('yes');card.querySelectorAll('.opt').forEach(x=>x.disabled=true);
+  const g=tries===0?3:tries===1?1:0;pts+=g;$('pts').textContent=pts;
+  fb.textContent=(g===3?'+3 poeng. ':g===1?'+1 poeng. ':'0 poeng denne gangen. ')+s.f[0];fb.className='fb show good';
+  $('tip').hidden=false;$('next').classList.add('show');$('next').focus({preventScroll:true});
+  place(s.slot,fillFor(i));$('prog').style.width=((i+1)/S.length*100)+'%';
+}
+function place(slot,html){
+  const el=$('s-'+slot);el.innerHTML=html;
+  if(slot==='vinkel'){el.classList.add('on');return}
+  el.classList.remove('empty');el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),900);
+}
+function end(){
+  const q=pts/MAX,rank=q>=.85?'Redaktør':q>=.55?'Journalist':'Praktikant';
+  const sv=q>=.85?'Du tar gode valg. Neste steg er å gjøre det selv, med en ekte person.':q>=.55?'Stødig. Se igjen på stegene der du bommet, de reglene er verdt å kunne.':'Du har en vei å gå. Spill en gang til og les tipsene nøye.';
+  const others=P.filter(x=>x!==p).map(x=>x.fornavn).join(' eller ');
+  card.innerHTML=`<p class="step">Portrett av ${p.navn} · ${pts} av ${MAX} poeng</p><h2>Du er</h2><p class="rank">${rank}</p><p>${sv} Prøv gjerne ${others} også, og se om du kjenner igjen de samme grepene.</p><h2 style="font-size:22px;margin-top:22px">Din tur: sjekkliste</h2><ol class="check"><li>Velg en person du blir nysgjerrig på, og finn én skarp vinkel.</li><li>Lag åpne spørsmål, men følg det personen sier.</li><li>Noter det du ser og hører, ikke bare svarene.</li><li>Tittel og ingress: sant, kort og lokkende. Fortell hvorfor nå.</li><li>Start brødteksten med en scene. Vis, ikke fortell.</li><li>Bruk sitater som viser personen, fakta i faktaboksen.</li><li>Slutt med en ring tilbake til starten, ikke en moral.</li><li>La personen sjekke sitatene sine før du publiserer.</li></ol><button class="next show" id="test">Ta testen</button><button class="ghost" id="again">Velg ny person</button><button class="ghost" id="same">Samme person igjen</button>`;
+  $('test').addEventListener('click',testStart);
+  $('prog').style.width='100%';
+  $('again').addEventListener('click',()=>{clear();choose()});
+  $('same').addEventListener('click',()=>{clear();i=0;pts=0;$('pts').textContent=0;render()});
+}
+function clear(){
+  document.querySelectorAll('.slot').forEach(s=>{s.classList.add('empty');s.textContent='x'});
+  $('s-vinkel').classList.remove('on');
+}
+choose();
+}
+</script>
+</body>
+</html>
