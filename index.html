@@ -5,94 +5,75 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Læringsspill</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;700;800&display=swap" rel="stylesheet">
 <style>
-:root{color-scheme:light;--bg:#f7f6f2;--ink:#17181c;--muted:#5d5f68;--line:#17181c}
+:root{color-scheme:light dark;--bg:light-dark(#fafaf7,#111216);--ink:light-dark(#141519,#f1f0ec);--muted:light-dark(#5f616b,#a4a6b0);--card:light-dark(#ffffff,#1b1c22);--line:light-dark(#e4e2dc,#2c2e36);--acc:#e2462f}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
 *{box-sizing:border-box;min-width:0}
-body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 Nunito,system-ui,sans-serif}
-.wrap{max-width:1040px;margin:0 auto;padding:clamp(28px,6vw,72px) max(5vw,18px)}
-header{border-bottom:3px solid var(--line);padding-bottom:28px;margin-bottom:36px}
-h1{font-family:Fraunces,Georgia,serif;font-weight:800;font-size:clamp(40px,7vw,68px);line-height:1.02;margin:0}
-.lead{max-width:60ch;color:var(--muted);margin:14px 0 0;font-size:18px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:24px}
-.card{display:flex;flex-direction:column;text-decoration:none;color:inherit;background:#fff;border:3px solid var(--line);border-radius:8px;box-shadow:6px 6px 0 var(--line);overflow:hidden;transition:transform .12s,box-shadow .12s}
-.card:hover,.card:focus-visible{transform:translate(-2px,-2px);box-shadow:8px 8px 0 var(--line);outline:none}
-.thumb{height:150px;display:grid;place-items:center;border-bottom:3px solid var(--line);font-family:Fraunces,Georgia,serif;font-weight:800;font-size:34px;text-align:center;padding:10px}
-.t1{background:repeating-conic-gradient(from 0deg at 50% 70%,#ffd23f 0 9deg,#ffc414 9deg 18deg);color:#fff;-webkit-text-stroke:1.5px #111;text-shadow:3px 3px 0 #e63b2e}
-.t2{background:#1f3f99;color:#fff}
-.t3{background:#17181c;color:#f5b301}
-.t4{background:#f3efe4;color:#17181c;font-family:Georgia,serif;font-style:italic;background-image:repeating-linear-gradient(#0000 0 22px,#0001 22px 23px)}
-.t5{background:linear-gradient(#e23d3d 0 33%,#2f6fdb 33% 66%,#f0b400 66%);color:#fff;text-shadow:0 2px 0 #0005}
-.body{padding:16px 18px 20px;display:flex;flex-direction:column;gap:6px;flex:1}
-.tags{display:flex;flex-wrap:wrap;gap:6px}
-.tags span{font-size:13px;font-weight:800;border:2px solid var(--line);border-radius:999px;padding:1px 10px}
-.card h2{font-family:Fraunces,Georgia,serif;font-size:24px;margin:4px 0 0;line-height:1.15}
-.card p{margin:0;color:var(--muted)}
-.go{margin-top:auto;padding-top:10px;font-weight:800}
-footer{margin-top:52px;border-top:2px solid #0002;padding-top:18px;color:var(--muted);font-size:15px;max-width:75ch}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 "Schibsted Grotesk",system-ui,sans-serif}
+.wrap{max-width:1120px;margin:0 auto;padding:0 max(5vw,18px)}
+.top{padding:22px 0;display:flex;justify-content:space-between;gap:12px;font-size:15px;color:var(--muted);border-bottom:1px solid var(--line)}
+.top b{color:var(--ink);font-weight:700}
+.hero{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:clamp(28px,5vw,72px);padding:clamp(40px,7vw,88px) 0 clamp(36px,5vw,56px)}
+h1{font-weight:800;font-size:clamp(44px,7vw,76px);line-height:1;letter-spacing:-.035em;margin:0 0 22px}
+h1 span{color:var(--acc)}
+.hero p{margin:0 0 14px;max-width:58ch}.hero p a{color:inherit;font-weight:700;text-decoration-color:var(--acc);text-decoration-thickness:2px;text-underline-offset:3px}
+.facts{list-style:none;margin:0;padding:0;border-top:2px solid var(--ink);align-self:start}
+.facts li{padding:14px 0;border-bottom:1px solid var(--line)}
+.facts b{display:block;font-size:14px;font-weight:700;color:var(--muted);margin-bottom:2px}
+.facts a{color:inherit;font-weight:700;overflow-wrap:anywhere}
+h2{font-size:15px;font-weight:700;color:var(--muted);margin:0 0 16px;display:flex;justify-content:space-between;gap:10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:18px;margin-bottom:clamp(48px,7vw,88px)}
+.g{display:flex;flex-direction:column;text-decoration:none;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;transition:transform .15s,box-shadow .15s}
+.g:hover,.g:focus-visible{transform:translateY(-3px);box-shadow:0 12px 28px -12px #0004;outline:none}
+.g:focus-visible{box-shadow:0 0 0 3px var(--acc)}
+.th{aspect-ratio:4/3;display:grid;place-items:center;padding:12px;color:#fff;font-weight:800;font-size:clamp(20px,2.2vw,24px);line-height:1.05;letter-spacing:-.02em;text-align:center;overflow-wrap:anywhere;position:relative}
+.th small{position:absolute;left:10px;top:9px;font-size:12px;font-weight:700;letter-spacing:0;background:#0000004d;padding:2px 8px;border-radius:999px}
+.s1{background:#ffc414 repeating-conic-gradient(from 0deg at 50% 75%,#ffd23f 0 10deg,#ffc414 10deg 20deg);color:#141519}
+.s1 small{background:#ffffffb3}
+.s2{background:#2346a8}
+.s3{background:#141519;color:#f5b301}
+.s4{background:#e9e3d4;color:#141519}.s4 small{background:#0000001a}
+.s5{background:linear-gradient(#e23d3d 0 34%,#2f6fdb 34% 67%,#f0b400 67%)}
+.b{padding:12px 14px 14px}
+.b h3{margin:0;font-size:17px;line-height:1.25}
+.b p{margin:4px 0 0;font-size:14px;color:var(--muted);line-height:1.45}
+footer{border-top:1px solid var(--line);padding:22px 0 36px;font-size:14px;color:var(--muted)}
 footer a{color:inherit}
-@media(prefers-reduced-motion:reduce){.card{transition:none}}
+@media(max-width:760px){.hero{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:460px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.b p{display:none}.top span:last-child{display:none}}
+@media(prefers-reduced-motion:reduce){.g{transition:none}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <h1>Læringsspill</h1>
-    <p class="lead">Små spill for språkfagene, laget med KI av Anne Katrine Westbye. Spillene åpnes rett i nettleseren, uten innlogging, på PC og mobil.</p>
-  </header>
+  <div class="top"><span><b>Anne Katrine Westbye</b></span><span>Læringsspill</span></div>
 
+  <section class="hero">
+    <div>
+      <h1>Små spill for <span>klasse</span>rommet</h1>
+      <p>Jeg heter Anne Katrine Westbye og er stipendiat ved OsloMet. I doktorgradsprosjektet mitt, <a href="https://www.oslomet.no/forskning/forskningsprosjekter/ki-stotta-forskriving-ungdomsskolen/">Frå samtale til tekst: KI-støtta førskriving i ungdomsskulen</a>, undersøker jeg hva som skjer når elevene bruker en spørsmålsstyrt chatbot i skrivingen. Før det underviste jeg i norsk, tysk, samfunnsfag og historie i videregående.</p>
+      <p>Her samler jeg små spill som elever kan bruke for å øve på konkrete ting, som kommaregler, hvordan en argumenterende tekst er bygd opp, eller forskjellen på ser og estar i spansk.</p>
+      <p>Spillene er laget sammen med KI-verktøyet Claude. Ideen, det faglige innholdet og kvalitetssikringen er mitt ansvar. Koden og mye av teksten er generert. Jeg har gått gjennom fagstoffet, men ser du noe som er feil eller kunne vært bedre, si gjerne fra.</p>
+    </div>
+    <ul class="facts">
+      <li><b>Bruk</b>Spillene åpnes rett i nettleseren, på PC og mobil. Elevene trenger ikke logge inn, og ingenting om dem sendes noe sted.</li>
+      <li><b>I undervisningen</b>Spillene øver mest på å kjenne igjen gode valg. De fungerer best som oppvarming eller repetisjon, sammen med skriving og samtale i klassen.</li>
+      <li><b>Kontakt</b>Har du en idé til et spill, eller vil du ha en workshop på skolen der lærerne lærer å lage og kvalitetssikre slike spill selv? Send meg en e-post: <a href="mailto:annekwe@gmail.com">annekwe@gmail.com</a></li>
+      <li><b>Lisens</b>Du kan bruke, dele og endre spillene fritt etter <a href="https://creativecommons.org/licenses/by/4.0/deed.no">CC BY 4.0</a>, så lenge du oppgir hvor originalen kommer fra.</li>
+    </ul>
+  </section>
+
+  <h2><span>Spillene</span><span>5 spill</span></h2>
   <main class="grid">
-    <a class="card" href="ser-o-estar.html">
-      <div class="thumb t1">¿Ser o estar?</div>
-      <div class="body">
-        <div class="tags"><span>Spansk</span><span>Nivå 1 og 2</span></div>
-        <h2>¿Ser o estar?</h2>
-        <p>Velg riktig verb og riktig bøyd form. På nivå 1 bygger elevene en tegneseriefigur, og på nivå 2 løser de et tyveri.</p>
-        <span class="go">Spill</span>
-      </div>
-    </a>
-    <a class="card" href="kommajakt.html">
-      <div class="thumb t2">Kommajakt</div>
-      <div class="body">
-        <div class="tags"><span>Norsk</span><span>Kommaregler</span></div>
-        <h2>Kommajakt</h2>
-        <p>Sett kommaene der de skal stå. Reglene er kontrollert mot Språkrådets kommaregler.</p>
-        <span class="go">Spill</span>
-      </div>
-    </a>
-    <a class="card" href="kommadetektiv.html">
-      <div class="thumb t3">Kommadetektiven</div>
-      <div class="body">
-        <div class="tags"><span>Norsk</span><span>Kommaregler</span></div>
-        <h2>Kommadetektiven</h2>
-        <p>Øv på kommaregler. Reglene er kontrollert mot Språkrådets kommaregler.</p>
-        <span class="go">Spill</span>
-      </div>
-    </a>
-    <a class="card" href="profilartikkel-spill.html">
-      <div class="thumb t4">Redaksjonen</div>
-      <div class="body">
-        <div class="tags"><span>Norsk</span><span>Profilartikkel</span></div>
-        <h2>Redaksjonen</h2>
-        <p>Eleven er journalist i skoleavisa og bygger en profilartikkel steg for steg, fra vinkel og intervjuspørsmål til ingress, sitater og avslutning.</p>
-        <span class="go">Spill</span>
-      </div>
-    </a>
-    <a class="card" href="argumenttarnet.html">
-      <div class="thumb t5">Argumenttårnet</div>
-      <div class="body">
-        <div class="tags"><span>Norsk</span><span>Argumenterende tekst</span></div>
-        <h2>Argumenttårnet</h2>
-        <p>Påstand, begrunnelse og eksempel. Fire nivåer, fra å sortere setninger til å skrive sitt eget argument.</p>
-        <span class="go">Spill</span>
-      </div>
-    </a>
+    <a class="g" href="argumenttarnet.html"><div class="th s5"><small>Norsk</small>Argument&shy;tårnet</div><div class="b"><h3>Argumenttårnet</h3><p>Påstand, begrunnelse og eksempel. Idé: Alfred.</p></div></a>
+    <a class="g" href="profilartikkel-spill.html"><div class="th s4"><small>Norsk</small>Redaksjonen</div><div class="b"><h3>Redaksjonen</h3><p>Bygg en profilartikkel steg for steg. Idé: Alfred.</p></div></a>
+    <a class="g" href="kommajakt.html"><div class="th s2"><small>Norsk</small>Kommajakt</div><div class="b"><h3>Kommajakt</h3><p>Sett kommaene der de skal stå.</p></div></a>
+    <a class="g" href="kommadetektiv.html"><div class="th s3"><small>Norsk</small>Komma&shy;detektiven</div><div class="b"><h3>Kommadetektiven</h3><p>Øv på kommaregler.</p></div></a>
+    <a class="g" href="ser-o-estar.html"><div class="th s1"><small>Spansk</small>¿Ser o estar?</div><div class="b"><h3>¿Ser o estar?</h3><p>Riktig verb og riktig bøyd form. Spansk nivå 1 og 2.</p></div></a>
   </main>
 
-  <footer>
-    Laget av Anne Katrine Westbye med Claude (Anthropic), 2026. Spillene kan brukes, deles og endres fritt etter
-    <a href="https://creativecommons.org/licenses/by/4.0/deed.no">CC BY 4.0</a>, så lenge du oppgir hvor originalen kommer fra.
-  </footer>
+  <footer>Anne Katrine Westbye, 2026. Spillene er laget med Claude (Anthropic) og publisert under <a href="https://creativecommons.org/licenses/by/4.0/deed.no">CC BY 4.0</a>.</footer>
 </div>
 </body>
 </html>
