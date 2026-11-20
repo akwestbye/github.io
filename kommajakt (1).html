@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<!--
+  Kommajakt
+  Laget av Anne Katrine Westbye med Claude (Anthropic), november 2026.
+  Idé, didaktisk opplegg og kvalitetssikring: Anne Katrine Westbye. Kode, setninger og forklaringer: generert med Claude.
+  Lisens: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/deed.no).
+  Du kan fritt bruke, dele og endre spillet så lenge du oppgir hvor originalen kommer fra.
+  Hvis du endrer spillet (også med KI): behold denne merknaden og kredittlinja nederst på siden,
+  og skriv inn hva du har endret, f.eks. «Basert på Kommajakt av Anne Katrine Westbye (2026), CC BY 4.0. Endret av [navn]: [hva].»
+-->
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kommajakt</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg1:#1d1240; --bg2:#3a1c6b; --card:#fffaf0; --ink:#1f1633;
+    --accent:#ff5c8a; --gold:#ffc83d; --green:#2bb673; --red:#e5484d; --amber:#f59e0b; --muted:#6b6385;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%;}
+  body{
+    font-family:'Nunito',system-ui,sans-serif;color:var(--ink);
+    background:radial-gradient(1200px 600px at 20% -10%, #5b2a9e 0%, transparent 60%),
+               radial-gradient(900px 500px at 110% 110%, #a12a6b 0%, transparent 55%),
+               linear-gradient(160deg,var(--bg1),var(--bg2));
+    min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;
+  }
+  #fx{position:fixed;inset:0;pointer-events:none;z-index:50}
+  .wrap{width:100%;max-width:820px;position:relative}
+  .card{background:var(--card);border-radius:28px;padding:32px;box-shadow:0 20px 60px rgba(0,0,0,.35), 0 0 0 6px rgba(255,255,255,.06);position:relative}
+  h1{font-family:'Fredoka',sans-serif;font-size:clamp(44px,9vw,76px);margin:0;line-height:.95;letter-spacing:-1px}
+  h1 .c{color:var(--accent);display:inline-block;animation:wob 2.4s ease-in-out infinite}
+  @keyframes wob{0%,100%{transform:rotate(-8deg) translateY(0)}50%{transform:rotate(10deg) translateY(-6px)}}
+  .tag{font-weight:800;color:var(--muted);margin:10px 0 22px;font-size:18px}
+  .how{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:0 0 26px}
+  .how div{background:#fff;border:2px solid #efe6d6;border-radius:16px;padding:14px;font-size:15px}
+  .how b{font-family:'Fredoka';font-size:18px;display:block;margin-bottom:4px}
+  .btn{font-family:'Fredoka',sans-serif;font-size:22px;border:0;border-radius:16px;padding:14px 28px;cursor:pointer;
+    background:var(--accent);color:#fff;box-shadow:0 6px 0 #c23a64;transition:transform .08s, box-shadow .08s}
+  .btn:active{transform:translateY(4px);box-shadow:0 2px 0 #c23a64}
+  .btn.alt{background:#2a1f45;box-shadow:0 6px 0 #120b22}
+  .btn.alt:active{box-shadow:0 2px 0 #120b22}
+  .btn:disabled{opacity:.5;cursor:default}
+  .hud{display:flex;justify-content:space-between;align-items:center;color:#fff;margin-bottom:14px;font-family:'Fredoka';font-size:20px;gap:10px;flex-wrap:wrap}
+  .hearts span{display:inline-block;transition:transform .3s, opacity .3s}
+  .hearts span.lost{opacity:.18;transform:scale(.7) rotate(-20deg);filter:grayscale(1)}
+  .streak{background:rgba(255,255,255,.12);padding:4px 12px;border-radius:999px}
+  .streak.hot{background:linear-gradient(90deg,#ff7a18,#ff3d6e);animation:pulse .6s ease-in-out infinite alternate}
+  @keyframes pulse{to{transform:scale(1.08)}}
+  .score{font-size:26px}
+  .meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-weight:800;color:var(--muted);font-size:14px;text-transform:uppercase;letter-spacing:.06em}
+  .lvl{color:#fff;padding:3px 10px;border-radius:999px;font-size:12px}
+  .lvl.l1{background:var(--green)} .lvl.l2{background:var(--amber)} .lvl.l3{background:var(--red)}
+  .timer{height:10px;background:#efe6d6;border-radius:999px;overflow:hidden;margin-bottom:26px}
+  .timer i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--green),var(--gold));border-radius:999px}
+  .timer i.low{background:linear-gradient(90deg,var(--red),var(--amber))}
+  .sentence{font-size:clamp(24px,4.4vw,36px);font-weight:800;line-height:1.9;display:flex;flex-wrap:wrap;align-items:baseline;min-height:120px;margin-bottom:24px}
+  .w{white-space:nowrap}
+  .gap{position:relative;display:inline-flex;align-items:center;justify-content:center;width:30px;height:1.4em;cursor:pointer;border:0;background:transparent;padding:0;font:inherit;color:inherit;vertical-align:baseline}
+  .gap::before{content:"";width:8px;height:8px;border-radius:50%;background:#d9cdb8;transition:all .15s}
+  .gap:hover::before{background:var(--accent);transform:scale(1.4)}
+  .gap.on::before{display:none}
+  .gap .cm{display:none;color:var(--accent);font-size:1.2em;line-height:1;transform-origin:bottom center;position:relative;left:-9px}
+  .gap.on .cm{display:inline-block;animation:plop .25s cubic-bezier(.3,1.8,.5,1)}
+  @keyframes plop{from{transform:scale(0) rotate(-40deg)}to{transform:scale(1)}}
+  .gap.locked{cursor:default}
+  .gap.locked::before{display:none}
+  .gap.ok .cm{display:inline-block;color:var(--green)}
+  .gap.bad .cm{display:inline-block;color:var(--red);text-decoration:line-through;opacity:.8}
+  .gap.miss .cm{display:inline-block;color:var(--amber);opacity:.9;animation:blink 1s ease-in-out infinite}
+  @keyframes blink{50%{opacity:.25}}
+  .actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  .hint{color:var(--muted);font-size:14px;font-weight:700}
+  .shake{animation:shake .45s}
+  @keyframes shake{20%{transform:translateX(-12px)}40%{transform:translateX(10px)}60%{transform:translateX(-6px)}80%{transform:translateX(4px)}}
+  .fb{margin-top:22px;border-radius:18px;padding:18px 20px;display:none}
+  .fb.show{display:block;animation:rise .3s ease-out}
+  @keyframes rise{from{opacity:0;transform:translateY(10px)}}
+  .fb.good{background:#e6f7ee;border:2px solid #b6e6cb}
+  .fb.wrong{background:#fdecec;border:2px solid #f6c1c3}
+  .fb h3{font-family:'Fredoka';margin:0 0 6px;font-size:24px}
+  .fb .rule{background:#fff;border-radius:12px;padding:10px 14px;margin-top:10px;font-size:16px}
+  .fb .rule b{font-family:'Fredoka';color:var(--accent)}
+  .legend{font-size:13px;color:var(--muted);margin-top:8px;font-weight:700}
+  .legend span{margin-right:12px}
+  .special{font-size:20px;font-weight:800;margin-top:8px}
+  .pts{position:absolute;right:30px;top:20px;font-family:'Fredoka';font-size:34px;color:var(--green);opacity:0;pointer-events:none}
+  .pts.go{animation:float 1.1s ease-out}
+  @keyframes float{0%{opacity:0;transform:translateY(20px) scale(.6)}20%{opacity:1;transform:translateY(0) scale(1.15)}100%{opacity:0;transform:translateY(-50px)}}
+  .big{font-family:'Fredoka';font-size:72px;margin:6px 0;color:var(--accent)}
+  .misses{margin:18px 0 26px;display:grid;gap:10px}
+  .misses div{background:#fff;border:2px solid #efe6d6;border-radius:14px;padding:12px 14px}
+  .misses b{font-family:'Fredoka';font-size:18px}
+  .mute{position:absolute;top:-46px;right:0;background:rgba(255,255,255,.12);color:#fff;border:0;border-radius:999px;padding:6px 12px;cursor:pointer;font-size:16px}
+  .hidden{display:none!important}
+  @media (max-width:560px){.card{padding:22px}.gap{width:24px}}
+
+  .credit{margin:22px auto 0;max-width:820px;color:rgba(255,255,255,.72);font-size:13px;line-height:1.55;text-align:center}
+  .credit a{color:#fff}
+  .credit b{color:#fff}
+</style>
+</head>
+<body>
+<canvas id="fx"></canvas>
+<div class="wrap">
+  <button class="mute" id="mute" title="Lyd av/på">🔊</button>
+
+  <!-- START -->
+  <section id="start" class="card">
+    <h1>Komma<span class="c">,</span>jakt</h1>
+    <p class="tag">Ett komma kan redde bestemor. Finn ut hvor de skal stå før tida renner ut.</p>
+    <div class="how">
+      <div><b>👆 Trykk mellom ordene</b>for å sette inn eller fjerne et komma.</div>
+      <div><b>⏱ Vær rask</b>Jo raskere du svarer riktig, jo flere poeng.</div>
+      <div><b>🔥 Hold rekka</b>Riktige svar på rad gir opptil 4× poeng.</div>
+      <div><b>❤️ Tre liv</b>Feil svar koster et hjerte. Noen setninger skal ikke ha komma i det hele tatt!</div>
+    </div>
+    <button class="btn" id="go">Start jakten</button>
+    <span class="hint" id="best" style="margin-left:14px"></span>
+  </section>
+
+  <!-- GAME -->
+  <section id="game" class="hidden">
+    <div class="hud">
+      <div class="hearts" id="hearts"><span>❤️</span><span>❤️</span><span>❤️</span></div>
+      <div class="streak" id="streak">🔥 ×1</div>
+      <div class="score" id="score">0</div>
+    </div>
+    <div class="card" id="board">
+      <div class="pts" id="pts">+0</div>
+      <div class="meta"><span id="count">Setning 1 av 12</span><span class="lvl l1" id="lvl">Lett</span></div>
+      <div class="timer"><i id="bar"></i></div>
+      <div class="sentence" id="sentence"></div>
+      <div class="actions">
+        <button class="btn" id="check">Sjekk ✓</button>
+        <span class="hint" id="kbd">eller trykk Enter</span>
+      </div>
+      <div class="fb" id="fb"></div>
+    </div>
+  </section>
+
+  <!-- END -->
+  <section id="end" class="card hidden">
+    <h1 id="endTitle">Ferdig!</h1>
+    <div class="big" id="final">0</div>
+    <p class="tag" id="endSub"></p>
+    <div id="missWrap">
+      <h3 style="font-family:Fredoka;margin:0">Øv mer på dette:</h3>
+      <div class="misses" id="misses"></div>
+    </div>
+    <button class="btn" id="again">Spill igjen</button>
+
+  <footer class="credit">
+    <b>Kommajakt</b> er laget av Anne Katrine Westbye med Claude (Anthropic), november 2026.<br>
+    Idé, didaktisk opplegg og kvalitetssikring: Anne Katrine Westbye. Kode, setninger og forklaringer: generert med Claude.<br>
+    Reglene er kontrollert mot Språkrådets kommaregler. Reglene om tiltale og ja/nei og om komma foran leddsetninger er i tillegg kontrollert mot Ordnett og Nynorsksenteret.<br>
+    Lisens: <a href="https://creativecommons.org/licenses/by/4.0/deed.no" target="_blank" rel="noopener">CC BY 4.0</a>. Du kan fritt bruke, dele og endre spillet så lenge du oppgir hvor originalen kommer fra, for eksempel:
+    «Basert på Kommajakt av Anne Katrine Westbye (2026), CC BY 4.0.»
+  </footer>
+</div>
+
+<script>
+const RULES = {
+  hs:   {name:"Komma mellom helsetninger", text:"Sett komma mellom to helsetninger som er bundet sammen med og, eller eller for. Foran «men» skal det alltid stå komma."},
+  men:  {name:"Komma foran «men»", text:"Det skal alltid stå komma foran «men», også når det ikke kommer en hel setning etter."},
+  ls:   {name:"Leddsetning først", text:"Når setningen starter med en leddsetning (når, hvis, fordi, da, mens osv.), setter du komma etter leddsetningen."},
+  inn:  {name:"Innskutt leddsetning", text:"En leddsetning som er skutt inn midt i en helsetning, får komma etter seg."},
+  ram:  {name:"Oppramsing", text:"Sett komma mellom leddene i en oppramsing, men ikke foran det siste «og» eller «eller»."},
+  tilt: {name:"Tiltale og ja/nei", text:"Sett komma etter ja, nei og hei, og skill ut navnet på den du snakker til med komma."},
+  ingen:{name:"Ingen komma", text:"Ikke alle setninger skal ha komma. Komma der det ikke skal være, er også feil."}
+};
+
+const SENTENCES = [
+  // Lett
+  {t:"Mamma lagde middag, og pappa vasket opp.", r:["hs"], l:1},
+  {t:"Jeg ville gå på kino, men Ola ville spille fotball.", r:["hs"], l:1},
+  {t:"Vi kjøpte melk, brød, egg og ost.", r:["ram"], l:1},
+  {t:"Ja, jeg kommer straks.", r:["tilt"], l:1},
+  {t:"Når klokka ringer, må alle gå inn.", r:["ls"], l:1},
+  {t:"Kari, kan du lukke vinduet?", r:["tilt"], l:1},
+  {t:"Vi tok på oss lue, for det var kaldt ute.", r:["hs"], l:1},
+  // Middels
+  {t:"Hvis du er sulten, kan du ta en brødskive.", r:["ls"], l:2},
+  {t:"Hun kan spille gitar, piano, fiolin og trommer.", r:["ram"], l:2},
+  {t:"Jeg går hjem når klokka ringer.", r:["ingen"], l:2, why:"Leddsetningen («når klokka ringer») kommer etter helsetningen. Da skal det ikke være komma."},
+  {t:"Vi spiste pizza og drakk brus.", r:["ingen"], l:2, why:"Dette er én helsetning med ett subjekt («vi»). «Og» binder sammen to verb, ikke to helsetninger."},
+  {t:"Fordi det var glatt, falt jeg på vei hjem.", r:["ls"], l:2},
+  {t:"Hun likte boka, men ikke filmen.", r:["men"], l:2},
+  {t:"Nei, det er ikke din tur nå.", r:["tilt"], l:2},
+  // Vanskelig
+  {t:"Gutten som vant konkurransen, fikk en pokal.", r:["inn"], l:3},
+  {t:"Boka som jeg lånte av deg, var veldig spennende.", r:["inn"], l:3},
+  {t:"Alle som har levert, kan gå ut.", r:["inn"], l:3},
+  {t:"Hun sa at hun var trøtt.", r:["ingen"], l:3, why:"At-setninger som kommer etter verb som «sa», «tror» og «vet», får ikke komma foran seg."},
+  {t:"Jeg tror at det blir sol i morgen.", r:["ingen"], l:3, why:"At-setningen er en del av det du tror. Den skal ikke skilles ut med komma."},
+  {t:"Da vi kom hjem, var huset tomt, og katten hadde forsvunnet.", r:["ls","hs"], l:3, why:"To regler i én setning: komma etter leddsetningen som står først, og komma mellom de to helsetningene som er bundet sammen med «og»."},
+  {t:"Mens vi ventet på bussen, begynte det å snø, men ingen klaget.", r:["ls","hs"], l:3, why:"Komma etter leddsetningen som starter setningen, og komma foran «men» mellom to helsetninger."},
+  {t:"Takk for maten, mamma!", r:["tilt"], l:3}
+];
+const BESTEMOR = {t:"Vi skal spise, bestemor!", r:["tilt"], l:2, special:true};
+
+const LVLNAME = {1:"Lett",2:"Middels",3:"Vanskelig"};
+const PER_LEVEL = 4, TIME = 25;
+const $ = id => document.getElementById(id);
+
+let deck=[], idx=0, score=0, lives=3, streak=0, placed=new Set(), answer=new Set(), words=[];
+let tStart=0, raf=null, locked=false, misses={}, correctCount=0;
+let muted=false, actx=null;
+
+// ---------- lyd ----------
+function beep(freqs, dur=0.09, type="square", vol=0.05){
+  if(muted) return;
+  try{
+    actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+    let t = actx.currentTime;
+    freqs.forEach((f,i)=>{
+      const o=actx.createOscillator(), g=actx.createGain();
+      o.type=type; o.frequency.value=f; g.gain.value=vol;
+      g.gain.exponentialRampToValueAtTime(0.0001, t+i*dur+dur);
+      o.connect(g); g.connect(actx.destination);
+      o.start(t+i*dur); o.stop(t+i*dur+dur+0.02);
+    });
+  }catch(e){}
+}
+$("mute").onclick=()=>{muted=!muted;$("mute").textContent=muted?"🔇":"🔊";};
+
+// ---------- konfetti ----------
+const cv=$("fx"), cx=cv.getContext("2d"); let parts=[];
+function resize(){cv.width=innerWidth;cv.height=innerHeight;} resize(); addEventListener("resize",resize);
+function confetti(n=90){
+  const cols=["#ff5c8a","#ffc83d","#2bb673","#6c8cff","#ffffff"];
+  for(let i=0;i<n;i++) parts.push({x:innerWidth/2,y:innerHeight*0.45,vx:(Math.random()-.5)*16,vy:Math.random()*-14-4,
+    s:Math.random()*8+4,c:cols[i%cols.length],r:Math.random()*6,vr:(Math.random()-.5)*.4,comma:Math.random()<.35,life:120});
+  if(parts.length===n) loop();
+}
+function loop(){
+  cx.clearRect(0,0,cv.width,cv.height);
+  parts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.45;p.vx*=.99;p.r+=p.vr;p.life--;
+    cx.save();cx.translate(p.x,p.y);cx.rotate(p.r);cx.fillStyle=p.c;
+    if(p.comma){cx.font=`800 ${p.s*3}px Nunito`;cx.fillText(",",0,0);} else cx.fillRect(-p.s/2,-p.s/2,p.s,p.s*.6);
+    cx.restore();});
+  parts=parts.filter(p=>p.life>0&&p.y<cv.height+40);
+  if(parts.length) requestAnimationFrame(loop); else cx.clearRect(0,0,cv.width,cv.height);
+}
+
+// ---------- spill ----------
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function buildDeck(){
+  const by=l=>shuffle(SENTENCES.filter(s=>s.l===l));
+  const d1=by(1).slice(0,PER_LEVEL), d2=by(2).slice(0,PER_LEVEL-1), d3=by(3).slice(0,PER_LEVEL);
+  // bestemor kommer alltid med i midtre del
+  d2.splice(Math.floor(Math.random()*PER_LEVEL),0,BESTEMOR);
+  return [...d1,...d2,...d3];
+}
+
+function start(){
+  deck=buildDeck(); idx=0; score=0; lives=3; streak=0; misses={}; correctCount=0;
+  $("start").classList.add("hidden"); $("end").classList.add("hidden"); $("game").classList.remove("hidden");
+  updateHud(); show();
+  beep([523,659,784],0.08,"triangle",0.06);
+}
+
+function show(){
+  const s=deck[idx]; locked=false; placed=new Set(); answer=new Set();
+  words=s.t.split(" ").map((w,i)=>{ if(w.endsWith(",")){answer.add(i); return w.slice(0,-1);} return w; });
+  const el=$("sentence"); el.innerHTML="";
+  words.forEach((w,i)=>{
+    const sp=document.createElement("span"); sp.className="w"; sp.textContent=w; el.appendChild(sp);
+    if(i<words.length-1){
+      const g=document.createElement("button"); g.className="gap"; g.dataset.i=i; g.setAttribute("aria-label","Komma etter "+w);
+      g.innerHTML='<span class="cm">,</span>';
+      g.onclick=()=>toggle(g,i); el.appendChild(g);
+    }
+  });
+  $("count").textContent=`Setning ${idx+1} av ${deck.length}`;
+  const lv=$("lvl"); lv.textContent=LVLNAME[s.l]; lv.className="lvl l"+s.l;
+  $("fb").className="fb"; $("fb").innerHTML="";
+  $("check").textContent="Sjekk ✓"; $("check").onclick=check; $("kbd").textContent="eller trykk Enter";
+  tStart=performance.now(); cancelAnimationFrame(raf); tick();
+}
+
+function toggle(g,i){
+  if(locked) return;
+  if(placed.has(i)){placed.delete(i);g.classList.remove("on");beep([330],0.05,"triangle",0.04);}
+  else{placed.add(i);g.classList.add("on");beep([880],0.05,"triangle",0.05);}
+}
+
+function tick(){
+  const left=Math.max(0,TIME-(performance.now()-tStart)/1000);
+  const bar=$("bar"); bar.style.width=(left/TIME*100)+"%"; bar.classList.toggle("low",left<7);
+  if(left<=0){check(true);return;}
+  raf=requestAnimationFrame(tick);
+}
+
+function check(timeout){
+  if(locked) return; locked=true; cancelAnimationFrame(raf);
+  const s=deck[idx];
+  const left=Math.max(0,TIME-(performance.now()-tStart)/1000);
+  const ok = placed.size===answer.size && [...answer].every(i=>placed.has(i));
+  // marker luker
+  document.querySelectorAll(".gap").forEach(g=>{
+    const i=+g.dataset.i; g.classList.add("locked"); g.classList.remove("on");
+    if(placed.has(i)&&answer.has(i)) g.classList.add("ok");
+    else if(placed.has(i)) g.classList.add("bad");
+    else if(answer.has(i)) g.classList.add("miss");
+  });
+  const fb=$("fb"); let html="";
+  if(ok){
+    streak++; correctCount++;
+    const mult=Math.min(streak,4), bonus=Math.round(left/TIME*100), pts=(100+bonus)*mult;
+    score+=pts;
+    const p=$("pts"); p.textContent="+"+pts; p.classList.remove("go"); void p.offsetWidth; p.classList.add("go");
+    confetti(streak>=3?140:80);
+    beep([659,784,1046],0.07,"triangle",0.06);
+    html+=`<h3>${["Rått!","Kommakonge!","Spot on!","Perfekt!","Helt riktig!"][Math.floor(Math.random()*5)]}</h3>`;
+    if(s.special) html+=`<div class="special">😅 Puh. Bestemor overlevde.</div>`;
+  } else {
+    streak=0; lives--;
+    s.r.forEach(r=>misses[r]=(misses[r]||0)+1);
+    $("board").classList.remove("shake"); void $("board").offsetWidth; $("board").classList.add("shake");
+    beep([220,165],0.14,"sawtooth",0.05);
+    html+=`<h3>${timeout?"⏰ Tida rant ut!":"Ikke helt …"}</h3>`;
+    if(s.special && !placed.has(answer.values().next().value))
+      html+=`<div class="special">😱 Uten komma står det at dere skal <em>spise bestemor</em>. Kommaet redder liv!</div>`;
+    html+=`<div class="legend"><span style="color:var(--green)">, riktig</span><span style="color:var(--red)">, feil</span><span style="color:var(--amber)">, mangler</span></div>`;
+  }
+  const ruleHtml = s.r.map(r=>`<div class="rule"><b>${RULES[r].name}:</b> ${r==="ingen"&&s.why?s.why:RULES[r].text}</div>`).join("");
+  html += (s.why && s.r[0]!=="ingen") ? `<div class="rule"><b>Regel:</b> ${s.why}</div>` : ruleHtml;
+  fb.innerHTML=html; fb.className="fb show "+(ok?"good":"wrong");
+  updateHud();
+  const last = lives<=0 || idx>=deck.length-1;
+  $("check").textContent = last ? "Se resultat →" : "Neste →";
+  $("kbd").textContent="eller trykk Enter";
+  $("check").onclick = ()=> last ? end() : (idx++, show());
+}
+
+function updateHud(){
+  document.querySelectorAll("#hearts span").forEach((h,i)=>h.classList.toggle("lost",i>=lives));
+  const m=Math.min(Math.max(streak,1),4);
+  $("streak").textContent=`🔥 ×${m}`+(streak>=2?`  (${streak} på rad)`:"");
+  $("streak").classList.toggle("hot",streak>=3);
+  $("score").textContent=score;
+}
+
+function end(){
+  $("game").classList.add("hidden"); $("end").classList.remove("hidden");
+  $("final").textContent=score;
+  const survived=lives>0;
+  $("endTitle").textContent = survived ? (correctCount===deck.length?"Feilfritt! 🏆":"Du klarte det!") : "Game over";
+  $("endSub").textContent = `${correctCount} av ${deck.length} riktige` + (survived?"":` (du kom til setning ${idx+1})`);
+  let best=0; try{best=+localStorage.getItem("kommajakt-best")||0; if(score>best){localStorage.setItem("kommajakt-best",score);best=score;$("endSub").textContent+=" · ny rekord!";}}catch(e){}
+  const keys=Object.keys(misses).sort((a,b)=>misses[b]-misses[a]);
+  $("missWrap").classList.toggle("hidden",!keys.length);
+  $("misses").innerHTML=keys.map(k=>`<div><b>${RULES[k].name}</b> (bom ×${misses[k]})<br>${RULES[k].text}</div>`).join("");
+  if(survived) confetti(200);
+  beep(survived?[523,659,784,1046]:[392,330,262],0.12,"triangle",0.06);
+  showBest();
+}
+
+function showBest(){try{const b=+localStorage.getItem("kommajakt-best")||0; $("best").textContent=b?`Rekord: ${b}`:"";}catch(e){}}
+
+document.addEventListener("keydown",e=>{
+  if(e.key==="Enter" && !$("game").classList.contains("hidden")){ e.preventDefault(); $("check").click(); }
+});
+$("go").onclick=start; $("again").onclick=start; showBest();
+</script>
+</body>
+</html>

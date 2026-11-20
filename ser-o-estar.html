@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>¿Ser o estar?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@700&family=Nunito:wght@600;800&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+/* VOICE: tegneserie, nivå 1 lys og sprudlende, nivå 2 noir detektivhefte
+   IDEA: et tegneseriehefte der hver oppgave er en rute og hver replikk en snakkeboble
+   PICTURE: blekkstrek, rasterprikker, hardt lys; noir med persiennelys og konfrontasjonsrekke
+   COLOUR and TYPE: svart blekk, gul, rød; noir i beinhvitt og svart med rød aksent. Bangers, Comic Neue, Special Elite
+   LAYOUT: rute og notatbok øverst, snakkeboble og verbtavle under */
+:root{--paper:#fff8e6;--ink:#111;--panel:#fff;--line:#111;--shadow:#111;--pop:#ffd23f;--red:#e63b2e;--green:#1f9d63;--muted:#4b4b4b;--btn:#fff;--fbg:#d9f4e5;--fbb:#fff0c2;color-scheme:light}
+body.noir{--paper:#0d0e12;--ink:#efe6cf;--panel:#17181e;--line:#efe6cf;--shadow:#e63b2e;--muted:#b3ab9a;--btn:#22242c;--fbg:#12301f;--fbb:#3a2f10;color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--paper) radial-gradient(#00000012 1.2px,transparent 1.5px) 0 0/11px 11px;color:var(--ink);font:16px/1.55 Nunito,system-ui,sans-serif;overflow-x:clip}
+body.noir{background:var(--paper) radial-gradient(#ffffff08 1.2px,transparent 1.5px) 0 0/9px 9px}
+h1,h2,h3{font-family:Bangers,Impact,sans-serif;font-weight:400;letter-spacing:.03em;line-height:1.05;margin:0;text-wrap:balance}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible+span{outline:3px solid var(--red);outline-offset:3px}
+.band{padding:clamp(22px,4vw,52px) max(5vw,16px)}
+.wrap{max-width:1180px;margin:0 auto}
+.panel{background:var(--panel);border:3px solid var(--line);box-shadow:6px 6px 0 var(--shadow);border-radius:6px}
+/* forside */
+.cover{background:repeating-conic-gradient(from 0deg at 50% 70%,#ffd23f 0 9deg,#ffc414 9deg 18deg);border-bottom:4px solid #111;text-align:center;padding-bottom:70px}
+.cover h1{font-size:clamp(60px,12vw,132px);color:#fff;-webkit-text-stroke:3px #111;text-shadow:7px 7px 0 #e63b2e;transform:rotate(-2deg)}
+.cover p{display:inline-block;max-width:58ch;background:#fff;border:3px solid #111;box-shadow:5px 5px 0 #111;padding:10px 18px;margin:18px 0 0;font-weight:800;color:#111}
+.levels{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:26px;margin-top:-50px}
+.lvl{padding:0;text-align:left;overflow:hidden;transition:transform .15s}
+.lvl:hover{transform:translate(-2px,-3px) rotate(-.4deg)}
+.lvl svg{display:block;width:100%;aspect-ratio:16/9;border-bottom:3px solid var(--line)}
+.lvl div{padding:14px 20px 20px}
+.lvl h2{font-size:34px}
+.lvl p{margin:4px 0 0;color:var(--muted)}
+.lvl.n{--panel:#17181e;--line:#efe6cf;--shadow:#e63b2e;--muted:#b3ab9a;color:#efe6cf}
+.lvl.n h2{font-family:"Special Elite",monospace;font-size:28px}
+.opts{display:flex;flex-wrap:wrap;gap:14px 28px;align-items:center;margin-top:30px;padding:16px 20px}
+.seg{display:inline-flex;border:3px solid #111;border-radius:999px;overflow:hidden}
+.seg button{border:0;background:#fff;padding:9px 18px;min-height:44px;font-weight:800}
+.seg button[aria-pressed=true]{background:#111;color:#ffd23f}
+.chk{display:flex;gap:10px;align-items:center;font-weight:800;min-height:44px}
+.chk input{width:22px;height:22px;accent-color:#e63b2e}
+.note{color:var(--muted);font-size:15px;margin:18px 0 0;max-width:78ch}
+/* spill */
+.hud{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;padding:10px max(5vw,16px);background:#111;color:#fff;border-bottom:4px solid var(--pop)}
+body.noir .hud{background:#000;border-color:var(--red)}
+.hud h2{font-size:28px;margin-right:auto;color:var(--pop)}
+body.noir .hud h2{font-family:"Special Elite",monospace;font-size:22px;color:#efe6cf}
+.pill{background:#ffffff1f;border-radius:999px;padding:5px 14px;font-weight:800;white-space:nowrap}
+.pill.on{background:var(--red);color:#fff}
+.hud button{background:transparent;border:2px solid #ffffff80;color:#fff;border-radius:999px;padding:5px 14px;min-height:40px;font-weight:800}
+.prog{height:8px;background:#0003}.prog i{display:block;height:100%;background:var(--red);transition:width .4s}
+#playArea{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(0,1fr);grid-template-areas:"stage side" "bubble bubble" "ctrl ctrl";column-gap:24px;margin-top:22px;align-items:start}.stage{grid-area:stage}.side{grid-area:side}.bubble{grid-area:bubble}.ctrl{grid-area:ctrl}
+.stage{position:relative;overflow:hidden;padding:0}
+.stage svg{display:block;width:100%;aspect-ratio:16/9}
+.cap{position:absolute;left:10px;top:10px;background:var(--pop);color:#111;border:2.5px solid #111;padding:2px 12px;font-family:Bangers,sans-serif;font-size:22px;letter-spacing:.04em;display:flex;align-items:center;gap:8px;max-width:calc(100% - 20px)}
+body.noir .cap{font-family:"Special Elite",monospace;font-size:16px;letter-spacing:0;padding:4px 12px}
+.flag{display:inline-block;width:24px;height:16px;border:2px solid #111;background:linear-gradient(#c60b1e 25%,#ffc400 25% 75%,#c60b1e 75%)}
+.pop{animation:pop .45s ease}
+@keyframes pop{0%{transform:scale(.985);filter:brightness(1.3)}100%{transform:none;filter:none}}
+.side{padding:16px 20px}
+.side h3{font-size:28px;margin-bottom:6px}
+body.noir .side{font-family:"Special Elite",monospace}
+body.noir .side h3{font-family:"Special Elite",monospace;font-size:22px;border-bottom:2px solid var(--line);padding-bottom:6px}
+.side h4{margin:14px 0 4px;font-size:14px;color:var(--muted);font-weight:800}
+.side ul{list-style:none;padding:0;margin:0}
+.side li{padding:6px 0;border-bottom:2px dotted #8884}
+.side li b{color:var(--red)}
+.side .empty{color:var(--muted);margin:6px 0}
+.clue{color:var(--red);font-weight:800}.clue.unk{color:var(--muted);font-weight:400}
+.bubble{position:relative;background:#fff;color:#111;border:3px solid #111;border-radius:34px;padding:18px clamp(18px,3vw,30px);margin:30px 0 22px;box-shadow:5px 5px 0 var(--shadow)}
+.bubble::before{content:"";position:absolute;left:16%;top:-30px;border-left:18px solid transparent;border-right:6px solid transparent;border-bottom:30px solid #111}
+.bubble::after{content:"";position:absolute;left:calc(16% + 5px);top:-22px;border-left:12px solid transparent;border-right:3px solid transparent;border-bottom:23px solid #fff}
+.sent{font-family:"Comic Neue",Nunito,sans-serif;font-size:clamp(24px,3.3vw,34px);font-weight:700;margin:0;line-height:1.25}
+.q2{display:block;font-size:.62em;color:#555;margin-top:4px}
+.gloss{margin:10px 0 0;font-size:15px;color:#555}
+.gloss b{color:#111}
+.gap{display:inline-block;min-width:3em;border-bottom:4px dashed #e63b2e;text-align:center;color:#999}
+.gap.ok{color:#1f9d63;border:0;background:#ffd23f;padding:0 6px;transform:rotate(-2deg)}
+.ctrl{padding:16px clamp(14px,3vw,26px);margin-bottom:40px}
+.turn{display:inline-block;border:2.5px solid #111;padding:2px 12px;color:#fff;font-family:Bangers,sans-serif;font-size:20px;letter-spacing:.04em;margin-bottom:10px}
+.row{display:grid;grid-template-columns:72px minmax(0,1fr);gap:10px;align-items:center;margin-bottom:12px}
+.vb{font-family:Bangers,sans-serif;font-size:28px;letter-spacing:.04em}
+.forms{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px}
+.forms.one{grid-template-columns:minmax(0,1fr) minmax(0,5fr)}
+.f,.opt{background:var(--btn);color:var(--ink);border:2.5px solid var(--line);box-shadow:3px 3px 0 var(--line);border-radius:8px;min-height:54px;padding:5px 4px;font-weight:800;font-size:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:transform .08s,box-shadow .08s}
+body.noir .f,body.noir .opt{box-shadow:3px 3px 0 #000}
+.f small{font-size:13px;font-weight:600;color:var(--muted);line-height:1.1}
+.f:hover:not(:disabled),.opt:hover:not(:disabled){background:var(--pop);color:#111}
+.f:hover:not(:disabled) small{color:#333}
+.f:active:not(:disabled),.opt:active:not(:disabled){transform:translate(2px,2px);box-shadow:1px 1px 0 var(--line)}
+.f.good,.opt.good{background:var(--green);color:#fff}.f.good small{color:#fff}
+.f.bad,.opt.bad{background:light-dark(#f8cfcb,#3a1618);border-color:var(--red);opacity:.7;animation:shake .35s;box-shadow:none}
+.f.hint{background:#fff6d0;color:#111;border-color:var(--green);animation:glow .9s infinite alternate}
+.f.hint.good{background:var(--green);color:#fff;animation:none}.f.hint small{color:#555}.f.hint.good small{color:#fff}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@keyframes glow{from{box-shadow:0 0 0 3px #1f9d6380}to{box-shadow:0 0 0 8px #1f9d6320}}
+.mopts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.opt{font-size:18px;padding:12px;text-align:center}
+.fb{margin-top:14px;border:2.5px solid var(--line);border-radius:6px;padding:12px 16px}
+.fb.good{background:var(--fbg)}.fb.bad{background:var(--fbb)}
+.next{margin-top:16px;background:var(--red);color:#fff;border:3px solid #111;box-shadow:4px 4px 0 #111;border-radius:8px;padding:8px 28px;font-family:Bangers,sans-serif;font-size:26px;letter-spacing:.05em;min-height:50px}
+body.noir .next{border-color:#efe6cf;box-shadow:4px 4px 0 #000}
+.next:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #111}
+.next.alt{background:var(--pop);color:#111}.next.plain{background:var(--btn);color:var(--ink)}
+/* konfrontasjon */
+.lineup{padding:0;overflow:hidden;margin-top:16px}
+.lineup svg{display:block;width:100%;aspect-ratio:800/340}
+.sus{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-top:18px}
+.card{padding:10px 14px 14px;text-align:left;display:flex;flex-direction:column;justify-content:flex-start;font-family:"Special Elite",monospace;transition:transform .12s}
+.card h3{font-size:26px;font-family:Bangers,sans-serif;color:var(--pop)}
+.card p{margin:4px 0;font-size:14px;line-height:1.35}
+.card:hover:not(:disabled){transform:translate(-2px,-3px)}
+.card.out{opacity:.35;text-decoration:line-through}
+.card.win{border-color:var(--green);box-shadow:6px 6px 0 var(--green)}
+.clues{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.clues span{border:2px solid var(--red);color:var(--red);padding:4px 12px;font-family:"Special Elite",monospace;transform:rotate(-1deg)}
+.intro{font-family:"Special Elite",monospace;max-width:70ch}
+/* slutt */
+.end{text-align:center}
+.stamp{display:inline-block;border:6px solid var(--red);color:var(--red);font-family:Bangers,sans-serif;font-size:clamp(50px,9vw,96px);letter-spacing:.05em;padding:4px 26px;transform:rotate(-6deg);margin:10px 0 18px}
+.burst{display:inline-block;font-family:Bangers,sans-serif;font-size:clamp(60px,11vw,110px);color:#fff;-webkit-text-stroke:3px #111;text-shadow:6px 6px 0 #e63b2e;transform:rotate(-4deg);margin:6px 0 10px}
+.big{font-family:Bangers,sans-serif;font-size:clamp(48px,8vw,80px);line-height:1;letter-spacing:.04em}
+.stars{font-family:Bangers,sans-serif;font-size:56px;letter-spacing:.1em;color:var(--pop);-webkit-text-stroke:2px #111}
+.stars span{color:#8885}
+.bars{max-width:540px;margin:22px auto;text-align:left;padding:16px 20px}
+.bar{display:grid;grid-template-columns:140px minmax(0,1fr) 34px;gap:10px;align-items:center;margin:9px 0}
+.bar div{height:18px;border:2px solid var(--line);overflow:hidden}.bar i{display:block;height:100%;background:var(--red)}
+.bar b{text-align:right}
+.btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+/* modal */
+.modal{position:fixed;inset:0;background:#000b;display:grid;place-items:center;padding:16px;z-index:9}
+.box{max-width:780px;width:100%;max-height:88vh;overflow:auto;padding:22px clamp(18px,3vw,32px);color:var(--ink)}
+.box h2{font-size:40px;margin-bottom:8px}
+.cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.cols h3{font-size:26px;margin:10px 0 2px}
+.cols ul{margin:0;padding-left:20px}
+table{border-collapse:collapse;width:100%;margin-top:6px}td,th{border-bottom:2px solid #8884;padding:5px 8px;text-align:left}
+[hidden]{display:none!important}
+@media(max-width:860px){#playArea{grid-template-columns:minmax(0,1fr);grid-template-areas:"stage" "bubble" "ctrl" "side"}.side{margin-bottom:40px}.sus{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.levels,.cols,.mopts{grid-template-columns:minmax(0,1fr)}.levels{margin-top:-40px}.forms{grid-template-columns:repeat(3,minmax(0,1fr))}.row{grid-template-columns:minmax(0,1fr);gap:4px}.hud h2{width:100%}.bar{grid-template-columns:100px minmax(0,1fr) 30px}.cap{font-size:18px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<section id="start">
+  <div class="cover band"><div class="wrap">
+    <h1>¿Ser o estar?</h1>
+    <p>Velg riktig verb og riktig form. På nivå 1 bygger du Luna, rute for rute. På nivå 2 løser du et tyveri på en skolefest i Sevilla.</p>
+  </div></div>
+  <div class="band" style="padding-top:0"><div class="wrap">
+    <div class="levels">
+      <button class="lvl panel" data-l="1"><svg id="prev1" viewBox="0 0 400 225"></svg><div><h2>Nivå 1: Bygg Luna</h2><p>Navn, opphav, utseende, følelser og steder. Hvert riktig svar endrer ruta.</p></div></button>
+      <button class="lvl panel n" data-l="2"><svg id="prev2" viewBox="0 0 400 225"></svg><div><h2>Nivå 2: El trofeo perdido</h2><p>Avhør vitner og mistenkte, samle ledetråder og pek ut tyven i konfrontasjonsrekka.</p></div></button>
+    </div>
+    <div class="opts panel">
+      <div class="seg" role="group" aria-label="Spillmodus"><button id="mSolo" aria-pressed="true">Spill alene</button><button id="mTeam" aria-pressed="false">To lag</button></div>
+      <label class="chk"><input type="checkbox" id="pron" checked> <span>Vis pronomen på knappene</span></label>
+      <label class="chk"><input type="checkbox" id="snd" checked> <span>Lyd</span></label>
+    </div>
+    <p class="note">Spillet skiller mellom tre typer feil: feil verb, riktig verb med feil bøying, og feil forståelse. Sluttskjermen viser hvor feilene ligger. Med to lag bytter lagene på å svare, og bare riktig svar på første forsøk gir poeng. Skru av pronomenene for å gjøre det vanskeligere.</p>
+  </div></div>
+</section>
+
+<section id="game" hidden>
+  <div class="hud">
+    <h2 id="title"></h2>
+    <span class="pill" id="score"></span>
+    <span class="pill" id="streak"></span>
+    <button id="helpBtn">Huskelapp</button>
+    <button id="quit">Avslutt</button>
+  </div>
+  <div class="prog"><i id="bar"></i></div>
+  <div class="band" style="padding-top:0"><div class="wrap">
+    <div id="playArea">
+      <div class="stage panel"><svg id="stage" viewBox="0 0 400 225"></svg><div class="cap" id="cap"></div></div>
+      <aside class="side panel" id="side"></aside>
+      <div class="bubble"><p class="sent" id="sent"></p><p class="gloss" id="gloss"></p></div>
+      <div class="ctrl panel">
+        <div id="turn"></div>
+        <div id="answers"></div>
+        <div class="fb" id="fb" hidden></div>
+        <button class="next" id="next" hidden>Neste</button>
+      </div>
+    </div>
+    <div id="accuse" hidden style="margin:24px 0 44px">
+      <h2 style="font-size:clamp(40px,6vw,64px);color:var(--pop)">Hvem er tyven?</h2>
+      <p class="intro">Les ledetrådene. Bare én av de mistenkte passer med alle tre. Pass på: to av dem ser ut til å passe hvis du blander ser og estar.</p>
+      <div class="clues" id="clueList"></div>
+      <div class="lineup panel"><svg id="lineup" viewBox="0 0 800 340"></svg></div>
+      <div class="sus" id="susList"></div>
+      <div class="fb" id="afb" hidden></div>
+      <button class="next" id="toEnd" hidden>Se resultatet</button>
+    </div>
+    <div id="end" class="end" hidden style="margin:28px 0 48px"></div>
+  </div></div>
+</section>
+
+<div class="modal" id="modal" hidden><div class="box panel" id="mbox"></div></div>
+
+<template id="help">
+  <h2>Huskelapp</h2>
+  <div class="cols">
+    <div><h3>Ser</h3><ul>
+      <li>hvem eller hva noen er: <i>soy Luna, es profesora</i></li>
+      <li>hvordan noen er: <i>es alto, es simpático</i></li>
+      <li>hvor man kommer fra: <i>soy de Valencia</i></li>
+      <li>tid: <i>es tarde, son las diez</i></li></ul></div>
+    <div><h3>Estar</h3><ul>
+      <li>hvor noe eller noen er: <i>estoy en casa</i></li>
+      <li>hvordan man har det nå: <i>estoy cansada</i></li></ul>
+      <h3>Hay</h3><ul><li>det er, det finnes: <i>hay una fiesta, hay muchos estudiantes</i></li></ul></div>
+  </div>
+  <h3 style="margin-top:14px;font-size:26px">Samme ord, ulik betydning</h3>
+  <table><tr><th></th><th>ser</th><th>estar</th></tr>
+  <tr><td>aburrido</td><td>er en kjedelig person</td><td>kjeder seg</td></tr>
+  <tr><td>nervioso</td><td>er en nervøs type</td><td>er nervøs nå</td></tr>
+  <tr><td>tranquilo</td><td>er en rolig type</td><td>er rolig nå</td></tr></table>
+  <h3 style="margin-top:14px;font-size:26px">Bøying</h3>
+  <table><tr><th></th><th>ser</th><th>estar</th></tr>
+  <tr><td>yo</td><td>soy</td><td>estoy</td></tr><tr><td>tú</td><td>eres</td><td>estás</td></tr><tr><td>él / ella</td><td>es</td><td>está</td></tr><tr><td>nosotros</td><td>somos</td><td>estamos</td></tr><tr><td>vosotros</td><td>sois</td><td>estáis</td></tr><tr><td>ellos</td><td>son</td><td>están</td></tr></table>
+  <p style="margin-top:12px">Huskeregelen «ser er permanent, estar er midlertidig» holder ikke alltid. Spør heller: handler setningen om hvem eller hvordan noen er, eller om hvor de er og hvordan de har det nå?</p>
+  <button class="next" data-close>Lukk</button>
+</template>
+
+<script>
+{
+const P=["yo","tú","él / ella","nosotros","vosotros","ellos"];
+const F={ser:["soy","eres","es","somos","sois","son"],estar:["estoy","estás","está","estamos","estáis","están"],hay:["hay"]};
+const GEN={ser:"Her skal det være ser. Handler setningen om hvem eller hva noen er, hvordan noen er, opphav eller tid?",estar:"Her skal det være estar. Handler setningen om hvor noe er, eller hvordan noen har det akkurat nå?",hay:"Her skal det være hay. Det betyr «det er» eller «det finnes» og brukes med ubestemte ting: una, muchos, tall."};
+
+const L1=[
+{t:"¡Hola! Yo ___ Luna.",p:0,v:"ser",s:"yo",why:"Navn og identitet, hvem du er, tar ser.",w:"«Estoy Luna» gir ingen mening. Estar sier noe om sted eller hvordan man har det, ikke hvem man er.",fx:{name:true,pose:"wave"},fact:["Navn","Luna"]},
+{t:"Yo ___ de Valencia, en España.",p:0,v:"ser",s:"yo",why:"Hvor du kommer fra: ser de.",w:"«Estoy de Valencia» betyr ikke at du kommer derfra. Hvor du er akkurat nå, sier du med estar en: «estoy en Valencia».",fx:{from:true},fact:["Fra","Valencia"]},
+{t:"Yo ___ alta.",p:0,v:"ser",s:"yo",why:"Utseende, hvordan noen er, tar ser.",w:"«Estoy alta» høres ut som om du er høy bare akkurat nå, for eksempel fordi du står på en stol.",fx:{tall:true,pose:"hip"},fact:["Utseende","alta"]},
+{t:"Yo ___ estudiante.",p:0,v:"ser",s:"yo",why:"Yrke eller rolle tar ser: soy estudiante, soy profesora.",w:"Yrke og rolle tar ser. «Estoy estudiante» er feil.",fx:{pack:true},fact:["Rolle","estudiante"]},
+{t:"Hoy ___ muy contenta.",p:0,v:"estar",s:"yo",why:"Følelse i dag, akkurat nå, tar estar.",w:"«Soy contenta» høres ut som om glad er en fast egenskap. Om følelser nå bruker vi estar.",fx:{mood:"happy",pose:"hip"},fact:["I dag","contenta"]},
+{t:"Ahora ___ en la playa.",p:0,v:"estar",s:"yo",why:"Hvor noen befinner seg, tar estar.",w:"Hvor en person eller ting er, sier vi ikke med ser. «Soy en la playa» er feil.",fx:{bg:"beach"},fact:["Er nå","en la playa"]},
+{t:"Mi perro Toby ___ conmigo.",p:2,v:"estar",s:"mi perro Toby (él)",why:"Hvor Toby er: estar. Toby er han, altså tredje person: está.",w:"Her handler det om hvor Toby er, og sted tar estar.",fx:{dog:true},fact:["Hund","Toby"]},
+{t:"Toby ___ pequeño y muy simpático.",p:2,v:"ser",s:"Toby (él)",why:"Hvordan Toby er, størrelse og personlighet, tar ser.",w:"«Está pequeño» kan bety at han er liten nå, men skal vokse. Her beskriver vi hvordan Toby er.",fx:{},fact:["Toby er","pequeño y simpático"]},
+{m:1,t:"Toby está muy contento hoy.",q:"Hva betyr setningen?",o:["Toby er glad i dag","Toby er en glad hund"],a:0,why:"Estar + hoy handler om hvordan Toby har det i dag, ikke om hva slags hund han er.",w:"Se på verbet og ordet hoy. Estar sier noe om nå."},
+{t:"¡Uf! Ahora ___ muy cansada.",p:0,v:"estar",s:"yo",why:"Hvordan du har det nå, tar estar.",w:"«Soy cansada» betyr nærmest at du er en slitsom person. Det var nok ikke det Luna mente.",fx:{mood:"tired",pose:"down"},fact:["Nå","cansada"]},
+{t:"¡Oh, no! Toby ___ muy sucio.",p:2,v:"estar",s:"Toby (él)",g:"sucio = skitten",why:"Toby har rullet seg i sanden. Tilstanden har endret seg: estar.",w:"«Toby es sucio» betyr at Toby er en skitten hund av natur, at han aldri holder seg ren.",fx:{dogDirty:true},fact:["Toby nå","sucio"]},
+{t:"Mis padres ___ en casa.",p:5,v:"estar",s:"mis padres (ellos)",g:"mis padres = foreldrene mine",why:"Sted tar estar. Mis padres er ellos, altså están.",w:"Hvor noen er, tar estar.",fx:{parents:"thought"},fact:["Foreldrene er","en casa"]},
+{t:"Mis padres ___ profesores.",p:5,v:"ser",s:"mis padres (ellos)",why:"Yrke tar ser. Mis padres er ellos, altså son.",w:"Yrke tar ser, ikke estar.",fx:{},fact:["Foreldrene er","profesores"]},
+{t:"Y tú, ¿___ mi amigo o mi amiga?",p:1,v:"ser",s:"tú",why:"Hvem noen er for deg (venn, søster, lærer) tar ser. Tú gir eres.",w:"Hvem noen er, tar ser. «¿Estás mi amigo?» er feil.",fx:{heart:true,pose:"wave"},fact:["Du er","mi amigo / mi amiga"]},
+{t:"Ahora Toby y yo ___ en el parque.",p:3,v:"estar",s:"Toby y yo (nosotros)",why:"Sted tar estar. Toby y yo er nosotros, altså estamos.",w:"Hvor noen er, tar estar.",fx:{bg:"park",mood:"happy",dogDirty:false,pose:"hip"},fact:["Er nå","en el parque"]},
+{m:1,t:"Luna es tranquila.",q:"Hva betyr setningen?",o:["Luna er en rolig person","Luna er rolig akkurat nå"],a:0,why:"Ser beskriver hvordan noen er, en egenskap ved personen.",w:"Med ser handler det om hvordan Luna er som person."},
+{t:"Son las nueve de la noche. ¡___ tarde!",p:2,v:"ser",s:"det (tredje person entall)",g:"tarde = sent",why:"Tid tar ser: es tarde, es lunes, son las nueve.",w:"Tid uttrykkes med ser. «Está tarde» er feil.",fx:{night:true},fact:["Tid","es tarde"]},
+{t:"Ahora ___ en casa con mis padres. ¡Buenas noches!",p:0,v:"estar",s:"yo",why:"Sted tar estar. Luna er hjemme, og historien er ferdig.",w:"Hvor noen er, tar estar.",fx:{bg:"home",parents:"here",mood:"tired",pose:"down"},fact:["Er nå","en casa"]}
+];
+
+const SPK={
+ dir:{name:"Don Fernando",role:"rektor",skin:"#d6a582",hair:"side",hairC:"#c9c4b8",outfit:"suit",top:"#3b3f4a",shirt:"#e9e4d8",pants:"#26282e",acc:"#c0392b",glasses:1,pose:"crossed",iris:"#4a6a8a",mood:"nervous"},
+ lola:{name:"Lola",role:"elev og vitne",skin:"#e2bb98",hair:"long",hairC:"#2b1f1a",outfit:"coat",top:"#8a7a62",pants:"#26282e",acc:"#d33a2c",beret:1,scarf:1,pose:"think",iris:"#3f6b4a",mood:"nervous"},
+ hugo:{name:"Hugo",role:"elev, mistenkt",skin:"#ecc8a6",hair:"spiky",hairC:"#c99a45",outfit:"hoodie",top:"#4f6d8a",shirt:"#e9e4d8",pants:"#2e3440",short:1,pose:"pockets",iris:"#4a6a8a",mood:"happy"},
+ vega:{name:"Profesora Vega",role:"lærer, mistenkt",skin:"#c99a78",hair:"bun",hairC:"#3a2a22",outfit:"cardigan",top:"#6b5d72",shirt:"#d8d2c4",pants:"#26282e",glasses:1,tall:1,pose:"crossed",mood:"calm"},
+ nerea:{name:"Nerea",role:"elev, mistenkt",skin:"#7a4e35",hair:"afro",hairC:"#151515",outfit:"jacket",top:"#4a6a8a",shirt:"#e8b84a",pants:"#26282e",tall:1,pose:"hip",iris:"#3a2214",mood:"happy"},
+ paco:{name:"Paco",role:"vaktmester, mistenkt",skin:"#c79473",hair:"cap",hairC:"#8a8a8a",outfit:"overall",top:"#4b5446",pants:"#4b5446",acc:"#30352c",mustache:1,tall:1,pose:"pockets",mood:"bored"}
+};
+
+const L2=[
+{sp:"dir",t:"Buenas noches. Yo ___ Fernando, el director.",p:0,v:"ser",s:"yo",g:"buenas noches = god kveld, el director = rektor",why:"Navn og rolle tar ser.",w:"Hvem noen er, tar ser. «Estoy Fernando» gir ingen mening."},
+{sp:"dir",t:"Y vosotros ___ los detectives, ¿verdad?",p:4,v:"ser",s:"vosotros",g:"¿verdad? = ikke sant?",why:"Rolle tar ser. Vosotros gir sois.",w:"Hvem noen er, tar ser."},
+{sp:"dir",t:"Esta noche ___ una fiesta en el instituto.",p:0,v:"hay",s:"una fiesta",g:"esta noche = i kveld, el instituto = skolen",why:"Hay betyr «det er» eller «det finnes»: hay una fiesta, hay muchos estudiantes.",w:"Når vi sier at noe finnes eller skjer, med ubestemt artikkel (una fiesta), bruker vi hay."},
+{sp:"dir",t:"El trofeo de fútbol normalmente ___ aquí.",p:2,v:"estar",s:"el trofeo (él)",g:"normalmente = vanligvis, aquí = her",why:"Hvor en ting er, tar estar.",w:"Sted tar estar, ikke ser."},
+{sp:"dir",t:"¡Pero ahora el trofeo no ___ aquí!",p:2,v:"estar",s:"el trofeo (él)",g:"pero ahora = men nå",why:"Hvor en ting er (eller ikke er), tar estar.",w:"Det handler fortsatt om hvor trofeet er: estar."},
+{sp:"dir",t:"___ las diez de la noche. ¡Rápido!",p:5,v:"ser",s:"las diez (ellas)",g:"rápido = fort",why:"Klokkeslett tar ser: son las diez (flertall), es la una (entall).",w:"Tid tar ser."},
+{sp:"lola",t:"Hola. Yo ___ Lola, una estudiante.",p:0,v:"ser",s:"yo",why:"Navn og rolle tar ser.",w:"Hvem noen er, tar ser."},
+{sp:"lola",t:"Ahora ___ muy nerviosa. ¡Vi al ladrón!",p:0,v:"estar",s:"yo",g:"vi al ladrón = jeg så tyven",why:"Følelse akkurat nå tar estar.",w:"«Soy nerviosa» betyr at du er en nervøs type. Lola er nervøs nå, etter det hun så."},
+{sp:"lola",t:"El ladrón ___ alto, muy alto.",p:2,v:"ser",s:"el ladrón (él)",g:"el ladrón = tyven",why:"Utseende tar ser. Ny ledetråd!",w:"Hvor høy noen er, beskriver hvordan personen er: ser.",clue:"El ladrón es alto."},
+{sp:"lola",t:"En la fiesta, el ladrón ___ aburrido. Mira el reloj todo el tiempo.",p:2,v:"estar",s:"el ladrón (él)",g:"mira el reloj = ser på klokka, todo el tiempo = hele tiden",why:"Han kjeder seg på festen: estar aburrido. Ny ledetråd!",w:"«Es aburrido» betyr at han er en kjedelig person. Han ser på klokka fordi han kjeder seg der og da.",clue:"El ladrón está aburrido."},
+{sp:"lola",t:"Y ahora ___ muy nervioso, ¿no?",p:2,v:"estar",s:"el ladrón (él)",why:"Nervøs akkurat nå: estar. Ny ledetråd!",w:"«Es nervioso» betyr at han er en nervøs type. Lola tror han er nervøs nå, etter tyveriet.",clue:"El ladrón está nervioso."},
+{m:1,sp:"lola",t:"«El ladrón está aburrido.»",q:"Hva betyr det?",o:["Tyven kjeder seg","Tyven er en kjedelig person"],a:0,why:"Estar aburrido = kjede seg. Ser aburrido = være kjedelig. Husk det når du skal finne tyven.",w:"Se på verbet. Med estar handler aburrido om hvordan man har det."},
+{sp:"hugo",t:"¡Hola! Yo no ___ el ladrón.",p:0,v:"ser",s:"yo",why:"Hvem noen er (eller ikke er), tar ser.",w:"Hvem noen er, tar ser."},
+{sp:"hugo",t:"Mis amigos y yo ___ en la cafetería.",p:3,v:"estar",s:"mis amigos y yo (nosotros)",why:"Sted tar estar. Mis amigos y yo = nosotros: estamos.",w:"Hvor noen er, tar estar."},
+{sp:"vega",t:"Yo ___ la profesora de matemáticas.",p:0,v:"ser",s:"yo",why:"Yrke tar ser.",w:"Yrke tar ser."},
+{sp:"vega",t:"Soy una persona nerviosa, pero hoy ___ muy tranquila.",p:0,v:"estar",s:"yo",g:"tranquila = rolig, hoy = i dag",why:"Hvordan hun har det i dag: estar. Se forskjellen: soy nerviosa (en nervøs type), estoy tranquila (rolig i dag).",w:"Ordet hoy viser at det handler om i dag, ikke om hvordan hun er."},
+{m:1,sp:"vega",t:"«Soy una persona nerviosa.»",q:"Hva betyr det?",o:["Hun er en nervøs type","Hun er nervøs akkurat nå"],a:0,why:"Ser nervioso = være en nervøs type. Estar nervioso = være nervøs nå.",w:"Med ser handler det om hvordan hun er som person."},
+{sp:"nerea",t:"Mis amigos dicen que ___ un poco aburrida.",p:0,v:"ser",s:"yo",g:"dicen que = sier at, un poco = litt",why:"Personlighet tar ser. Ser aburrida = være kjedelig.",w:"Vennene snakker om hvordan Nerea er som person."},
+{sp:"nerea",t:"¡Pero hoy ___ muy contenta!",p:0,v:"estar",s:"yo",why:"Følelse i dag tar estar.",w:"Følelse akkurat nå tar estar."},
+{sp:"paco",t:"Yo ___ Paco, el conserje.",p:0,v:"ser",s:"yo",g:"el conserje = vaktmesteren",why:"Navn og yrke tar ser.",w:"Hvem noen er, tar ser."},
+{sp:"paco",t:"¡Uf! ___ muy aburrido en esta fiesta.",p:0,v:"estar",s:"yo",why:"Han kjeder seg på festen: estar.",w:"Han snakker om hvordan han har det på festen nå."},
+{sp:"paco",t:"¿La policía? Ahora ___ un poco nervioso.",p:0,v:"estar",s:"yo",g:"la policía = politiet",why:"Nervøs akkurat nå: estar. Nå har du hørt alle. Tid for å finne tyven!",w:"Han er nervøs nå, fordi politiet er der."}
+];
+
+const SUS=[
+ {k:"nerea",lines:["Nerea es alta.","«Soy un poco aburrida.»","«Hoy estoy muy contenta.»"],why:"Fellen! «Soy aburrida» betyr at Nerea er en kjedelig person. Men i dag está contenta, hun kjeder seg ikke. Tyven está aburrido, altså kjeder seg."},
+ {k:"paco",lines:["Paco es alto.","«Estoy muy aburrido.»","«Ahora estoy un poco nervioso.»"],why:"¡Correcto! Paco es alto, está aburrido og está nervioso. Trofeet ligger i skapet hans."},
+ {k:"vega",lines:["La profesora Vega es alta.","«Soy una persona nerviosa.»","«Hoy estoy muy tranquila.»"],why:"Fellen! «Soy nerviosa» betyr at hun er en nervøs type. Men i dag está tranquila, hun er rolig. Tyven está nervioso, altså er nervøs nå."},
+ {k:"hugo",lines:["Hugo es bajo.","«Yo no soy el ladrón.»","«Estamos en la cafetería.»"],why:"Hugo es bajo, han er lav. Tyven es alto."}
+];
+
+/* ---------- tegning ---------- */
+const DEFS=`<defs><pattern id="ht" width="5" height="5" patternUnits="userSpaceOnUse"><circle cx="2.5" cy="2.5" r="1.25" fill="#000"/></pattern><radialGradient id="vig" cx=".5" cy=".45" r=".75"><stop offset=".5" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".8"/></radialGradient><linearGradient id="cone" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff4cc" stop-opacity=".32"/><stop offset="1" stop-color="#fff4cc" stop-opacity="0"/></linearGradient></defs>`;
+const INK='stroke="#111" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"';
+const K='stroke="#111" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"';
+function shade(hex,f){const n=parseInt(hex.slice(1),16);return "#"+[n>>16,n>>8&255,n&255].map(v=>Math.max(0,Math.min(255,Math.round(f<1?v*f:v+(255-v)*(f-1)))).toString(16).padStart(2,"0")).join("");}
+function limb(d,c,w){return `<path d="${d}" fill="none" stroke="#111" stroke-width="${w+4}" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`;}
+const ARMS={
+ down:["M-21,-124 Q-27,-104 -26,-84","M21,-124 Q27,-104 26,-84",[[-26,-81],[26,-81]]],
+ pockets:["M-21,-124 Q-28,-106 -23,-94 L-15,-87","M21,-124 Q28,-106 23,-94 L15,-87",[]],
+ crossed:["M-21,-124 Q-29,-110 -20,-103 L11,-106","M21,-124 Q29,-110 20,-101 L-11,-102",[[12,-106],[-12,-102]]],
+ hip:["M-21,-124 Q-35,-108 -29,-98 L-16,-90","M21,-124 Q27,-104 26,-84",[[26,-81]]],
+ think:["M-21,-124 Q-28,-108 -18,-103 L12,-105","M21,-124 Q32,-106 19,-110 L6,-134",[[12,-105],[6,-136]]],
+ wave:["M-21,-124 Q-27,-104 -26,-84","M21,-124 Q35,-132 31,-156",[[-26,-81],[31,-159]]]
+};
+const TB="M-21,-129 Q-25,-128 -25,-120 L-17,-92 L-16,-79 L16,-79 L17,-92 L25,-120 Q25,-128 21,-129 Q10,-132 0,-132 Q-10,-132 -21,-129Z";
+const TC="M-21,-129 Q-25,-128 -25,-120 L-20,-92 L-25,-46 L25,-46 L20,-92 L25,-120 Q25,-128 21,-129 Q10,-132 0,-132 Q-10,-132 -21,-129Z";
+const HEAD="M-12.5,-160 Q-13.5,-174 0,-175 Q13.5,-174 12.5,-160 L11.5,-147 Q8,-136 0,-135 Q-8,-136 -11.5,-147Z";
+function details(out,tp,sh,ac){
+ const d=shade(tp,.8);
+ if(out==="suit"||out==="jacket") return `<path d="M-7,-131 L0,-106 L7,-131Z" fill="${sh}" ${K}/>`+(out==="suit"?`<path d="M0,-129 L-3,-125 L0,-104 L3,-125Z" fill="${ac}" ${K}/>`:"")+`<path d="M-8,-131 L-1,-108 L-10,-116 L-13,-129Z" fill="${d}" ${K}/><path d="M8,-131 L1,-108 L10,-116 L13,-129Z" fill="${d}" ${K}/><path d="M0,-106 V-79" ${K}/><circle cx="2.5" cy="-97" r="1.4" fill="#111"/><circle cx="2.5" cy="-87" r="1.4" fill="#111"/>`;
+ if(out==="coat") return `<path d="M2,-122 V-46" ${K}/><path d="M-21,-93 L21,-93 L21,-87 L-21,-87Z" fill="${shade(tp,.6)}" ${K}/><rect x="-3" y="-94" width="7" height="8" fill="none" stroke="#c9b98f" stroke-width="1.5"/><path d="M-9,-132 L-17,-115 L-3,-121Z" fill="${d}" ${K}/><path d="M9,-132 L17,-115 L4,-121Z" fill="${d}" ${K}/>`;
+ if(out==="hoodie") return `<path d="M-11,-98 L11,-98 L14,-83 L-14,-83Z" fill="${d}" ${K}/><path d="M-4,-129 v13 M4,-129 v13" stroke="${sh}" stroke-width="1.6" stroke-linecap="round"/>`;
+ if(out==="overall") return `<path d="M-9,-132 L-3,-124 L0,-131 L3,-124 L9,-131" fill="${d}" ${K}/><path d="M0,-124 V-80" ${K}/><rect x="5" y="-118" width="9" height="10" fill="${d}" ${K}/><path d="M7,-118 v-5" stroke="#c9b98f" stroke-width="1.6"/><path d="M-19,-90 H19" ${K}/>`;
+ if(out==="cardigan") return `<path d="M-6,-132 L6,-132 L5,-79 L-5,-79Z" fill="${sh}" ${K}/>${[-118,-106,-94].map(y=>`<circle cx="-7.5" cy="${y}" r="1.3" fill="#111"/>`).join("")}`;
+ return `<path d="M-7,-131.5 Q0,-125 7,-131.5" fill="none" ${K}/>`;
+}
+function backHair(h,c){
+ if(h==="long") return `<path d="M-15,-162 Q-18,-184 0,-183 Q18,-184 15,-162 L17,-126 Q9,-121 6,-134 L-6,-134 Q-9,-121 -17,-126Z" fill="${c}" ${K}/>`;
+ if(h==="pony") return `<path d="M9,-172 Q26,-172 27,-152 Q27,-138 33,-128 Q19,-129 18,-146 Q17,-160 9,-164Z" fill="${c}" ${K}/><path d="M18,-160 Q24,-150 22,-140" stroke="${shade(c,1.6)}" stroke-width="1.5" fill="none" opacity=".7"/>`;
+ if(h==="bun") return `<circle cx="4" cy="-180" r="7.5" fill="${c}" ${K}/>`;
+ if(h==="afro") return `<g fill="${c}" ${K}>${[[-16,-170],[16,-170],[-9,-183],[9,-183],[0,-187],[-19,-156],[19,-156],[-17,-143],[17,-143]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="10"/>`).join("")}</g><circle cx="0" cy="-163" r="21" fill="${c}"/>`;
+ return "";
+}
+function frontHair(h,c,ac){
+ const hl=shade(c,1.7);
+ if(h==="long"||h==="pony") return `<path d="M-13,-157 Q-15,-179 0,-179 Q15,-179 13,-157 Q11,-169 3,-170 Q-4,-165 -13,-157Z" fill="${c}" ${K}/><path d="M-7,-175 Q0,-177.5 6,-175.5" stroke="${hl}" stroke-width="1.8" fill="none" opacity=".75" stroke-linecap="round"/>`;
+ if(h==="spiky") return `<path d="M-13,-158 L-15,-171 L-10,-170 L-9,-180 L-4,-175 L0,-184 L4,-176 L9,-180 L10,-171 L15,-170 L13,-158 Q8,-167 0,-166 Q-8,-167 -13,-158Z" fill="${c}" ${K}/><path d="M-4,-176 L-1,-170 M4,-177 L5,-171" stroke="${hl}" stroke-width="1.5" opacity=".75"/>`;
+ if(h==="side") return `<path d="M-13,-155 Q-15,-175 -2,-177 Q12,-178 14,-164 L13,-155 Q12,-166 4,-169 Q-3,-170 -6,-166 Q-10,-164 -13,-155Z" fill="${c}" ${K}/><path d="M-6,-173 Q2,-175 8,-172" stroke="${hl}" stroke-width="1.5" fill="none" opacity=".7"/>`;
+ if(h==="bun") return `<path d="M-13,-156 Q-13,-178 1,-178 Q14,-177 13,-157 Q9,-170 -5,-168Z" fill="${c}" ${K}/><path d="M-6,-174 Q2,-176 8,-173" stroke="${hl}" stroke-width="1.5" fill="none" opacity=".7"/>`;
+ if(h==="afro") return `<path d="M-12,-161 Q0,-171 12,-161 Q13,-175 0,-177 Q-13,-175 -12,-161Z" fill="${c}"/>`;
+ if(h==="cap") return `<path d="M-13,-161 Q-15,-155 -12.5,-150 M13,-161 Q15,-155 12.5,-150" stroke="${c}" stroke-width="3.5" fill="none" stroke-linecap="round"/><path d="M-14,-162 Q-14,-183 1,-183 Q15,-182 14,-164 L27,-160 Q12,-155 -14,-161Z" fill="${ac}" ${K}/><path d="M14,-164 Q2,-166 -13,-163" ${K} fill="none"/>`;
+ return "";
+}
+function face(m,ir){
+ const L='stroke="#111" fill="none" stroke-linecap="round" stroke-linejoin="round"';
+ const eye=(x,r)=>`<path d="M${x-3.5},-155 Q${x},-159 ${x+3.5},-155 Q${x},-152 ${x-3.5},-155Z" fill="#fff" stroke="#111" stroke-width="1.1"/><circle cx="${x}" cy="-155.3" r="${r}" fill="${ir}"/><circle cx="${x}" cy="-155.3" r=".9" fill="#111"/><circle cx="${x-.6}" cy="-156" r=".5" fill="#fff"/><path d="M${x-4},-155 Q${x},-159.6 ${x+4},-155.4" ${L} stroke-width="1.9"/>`;
+ const nose=`<path d="M.6,-152 L2,-146.5 Q.6,-145.2 -1.2,-146" ${L} stroke-width="1.2"/>`;
+ const br=`<path d="M-9.5,-160.5 Q-6,-162.3 -2,-161 M9.5,-160.5 Q6,-162.3 2,-161" ${L} stroke-width="2"/>`;
+ switch(m){
+  case "happy":return br+`<path d="M-9,-154.5 Q-5.5,-158.5 -2,-154.5 M2,-154.5 Q5.5,-158.5 9,-154.5" ${L} stroke-width="1.9"/>`+nose+`<path d="M-5,-142 Q0,-141 5,-142 Q4,-137 0,-136.5 Q-4,-137 -5,-142Z" fill="#7a1f24" stroke="#111" stroke-width="1.2"/><path d="M-4,-141.5 Q0,-140.8 4,-141.5" stroke="#fff" stroke-width="1.2" fill="none"/><ellipse cx="-8.5" cy="-148" rx="2.6" ry="1.5" fill="#e2706a" opacity=".5"/><ellipse cx="8.5" cy="-148" rx="2.6" ry="1.5" fill="#e2706a" opacity=".5"/>`;
+  case "nervous":return `<path d="M-9.5,-160 Q-6,-161 -2,-163.5 M9.5,-160 Q6,-161 2,-163.5" ${L} stroke-width="2"/>`+eye(-5.5,1.4)+eye(5.5,1.4)+nose+`<path d="M-4,-141 q1,-1.5 2,0 t2,0 t2,0 t2,0" ${L} stroke-width="1.3"/><path d="M-15,-167 q3,5 0,7 q-3,-2 0,-7z" fill="#9fdcff" stroke="#111" stroke-width="1"/>`;
+  case "bored":return `<path d="M-9.5,-159.5 L-2,-159.5 M9.5,-159.5 L2,-159.5" ${L} stroke-width="2"/>`+[-5.5,5.5].map(x=>`<path d="M${x-3.5},-155.5 L${x+3.5},-155.5 Q${x},-152.5 ${x-3.5},-155.5Z" fill="#fff" stroke="#111" stroke-width="1.1"/><circle cx="${x}" cy="-154.6" r="1.3" fill="#111"/><path d="M${x-4},-155.6 H${x+4}" ${L} stroke-width="2"/>`).join("")+nose+`<path d="M-3.5,-140.5 Q0,-141.3 3.5,-140.2" ${L} stroke-width="1.5"/>`;
+  case "tired":return `<path d="M-9.5,-160 Q-6,-161 -2,-160 M9.5,-160 Q6,-161 2,-160" ${L} stroke-width="2"/><path d="M-9,-155 Q-5.5,-152.5 -2,-155 M2,-155 Q5.5,-152.5 9,-155" ${L} stroke-width="1.9"/><path d="M-8,-151.5 q2.5,1 5,0 M3,-151.5 q2.5,1 5,0" ${L} stroke-width=".9" opacity=".5"/>`+nose+`<ellipse cx="0" cy="-140.5" rx="2" ry="2.4" fill="#7a1f24" stroke="#111" stroke-width="1.1"/><text x="20" y="-188" font-family="Bangers,sans-serif" font-size="14" fill="#4d7be0" stroke="#111" stroke-width=".7">z</text><text x="29" y="-199" font-family="Bangers,sans-serif" font-size="20" fill="#4d7be0" stroke="#111" stroke-width=".7">Z</text>`;
+  case "calm":return br+`<path d="M-9,-155 Q-5.5,-152.8 -2,-155 M2,-155 Q5.5,-152.8 9,-155" ${L} stroke-width="1.9"/>`+nose+`<path d="M-3.5,-141 Q0,-139 3.5,-141" ${L} stroke-width="1.5"/>`;
+  default:return br+eye(-5.5,1.9)+eye(5.5,1.9)+nose+`<path d="M-3.5,-141 Q0,-140.2 3.5,-141" ${L} stroke-width="1.5"/>`;
+ }
+}
+let CID=0;
+function fig(o){
+ const id="cl"+(++CID),k=(o.s||1)*(o.tall?1.08:o.short?.82:1),nz=o.noir,dk=nz?.62:.8;
+ const sk=o.skin||"#f0c09a",hc=o.hairC||"#3a2214",tp=o.top||"#e63b2e",sh=o.shirt||"#f2efe6",pa=o.pants||"#1f4fa8",ac=o.acc||"#e23b2e",ir=o.iris||"#6b4226";
+ const out=o.outfit||"tee",A=ARMS[o.pose||"down"],T=out==="coat"?TC:TB;
+ let g=`<g transform="translate(${o.x} ${o.y}) scale(${k})"><ellipse rx="30" ry="5" fill="#000" opacity=".25"/>`+backHair(o.hair,hc);
+ if(o.pack) g+=`<rect x="-27" y="-128" width="54" height="40" rx="9" fill="#f2a93b" ${K}/>`;
+ g+=limb("M7,-80 L9,-44 L10,-8",shade(pa,dk),10)+limb("M-7,-80 L-9,-44 L-10,-8",pa,10);
+ g+=`<path d="M-17,-1 Q-18,-9 -10,-9 L-5,-9 Q-3,-4 -4,0 L-16,0Z" fill="#1c1c1f" ${K}/><path d="M17,-1 Q18,-9 10,-9 L5,-9 Q3,-4 4,0 L16,0Z" fill="#1c1c1f" ${K}/><path d="M-14,-6 q3,-1.5 6,-1" stroke="#fff" stroke-opacity=".4" stroke-width="1.2" fill="none"/>`;
+ g+=`<path d="M-16,-86 L16,-86 L15,-74 L-15,-74Z" fill="${pa}" ${K}/><path d="${T}" fill="${tp}" ${K}/>`+details(out,tp,sh,ac);
+ if(o.pack) g+=`<path d="M-14,-130 L-11,-92 M14,-130 L11,-92" stroke="#111" stroke-width="3.5" stroke-linecap="round"/>`;
+ g+=`<clipPath id="${id}"><path d="${T}"/></clipPath><g clip-path="url(#${id})"><rect x="7" y="-140" width="40" height="100" fill="#000" opacity="${nz?.42:.15}"/><rect x="7" y="-140" width="40" height="100" fill="url(#ht)" opacity=".2"/></g>`;
+ g+=`<path d="M-4.5,-140 L4.5,-140 L5,-127 L-5,-127Z" fill="${shade(sk,.82)}" ${K}/>`;
+ if(out==="hoodie") g+=`<path d="M-15,-131 Q-18,-141 0,-141 Q18,-141 15,-131 Q8,-126 0,-126 Q-8,-126 -15,-131Z" fill="${shade(tp,.75)}" ${K}/>`;
+ if(o.scarf) g+=`<path d="M-9,-134 Q0,-128 9,-134 L10,-127 Q0,-121 -10,-127Z" fill="${ac}" ${K}/><path d="M4,-126 L9,-106 L3,-107Z" fill="${ac}" ${K}/>`;
+ g+=`<ellipse cx="-12.5" cy="-153" rx="2.6" ry="4.2" fill="${sk}" ${K}/><ellipse cx="12.5" cy="-153" rx="2.6" ry="4.2" fill="${shade(sk,dk)}" ${K}/>`;
+ g+=`<path d="${HEAD}" fill="${sk}" ${K}/><path d="M5,-174 Q13.5,-173 12.5,-160 L11.5,-147 Q8,-136 0,-135 Q8,-142 8,-156 Q8,-168 5,-174Z" fill="${shade(sk,nz?.55:.84)}"/><path d="${HEAD}" fill="none" ${K}/>`;
+ g+=face(o.mood,ir);
+ if(o.mustache) g+=`<path d="M-6,-143.5 Q-3,-147 0,-145 Q3,-147 6,-143.5 Q3,-142 0,-143 Q-3,-142 -6,-143.5Z" fill="${hc}" ${K} stroke-width="1.2"/>`;
+ g+=frontHair(o.hair,hc,ac);
+ if(o.glasses) g+=`<g fill="#fff" fill-opacity=".2" stroke="#111" stroke-width="1.6"><rect x="-10.5" y="-158.5" width="9" height="7" rx="2"/><rect x="1.5" y="-158.5" width="9" height="7" rx="2"/></g><path d="M-1.5,-155.5 h3" stroke="#111" stroke-width="1.4"/>`;
+ if(o.beret) g+=`<ellipse cx="-3" cy="-178" rx="16" ry="6" fill="${ac}" ${K} transform="rotate(-12 -3 -178)"/><path d="M-5,-184 l-1,-4" ${K}/>`;
+ g+=limb(A[0],tp,9)+limb(A[1],shade(tp,dk),9)+A[2].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="4.3" fill="${x>0?shade(sk,dk):sk}" ${K}/>`).join("");
+ return g+"</g>";
+}
+function dog(x,y,s,dirty){
+ const S='stroke="#111" stroke-width="2.6" stroke-linejoin="round"',c="#d99a5b";
+ return `<g transform="translate(${x} ${y}) scale(${s})"><ellipse rx="28" ry="5" fill="#000" opacity=".2"/>
+ <path d="M22,-28 q16,-8 12,-26" stroke="#111" stroke-width="10" fill="none" stroke-linecap="round"/><path d="M22,-28 q16,-8 12,-26" stroke="${c}" stroke-width="5" fill="none" stroke-linecap="round"/>
+ <g fill="${c}" ${S}><rect x="-18" y="-20" width="8" height="20" rx="3"/><rect x="10" y="-20" width="8" height="20" rx="3"/><ellipse cy="-25" rx="25" ry="13"/><circle cx="-24" cy="-40" r="13"/></g>
+ <ellipse cx="-31" cy="-44" rx="5.5" ry="11" fill="#8a5a30" ${S} transform="rotate(25 -31 -44)"/>
+ <circle cx="-27" cy="-42" r="2.4" fill="#111"/><circle cx="-27.7" cy="-42.8" r=".8" fill="#fff"/><ellipse cx="-36" cy="-36" rx="3.2" ry="2.6" fill="#111"/><path d="M-34,-31 q3,3 7,1" stroke="#111" stroke-width="1.8" fill="none"/>
+ <path d="M4,-25 q10,6 20,-2 L24,-14 Q4,-12 4,-25z" fill="url(#ht)" opacity=".3"/>
+ ${dirty?'<g fill="#5c3d22" stroke="#111" stroke-width="1.2"><circle cx="-6" cy="-28" r="6"/><circle cx="10" cy="-22" r="5"/><circle cx="-16" cy="-12" r="4"/><circle cx="-20" cy="-46" r="3.5"/></g>':''}</g>`;
+}
+const BG={
+ blank:()=>`<rect width="400" height="225" fill="#ffd23f"/>`+Array.from({length:18},(_,i)=>{const a=i*20*Math.PI/180,b=a+10*Math.PI/180;return `<polygon points="200,120 ${200+500*Math.cos(a)},${120+500*Math.sin(a)} ${200+500*Math.cos(b)},${120+500*Math.sin(b)}" fill="#ffc414"/>`}).join("")+`<ellipse cx="200" cy="214" rx="70" ry="9" fill="#e0a800"/>`,
+ beach:()=>`<rect width="400" height="225" fill="#7fd0f0"/><rect width="400" height="70" fill="url(#ht)" opacity=".1"/><g stroke="#111" stroke-width="3" stroke-linecap="round">${[0,45,90,135,180,225,270,315].map(d=>{const r=d*Math.PI/180;return `<path d="M${362+25*Math.cos(r)},${42+25*Math.sin(r)} L${362+33*Math.cos(r)},${42+33*Math.sin(r)}"/>`}).join("")}</g><circle cx="362" cy="42" r="18" fill="#ffd23f" ${INK}/><path d="M0,118 q20,-7 40,0 t40,0 t40,0 t40,0 t40,0 t40,0 t40,0 t40,0 t40,0 t40,0 V165 H0Z" fill="#2f86c9" ${INK}/><path d="M30,135 h40 M150,142 h50 M290,132 h40" stroke="#bfe6ff" stroke-width="3" stroke-linecap="round"/><path d="M0,156 Q100,146 200,156 T400,154 V225 H0Z" fill="#f4d08a" ${INK}/><rect y="168" width="400" height="57" fill="url(#ht)" opacity=".1"/><path d="M66,213 L72,108" ${INK}/><path d="M18,128 Q68,72 124,112 Z" fill="#e63b2e" ${INK}/><path d="M50,118 Q68,84 88,115Z" fill="#fff" ${INK} stroke-width="2"/>`,
+ park:()=>`<rect width="400" height="225" fill="#9fdcff"/><path d="M60,48 q0,-14 16,-12 q6,-12 20,-6 q14,-4 14,10 q10,2 6,10 h-52 q-10,-1 -4,-2z" fill="#fff" ${INK} stroke-width="2.5"/><path d="M0,170 Q90,118 200,163 T400,148 V225 H0Z" fill="#8fd07a" ${INK}/><path d="M0,186 Q200,174 400,186 V225 H0Z" fill="#5fae4f" ${INK}/><rect y="190" width="400" height="35" fill="url(#ht)" opacity=".12"/><rect x="338" y="95" width="14" height="92" fill="#7a5230" ${INK}/><g fill="#3f9a4a" ${INK}><circle cx="320" cy="98" r="20"/><circle cx="370" cy="98" r="20"/><circle cx="345" cy="76" r="30"/></g><path d="M345,60 q16,6 20,26 M372,100 q8,6 8,14" stroke="#2c7a37" stroke-width="3" fill="none"/>`,
+ home:n=>`<rect width="400" height="225" fill="#f6e1c2"/>${Array.from({length:17},(_,i)=>`<rect x="${i*24}" width="10" height="185" fill="#efd2ab"/>`).join("")}<rect x="292" y="26" width="80" height="66" fill="${n?"#1b2a5c":"#9ad8f5"}" ${INK}/><path d="M332,26 v66 M292,59 h80" ${INK}/>${n?'<circle cx="352" cy="44" r="8" fill="#fff6c8" stroke="#111" stroke-width="2"/>':''}<rect x="150" y="34" width="70" height="44" fill="#1f4fa8" ${INK}/><path d="M156,72 l18,-22 l14,14 l10,-8 l16,16z" fill="#ffd23f" stroke="#111" stroke-width="2"/><rect y="185" width="400" height="40" fill="#b77b4c" ${INK}/><path d="M0,200 h400 M0,212 h400 M80,185 v15 M210,200 v12 M330,185 v15" stroke="#7a4d2a" stroke-width="2"/>`
+};
+function scene1(S){
+ let s=DEFS+BG[S.bg](S.night);
+ if(S.night&&S.bg!=="home") s+=`<rect width="400" height="225" fill="#0b1640" opacity=".55"/><circle cx="340" cy="44" r="16" fill="#fff6c8" ${INK}/>`+[[40,30],[110,18],[200,38],[260,14],[390,80],[90,70]].map(([x,y])=>`<path d="M${x},${y-5} l1.5,3.5 l3.5,1.5 l-3.5,1.5 l-1.5,3.5 l-1.5,-3.5 l-3.5,-1.5 l3.5,-1.5z" fill="#fff6c8"/>`).join("");
+ if(S.parents==="thought") s+=`<g fill="#fff" ${INK} stroke-width="2.5"><circle cx="178" cy="70" r="4"/><circle cx="166" cy="58" r="6"/><path d="M80,24 q8,-14 24,-8 q12,-10 26,0 q16,-2 16,12 q10,10 -2,20 q-4,14 -20,10 q-12,10 -26,2 q-16,4 -18,-12 q-12,-10 0,-24z"/></g><path d="M98,36 l14,-13 l14,13z" fill="#e63b2e" stroke="#111" stroke-width="2"/><rect x="102" y="36" width="20" height="13" fill="#ffd23f" stroke="#111" stroke-width="2"/>`;
+ if(S.parents==="here") s+=fig({x:70,y:214,s:.9,hair:"side",hairC:"#2a1a10",skin:"#e3a77f",outfit:"jacket",top:"#3a5f8f",pants:"#333",mood:"happy",pose:"pockets",glasses:1})+fig({x:128,y:214,s:.88,hair:"long",hairC:"#5a3a22",skin:"#efc39c",outfit:"cardigan",top:"#3fa86a",shirt:"#f6e7c8",pants:"#333",mood:"happy",pose:"crossed"});
+ s+=fig({x:200,y:214,s:.95,tall:S.tall,mood:S.mood,pose:S.pose||"down",hair:"pony",hairC:"#3a2214",outfit:"tee",top:"#e63b2e",pants:"#1f4fa8",pack:S.pack});
+ if(S.dog) s+=dog(296,215,.82,S.dogDirty);
+ if(S.heart) s+=`<path d="M250,70 c-8,-12 -24,-2 -14,10 l14,13 l14,-13 c10,-12 -6,-22 -14,-10z" fill="#e63b2e" ${INK} stroke-width="2.5"/>`;
+ return s;
+}
+function room(sp,mood){
+ return DEFS+`<rect width="400" height="225" fill="#1b1d24"/>
+ <g transform="rotate(-16 120 90)" fill="#efe6cf" opacity=".08">${Array.from({length:8},(_,i)=>`<rect x="-30" y="${-20+i*24}" width="260" height="12"/>`).join("")}</g>
+ <rect y="190" width="400" height="35" fill="#0a0b0e"/>
+ <rect x="292" y="122" width="92" height="8" fill="#3a2a20" stroke="#000" stroke-width="2"/>
+ <g fill="none" stroke="#e23b2e" stroke-width="2.4" stroke-dasharray="5 4" stroke-linejoin="round"><path d="M322,74 h32 v10 q0,20 -16,24 q-16,-4 -16,-24z"/><path d="M322,80 q-10,0 -10,10 q2,8 12,8 M354,80 q10,0 10,10 q-2,8 -12,8"/><path d="M338,108 v6 M328,120 h20 v-6 h-20z"/></g>
+ <text x="338" y="148" text-anchor="middle" font-family="Special Elite,monospace" font-size="12" fill="#e23b2e">¿dónde está?</text>
+ <path d="M150,0 v18" stroke="#000" stroke-width="3"/><path d="M135,27 q15,-17 30,0z" fill="#000" stroke="#333"/><polygon points="138,27 162,27 262,190 38,190" fill="url(#cone)"/>
+ ${fig(Object.assign({},sp,{x:150,y:322,s:1.45,noir:1,mood:mood||sp.mood}))}
+ <rect x="38" y="170" width="224" height="60" fill="#121318" stroke="#000" stroke-width="3"/><path d="M38,171 h224" stroke="#efe6cf" stroke-opacity=".35" stroke-width="2"/>
+ <rect x="74" y="160" width="46" height="11" fill="#c9b98f" stroke="#000" stroke-width="1.5" transform="rotate(-5 97 166)"/><rect x="200" y="152" width="22" height="18" fill="#2b2d35" stroke="#000" stroke-width="1.5"/><path d="M205,157 h12 M205,162 h8" stroke="#efe6cf" stroke-opacity=".4"/>
+ <rect width="400" height="225" fill="url(#vig)"/>`;
+}
+const LP={nerea:"hip",paco:"pockets",vega:"crossed",hugo:"down"};
+function lineup(){
+ const G0=318;
+ let s=DEFS+`<rect width="800" height="340" fill="#24262e"/>`;
+ s+=Array.from({length:21},(_,j)=>{const m=j/10,y=G0-m*133,maj=j%5===0;return `<path d="M${maj?0:0},${y}H${maj?800:40}" stroke="#efe6cf" stroke-opacity="${maj?.3:.4}" stroke-width="${maj?2:1.5}"/>${maj&&j?`<text x="12" y="${y-6}" fill="#efe6cf" fill-opacity=".75" font-family="Special Elite,monospace" font-size="15">${m.toFixed(1).replace(".",",")} m</text>`:""}`}).join("");
+ s+=`<rect y="${G0}" width="800" height="22" fill="#0a0b0e"/>`;
+ SUS.forEach((su,i)=>{const x=130+i*180;
+  s+=`<polygon points="${x-24},0 ${x+24},0 ${x+88},${G0} ${x-88},${G0}" fill="url(#cone)"/>`;
+  s+=fig(Object.assign({},SPK[su.k],{x,y:G0,s:1.25,noir:1,pose:LP[su.k],mood:su.k==="paco"?"bored":su.k==="vega"?"calm":"neutral"}));
+  s+=`<text x="${x}" y="${G0+18}" text-anchor="middle" font-family="Bangers,sans-serif" font-size="19" fill="#efe6cf">${i+1}</text>`;
+  if(G.out.includes(i)) s+=`<path d="M${x-44},${G0-215} L${x+44},${G0-25} M${x+44},${G0-215} L${x-44},${G0-25}" stroke="#e23b2e" stroke-width="9" stroke-linecap="round" opacity=".9"/>`;
+  if(G.solved&&su.k==="paco") s+=`<ellipse cx="${x}" cy="${G0-122}" rx="72" ry="138" fill="none" stroke="#e23b2e" stroke-width="6" stroke-dasharray="16 9"/>`;
+ });
+ return s+`<rect width="800" height="340" fill="url(#vig)" opacity=".7"/>`;
+}
+
+/* ---------- spill ---------- */
+const $=id=>document.getElementById(id);
+let G={out:[]},team=false,AC=null;
+function tone(fs){
+ if(!$("snd").checked) return;
+ try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();const t0=AC.currentTime;
+  fs.forEach((f,i)=>{const o=AC.createOscillator(),g=AC.createGain(),t=t0+i*.09;o.type="triangle";o.frequency.value=f;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.14,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.25);o.connect(g).connect(AC.destination);o.start(t);o.stop(t+.3);});}catch(e){}
+}
+const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+function fill(t,form){
+ const sp=f=>`<span class="gap ok">${f}</span>`;
+ if(/(^|[¡¿]|[.!?]\s)___/.test(t)) return t.replace(/(^|[¡¿]|[.!?]\s)___/,(m,a)=>a+sp(cap(form)));
+ return t.replace("___",sp(form));
+}
+const TEAMS=[["Equipo Rojo","#e63b2e"],["Equipo Azul","#1f4fa8"]];
+function openModal(html){$("mbox").innerHTML=html;$("modal").hidden=false;const b=$("mbox").querySelector("button");if(b)b.focus();}
+$("modal").addEventListener("click",e=>{if(e.target.id==="modal"||e.target.hasAttribute("data-close"))$("modal").hidden=true;});
+$("helpBtn").onclick=()=>openModal($("help").innerHTML);
+
+function start(l){
+ G={l,items:l===1?L1:L2,i:0,score:[0,0],turn:0,streak:0,tries:0,done:false,err:{verb:0,form:0,mean:0},first:0,out:[],solved:false,
+  S:{bg:"blank",night:false,tall:false,mood:"neutral",name:false,from:false,pack:false,dog:false,dogDirty:false,parents:false,heart:false},
+  facts:[],clues:[],notes:{},pron:$("pron").checked};
+ document.body.className=l===2?"noir":"";
+ $("start").hidden=true;$("game").hidden=false;$("end").hidden=true;$("accuse").hidden=true;$("playArea").hidden=false;
+ $("title").textContent=l===1?"Nivå 1: Bygg Luna":"Nivå 2: El trofeo perdido";
+ show();window.scrollTo(0,0);
+ openModal(l===1?`<h2>Bygg Luna</h2><p>Luna er bare en tom figur. Hver gang du velger riktig form av <b>ser</b> eller <b>estar</b>, får hun en ny egenskap, et nytt sted eller en ny følelse. Velger du feil, får du vite hva setningen faktisk ville betydd.</p><p>Trykk rett på den bøyde formen.${team?" Lagene bytter på å svare.":""}</p><button class="next" data-close>¡Vamos!</button>`
+  :`<h2 style="font-family:'Special Elite',monospace;font-size:30px">Saken</h2><p class="intro">Sevilla. Fredag kveld. Det er fest på skolen, og fotballtrofeet er borte fra hylla. Du er detektiven.</p><p>Avhør folkene, velg riktig form av <b>ser</b>, <b>estar</b> eller <b>hay</b>, og samle ledetråder. Til slutt peker du ut tyven. Da må du forstå hva ledetrådene betyr.${team?" Lagene bytter på å svare.":""}</p><button class="next" data-close>Start avhøret</button>`);
+}
+function hud(){
+ $("score").textContent=team?`Rojo ${G.score[0]} · Azul ${G.score[1]}`:`${G.score[0]} poeng`;
+ $("streak").textContent=`Rekke: ${G.streak}`;$("streak").classList.toggle("on",G.streak>=3);
+ $("bar").style.width=(G.i/G.items.length*100)+"%";
+}
+function drawStage(){
+ const it=G.items[Math.min(G.i,G.items.length-1)];
+ if(G.l===1){$("stage").innerHTML=scene1(G.S);$("cap").innerHTML=G.S.name?`Luna${G.S.from?' <span class="flag"></span> Valencia':''}`:"¿Quién soy?";}
+ else{const sp=SPK[it.sp];$("stage").innerHTML=room(sp,it.mood);$("cap").textContent=`${sp.name}, ${sp.role}`;}
+ const st=$("stage");st.classList.remove("pop");requestAnimationFrame(()=>st.classList.add("pop"));
+}
+function drawSide(){
+ if(G.l===1){
+  $("side").innerHTML=`<h3>Lunas profil</h3>${G.facts.length?`<ul>${G.facts.map(f=>`<li>${f[0]}: <b>${f[1]}</b></li>`).join("")}</ul>`:'<p class="empty">Tom foreløpig. Fyll inn riktig verb, så bygger du Luna bit for bit.</p>'}`;
+ }else{
+  const cl=[0,1,2].map(i=>G.clues[i]?`<li class="clue">${G.clues[i]}</li>`:'<li class="clue unk">? ukjent</li>').join("");
+  const ns=Object.keys(G.notes).map(k=>`<li><b>${SPK[k].name}:</b> ${G.notes[k].join(" ")}</li>`).join("");
+  $("side").innerHTML=`<h3>Notatboka</h3><h4>Ledetråder om tyven</h4><ul>${cl}</ul><h4>De mistenkte sier</h4>${ns?`<ul>${ns}</ul>`:'<p class="empty">Ingen avhør ennå.</p>'}`;
+ }
+}
+function show(){
+ const it=G.items[G.i];G.tries=0;G.done=false;
+ hud();drawStage();drawSide();
+ $("turn").innerHTML=team?`<span class="turn" style="background:${TEAMS[G.turn][1]}">Tur: ${TEAMS[G.turn][0]}</span>`:"";
+ $("sent").innerHTML=it.m?`${it.t}<span class="q2">${it.q}</span>`:it.t.replace("___",'<span class="gap">?</span>');
+ $("gloss").innerHTML=it.g?`<b>Ordhjelp:</b> ${it.g}`:"";$("gloss").hidden=!it.g;
+ if(it.m) $("answers").innerHTML=`<div class="mopts">${it.o.map((o,i)=>`<button class="opt" data-i="${i}">${o}</button>`).join("")}</div>`;
+ else{
+  const vs=G.l===1?["ser","estar"]:["ser","estar","hay"];
+  $("answers").innerHTML=vs.map(v=>`<div class="row"><span class="vb">${v}</span><div class="forms${v==="hay"?" one":""}">${F[v].map((f,p)=>`<button class="f" data-v="${v}" data-p="${p}">${G.pron&&v!=="hay"?`<small>${P[p]}</small>`:""}${f}</button>`).join("")}</div></div>`).join("");
+ }
+ $("fb").hidden=true;$("next").hidden=true;
+}
+function feedback(el,html,cls){$(el).innerHTML=html;$(el).className="fb "+cls;$(el).hidden=false;}
+function correct(btn,form){
+ const it=G.items[G.i];G.done=true;btn.classList.add("good");
+ $("answers").querySelectorAll("button").forEach(b=>b.disabled=true);
+ let extra="";
+ if(G.tries===0){const bonus=G.streak>=2?5:0;G.score[G.turn]+=10+bonus;G.first++;G.streak++;extra=bonus?` <b>+${10+bonus}</b> med rekkebonus.`:" <b>+10</b>";}
+ else G.streak=0;
+ if(!it.m){
+  $("sent").innerHTML=fill(it.t,form);
+  if(it.fx) Object.assign(G.S,it.fx);
+  if(it.fact) G.facts.push(it.fact);
+  if(it.clue) G.clues.push(it.clue);
+  if(["hugo","vega","nerea","paco"].includes(it.sp)) (G.notes[it.sp]=G.notes[it.sp]||[]).push("«"+fill(it.t,form).replace(/<[^>]+>/g,"")+"»");
+ }
+ feedback("fb",`<b>${G.tries===0?"¡Muy bien!":"Ja, nå stemmer det."}</b>${extra} ${it.why}`,"good");
+ tone([523,659,784]);hud();drawStage();drawSide();
+ $("next").hidden=false;$("next").textContent=G.i===G.items.length-1?(G.l===2?"Finn tyven":"Se resultatet"):"Neste";$("next").focus();
+}
+function wrong(btn,html){G.tries++;G.streak=0;btn.classList.add("bad");btn.disabled=true;feedback("fb",html,"bad");tone([260,200]);hud();}
+$("answers").addEventListener("click",e=>{
+ const b=e.target.closest("button");if(!b||G.done||b.disabled)return;
+ const it=G.items[G.i];
+ if(it.m){if(+b.dataset.i===it.a)correct(b);else{G.err.mean++;wrong(b,`<b>Ikke helt.</b> ${it.w}`);}return;}
+ const v=b.dataset.v,p=+b.dataset.p;
+ if(v===it.v&&(v==="hay"||p===it.p)){correct(b,F[v][p]);return;}
+ let msg;
+ if(v!==it.v){G.err.verb++;msg=`<b>Feil verb.</b> ${it.w||GEN[it.v]}`;}
+ else{G.err.form++;msg=`<b>Riktig verb, men feil bøying.</b> Subjektet er <b>${it.s}</b>. Hvilken form av <i>${v}</i> passer da?`;}
+ if(G.tries>=1){const c=$("answers").querySelector(`[data-v="${it.v}"][data-p="${it.v==="hay"?0:it.p}"]`);c.classList.add("hint");msg+=" Den riktige formen lyser nå.";}
+ wrong(b,msg);
+});
+$("next").onclick=()=>{
+ G.i++;if(team)G.turn=1-G.turn;
+ if(G.i>=G.items.length){G.l===2?accuse():end();}else{show();window.scrollTo({top:0,behavior:"smooth"});}
+};
+function accuse(){
+ hud();$("playArea").hidden=true;$("accuse").hidden=false;$("afb").hidden=true;$("toEnd").hidden=true;
+ $("clueList").innerHTML=G.clues.map(c=>`<span>${c}</span>`).join("");
+ $("lineup").innerHTML=lineup();
+ $("susList").innerHTML=SUS.map((s,i)=>`<button class="card panel" data-i="${i}"><h3>${i+1} · ${SPK[s.k].name}</h3>${s.lines.map(l=>`<p>${l}</p>`).join("")}</button>`).join("");
+ window.scrollTo(0,0);
+}
+$("susList").addEventListener("click",e=>{
+ const c=e.target.closest(".card");if(!c||c.disabled||G.solved)return;
+ const i=+c.dataset.i,s=SUS[i];
+ if(s.k==="paco"){G.solved=true;c.classList.add("win");$("susList").querySelectorAll(".card").forEach(x=>x.disabled=true);
+  feedback("afb",`<b>Saken er løst!</b> ${s.why}`,"good");tone([523,659,784,1047]);$("toEnd").hidden=false;$("toEnd").focus();}
+ else{G.out.push(i);c.classList.add("out");c.disabled=true;G.err.mean++;G.score[G.turn]=Math.max(0,G.score[G.turn]-5);
+  feedback("afb",`<b>Feil person, minus 5 poeng.</b> ${s.why}`,"bad");tone([260,200]);hud();}
+ $("lineup").innerHTML=lineup();
+});
+$("toEnd").onclick=end;
+function end(){
+ $("playArea").hidden=true;$("accuse").hidden=true;$("end").hidden=false;$("bar").style.width="100%";
+ const n=G.items.length,r=G.first/n,stars=r>=.85?3:r>=.6?2:1,E=G.err,tot=E.verb+E.form+E.mean,mx=Math.max(1,E.verb,E.form,E.mean);
+ let tip="Ingen feil. ¡Perfecto!";
+ if(tot){const top=E.verb>=E.form&&E.verb>=E.mean?"verb":E.form>=E.mean?"form":"mean";
+  tip={verb:"Flest feil i verbvalg. Hvor noe er og hvordan man har det nå: estar. Hvem og hvordan noen er, opphav og tid: ser.",form:"Flest feil i bøying. Finn subjektet først, og velg formen etterpå. Spill gjerne med pronomen på knappene.",mean:"Flest feil i betydning. Se på ordparene aburrido, nervioso og tranquilo på huskelappen."}[top];}
+ const wi=G.score[0]>G.score[1]?0:1;
+ const win=team?(G.score[0]===G.score[1]?"<h2 style='font-size:40px'>Uavgjort!</h2>":`<h2 style="font-size:40px;color:${TEAMS[wi][1]}">${TEAMS[wi][0]} vinner!</h2>`):"";
+ const bar=(l,v)=>`<div class="bar"><span>${l}</span><div><i style="width:${v/mx*100}%"></i></div><b>${v}</b></div>`;
+ $("end").innerHTML=`${G.l===2?'<div class="stamp">Caso cerrado</div>':'<div class="burst">¡Fin!</div>'}${win}
+ <div class="big">${team?`${G.score[0]} – ${G.score[1]}`:`${G.score[0]} poeng`}</div>
+ <div class="stars">${"★".repeat(stars)}<span>${"★".repeat(3-stars)}</span></div>
+ <p><b>${G.first} av ${n}</b> riktig på første forsøk.</p>
+ <div class="bars panel"><h3 style="font-size:26px;margin-bottom:4px">Feil fordelt på type</h3>${bar("Feil verb",E.verb)}${bar("Feil bøying",E.form)}${bar("Betydning",E.mean)}<p style="margin:12px 0 0">${tip}</p></div>
+ <div class="btns"><button class="next" id="again">Spill igjen</button><button class="next alt" id="other">${G.l===1?"Prøv nivå 2":"Prøv nivå 1"}</button><button class="next plain" id="home">Til start</button></div>`;
+ tone([523,659,784,1047]);
+ $("again").onclick=()=>start(G.l);$("other").onclick=()=>start(G.l===1?2:1);$("home").onclick=home;
+ window.scrollTo(0,0);
+}
+function home(){document.body.className="";$("game").hidden=true;$("start").hidden=false;window.scrollTo(0,0);}
+$("quit").onclick=home;
+document.querySelectorAll(".lvl").forEach(b=>b.onclick=()=>start(+b.dataset.l));
+$("mSolo").onclick=()=>{team=false;$("mSolo").setAttribute("aria-pressed","true");$("mTeam").setAttribute("aria-pressed","false");};
+$("mTeam").onclick=()=>{team=true;$("mTeam").setAttribute("aria-pressed","true");$("mSolo").setAttribute("aria-pressed","false");};
+document.addEventListener("keydown",e=>{if(e.key==="Escape")$("modal").hidden=true;});
+$("prev1").innerHTML=scene1({bg:"beach",mood:"happy",tall:true,dog:true,pack:true,pose:"wave"});
+$("prev2").innerHTML=room(SPK.paco,"bored");
+}
+</script>
+</body>
+</html>

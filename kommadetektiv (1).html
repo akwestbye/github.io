@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<!--
+  Kommadetektiven
+  Laget av Anne Katrine Westbye med Claude (Anthropic), november 2026.
+  Idé, didaktisk opplegg og kvalitetssikring: Anne Katrine Westbye. Kode, setninger og forklaringer: generert med Claude.
+  Lisens: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/deed.no).
+  Du kan fritt bruke, dele og endre spillet så lenge du oppgir hvor originalen kommer fra.
+  Hvis du endrer spillet (også med KI): behold denne merknaden og kredittlinja nederst på siden,
+  og skriv inn hva du har endret, f.eks. «Basert på Kommadetektiven av Anne Katrine Westbye (2026), CC BY 4.0. Endret av [navn]: [hva].»
+-->
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kommadetektiven</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--bg1:#0f2a2e;--bg2:#1c4a43;--card:#fffaf0;--ink:#1d2a2c;--accent:#ff7a45;--gold:#ffc83d;--green:#2bb673;--red:#e5484d;--muted:#5f6f6d;--line:#ece3d2}
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:'Nunito',system-ui,sans-serif;color:var(--ink);min-height:100vh;padding:20px;display:flex;justify-content:center;align-items:flex-start;
+    background:radial-gradient(1000px 600px at 10% -10%,#2f7a6a 0%,transparent 60%),radial-gradient(800px 500px at 110% 110%,#7a4a2a 0%,transparent 55%),linear-gradient(160deg,var(--bg1),var(--bg2))}
+  #fx{position:fixed;inset:0;pointer-events:none;z-index:60}
+  .wrap{width:100%;max-width:920px;margin-top:10px}
+  .card{background:var(--card);border-radius:26px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.35),0 0 0 6px rgba(255,255,255,.05)}
+  h1{font-family:'Fredoka';font-size:clamp(40px,8vw,66px);margin:0;line-height:1}
+  h1 .c{color:var(--accent);display:inline-block;animation:wob 2.4s ease-in-out infinite}
+  @keyframes wob{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(10deg) translateY(-5px)}}
+  .tag{font-weight:800;color:var(--muted);font-size:18px;margin:10px 0 20px}
+  h2{font-family:'Fredoka';margin:0 0 12px;font-size:24px}
+  .btn{font-family:'Fredoka';font-size:21px;border:0;border-radius:16px;padding:13px 26px;cursor:pointer;background:var(--accent);color:#fff;box-shadow:0 6px 0 #c4582c;transition:transform .08s,box-shadow .08s}
+  .btn:active{transform:translateY(4px);box-shadow:0 2px 0 #c4582c}
+  .btn.ghost{background:#fff;color:var(--ink);box-shadow:0 6px 0 var(--line);border:2px solid var(--line);font-size:17px;padding:9px 16px}
+  .btn.ghost:active{box-shadow:0 2px 0 var(--line)}
+  .rulelist{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin-bottom:24px}
+  .rcard{background:#fff;border:2px solid var(--line);border-radius:16px;padding:14px}
+  .rcard .ic{font-size:26px}
+  .rcard b{font-family:'Fredoka';font-size:19px;display:block;margin:4px 0}
+  .rcard .ex{margin-top:8px;font-weight:800;background:#fff6e5;border-radius:10px;padding:6px 10px;font-size:16px}
+  .rcard .ex em{color:var(--accent);font-style:normal;font-size:1.25em}
+  .rcard p{margin:0;font-size:15px}
+  .top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+  .prog{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{background:rgba(255,255,255,.12);color:#fff;border-radius:999px;padding:5px 10px;font-weight:800;font-size:14px;display:flex;gap:4px;align-items:center;transition:background .3s}
+  .chip.done{background:var(--green)}
+  .chip .st{letter-spacing:-2px;opacity:.95}
+  .topbtns{display:flex;gap:8px}
+  .tbtn{background:rgba(255,255,255,.14);color:#fff;border:0;border-radius:999px;padding:7px 14px;font-weight:800;cursor:pointer;font-size:14px;font-family:'Nunito'}
+  .q{font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-size:13px;margin-bottom:6px}
+  .sentence{font-size:clamp(24px,4.4vw,36px);font-weight:800;line-height:1.7;margin:4px 0 22px;min-height:70px}
+  .tc{display:inline-block;position:relative;color:var(--accent);font-size:1.35em;line-height:.6;padding:0 4px;margin-left:-2px}
+  .tc::after{content:"";position:absolute;left:50%;top:50%;width:1.25em;height:1.25em;transform:translate(-50%,-62%);border:4px solid var(--accent);border-radius:50%;animation:ring 1.4s ease-in-out infinite}
+  @keyframes ring{0%,100%{transform:translate(-50%,-62%) scale(1);opacity:1}50%{transform:translate(-50%,-62%) scale(1.25);opacity:.4}}
+  .tc.right{color:var(--green)} .tc.right::after{border-color:var(--green);animation:none}
+  .tc.gone{color:var(--red);text-decoration:line-through} .tc.gone::after{border-color:var(--red);animation:none}
+  .choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+  .ch{text-align:left;background:#fff;border:2px solid var(--line);border-radius:16px;padding:12px 14px;cursor:pointer;font-family:'Nunito';font-size:16px;color:var(--ink);display:flex;gap:10px;align-items:center;transition:transform .1s,border-color .15s,background .15s}
+  .ch:hover:not(:disabled){transform:translateY(-2px);border-color:var(--accent)}
+  .ch .ic{font-size:24px}
+  .ch b{font-family:'Fredoka';font-size:17px;font-weight:500}
+  .ch .k{margin-left:auto;font-size:12px;color:#b0a690;font-weight:800;border:1.5px solid var(--line);border-radius:6px;padding:1px 6px}
+  .ch:disabled{cursor:default;opacity:.55}
+  .ch.correct{background:#e6f7ee;border-color:var(--green);opacity:1}
+  .ch.wrong{background:#fdecec;border-color:var(--red);opacity:1;animation:shake .4s}
+  @keyframes shake{20%{transform:translateX(-8px)}40%{transform:translateX(7px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+  .fb{display:none;margin-top:18px;border-radius:18px;padding:16px 18px}
+  .fb.show{display:block;animation:rise .3s ease-out}
+  @keyframes rise{from{opacity:0;transform:translateY(8px)}}
+  .fb.good{background:#e6f7ee;border:2px solid #b6e6cb}
+  .fb.bad{background:#fdecec;border:2px solid #f6c1c3}
+  .fb h3{font-family:'Fredoka';margin:0 0 6px;font-size:23px}
+  .fb p{margin:6px 0;font-size:16px}
+  .fb .cmp{background:#fff;border-radius:12px;padding:10px 12px;margin-top:8px;font-size:15px}
+  .fb .cmp b{font-family:'Fredoka';font-weight:500}
+  .row{display:flex;gap:10px;align-items:center;margin-top:14px;flex-wrap:wrap}
+  .hint{display:none;background:#fff6e5;border:2px dashed #f3d9a8;border-radius:16px;padding:14px 18px;margin-bottom:16px}
+  .hint.show{display:block;animation:rise .25s}
+  .hint ol{margin:6px 0 0;padding-left:22px}
+  .hint li{margin:4px 0;font-size:15px}
+  .hint li span{font-weight:800;color:var(--accent)}
+  .modal{position:fixed;inset:0;background:rgba(10,25,25,.7);display:none;align-items:flex-start;justify-content:center;z-index:50;padding:20px;overflow:auto}
+  .modal.show{display:flex}
+  .modal .card{max-width:900px;width:100%}
+  .hidden{display:none!important}
+  .big{font-family:'Fredoka';font-size:64px;color:var(--accent);margin:4px 0}
+  .stars{animation:pop .4s cubic-bezier(.3,1.8,.5,1)}
+  @keyframes pop{from{transform:scale(.3)}}
+  @media (max-width:560px){.card{padding:20px}.choices{grid-template-columns:1fr}}
+
+  .credit{margin:22px auto 0;max-width:820px;color:rgba(255,255,255,.72);font-size:13px;line-height:1.55;text-align:center}
+  .credit a{color:#fff}
+  .credit b{color:#fff}
+</style>
+</head>
+<body>
+<canvas id="fx"></canvas>
+<div class="wrap">
+
+  <section id="start" class="card">
+    <h1>Komma<span class="c">,</span>detektiven</h1>
+    <p class="tag">Kommaet er allerede satt. Din jobb er å finne ut hvorfor, eller avsløre det hvis det ikke har noe der å gjøre.</p>
+    <h2>Dette er reglene du skal etterforske</h2>
+    <div class="rulelist" id="rulelist"></div>
+    <p class="tag" style="font-size:16px">Få tre riktige på hver regel for å løse saken. Bommer du, mister regelen en stjerne. Ingen klokke, så ta deg tid.</p>
+    <button class="btn" id="go">Start etterforskningen 🔍</button>
+  </section>
+
+  <section id="game" class="hidden">
+    <div class="top">
+      <div class="prog" id="prog"></div>
+      <div class="topbtns">
+        <button class="tbtn" id="hintBtn">💡 Tips</button>
+        <button class="tbtn" id="rulesBtn">📖 Reglene</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="q">Hvorfor står kommaet her?</div>
+      <div class="sentence" id="sentence"></div>
+      <div class="hint" id="hint">
+        <b style="font-family:Fredoka;font-size:18px">Detektivens spørsmål, i denne rekkefølgen:</b>
+        <ol>
+          <li>Skiller kommaet ut <span>ja, nei, hei</span> eller <span>navnet</span> på den du snakker til? → Tiltale</li>
+          <li>Står kommaet mellom ting i en <span>liste</span>? → Oppramsing</li>
+          <li>Kommer <span>men</span> rett etter kommaet, uten en hel setning etter? → Foran men</li>
+          <li>Starter setningen med <span>når, hvis, fordi, da, mens</span>, og slutter den delen ved kommaet? → Leddsetning først</li>
+          <li>Er en <span>som</span>- eller <span>der</span>-setning klemt inn før verbet? → Innskutt leddsetning</li>
+          <li>Står <span>og, eller, for</span> etter kommaet, med en hel setning på hver side? → Mellom helsetninger</li>
+          <li>Passer ingenting? → Skal ikke være komma</li>
+        </ol>
+      </div>
+      <div class="choices" id="choices"></div>
+      <div class="fb" id="fb"></div>
+    </div>
+  </section>
+
+  <section id="end" class="card hidden">
+    <h1>Saken er løst! 🕵️</h1>
+    <div class="big stars">⭐⭐⭐</div>
+    <p class="tag" id="endSub"></p>
+    <div id="hardest"></div>
+    <button class="btn" id="again">Ny sak</button>
+
+  <footer class="credit">
+    <b>Kommadetektiven</b> er laget av Anne Katrine Westbye med Claude (Anthropic), november 2026.<br>
+    Idé, didaktisk opplegg og kvalitetssikring: Anne Katrine Westbye. Kode, setninger og forklaringer: generert med Claude.<br>
+    Reglene er kontrollert mot Språkrådets kommaregler. Reglene om tiltale og ja/nei og om komma foran leddsetninger er i tillegg kontrollert mot Ordnett og Nynorsksenteret.<br>
+    Lisens: <a href="https://creativecommons.org/licenses/by/4.0/deed.no" target="_blank" rel="noopener">CC BY 4.0</a>. Du kan fritt bruke, dele og endre spillet så lenge du oppgir hvor originalen kommer fra, for eksempel:
+    «Basert på Kommadetektiven av Anne Katrine Westbye (2026), CC BY 4.0.»
+  </footer>
+</div>
+
+<div class="modal" id="modal">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <h2 style="margin:0">Reglene</h2>
+      <button class="btn ghost" id="closeModal">Lukk</button>
+    </div>
+    <div class="rulelist" id="rulelist2" style="margin:0"></div>
+  </div>
+</div>
+
+<script>
+const RULES = [
+  {id:"tilt", ic:"👋", name:"Tiltale og ja/nei", text:"Kommaet skiller ut ja, nei, hei eller navnet på den du snakker til.", ex:"Hei<em>,</em> Ola! Ja<em>,</em> jeg kommer."},
+  {id:"ram",  ic:"📝", name:"Oppramsing", text:"Kommaet står mellom ting i en liste, men aldri foran det siste «og» eller «eller».", ex:"epler<em>,</em> pærer<em>,</em> plommer og bananer"},
+  {id:"men",  ic:"⚖️", name:"Foran «men»", text:"Det står alltid komma foran «men», også når det som kommer etter ikke er en hel setning.", ex:"Liten<em>,</em> men sterk."},
+  {id:"ls",   ic:"1️⃣", name:"Leddsetning først", text:"Setningen starter med en leddsetning (når, hvis, fordi, da, mens osv.). Kommaet står der leddsetningen slutter.", ex:"Når det regner<em>,</em> blir vi inne."},
+  {id:"inn",  ic:"🥪", name:"Innskutt leddsetning", text:"En leddsetning er klemt inn mellom subjektet og verbet. Kommaet står etter den. (Er leddsetningen bare tilleggsinformasjon, får den komma på begge sider.)", ex:"Hunden som bjeffer<em>,</em> er min."},
+  {id:"hs",   ic:"🔗", name:"Mellom helsetninger", text:"To setninger som kunne stått alene (med hvert sitt subjekt), er bundet sammen med og, eller eller for.", ex:"Jeg løp<em>,</em> og hun gikk."},
+  {id:"feil", ic:"🚫", name:"Skal ikke være komma", text:"Ingen regel passer. Vanlige feller: komma foran «at», foran en leddsetning som står sist, mellom to verb med samme subjekt og foran siste «og» i en liste.", ex:"Jeg tror at det går bra."}
+];
+const R = Object.fromEntries(RULES.map(r=>[r.id,r]));
+
+// ^ etter kommaet markerer kommaet som skal etterforskes
+const ITEMS = [
+  {r:"hs", t:"Mamma lagde middag,^ og pappa vasket opp.", x:"«Mamma lagde middag» og «pappa vasket opp» kunne begge stått alene. Det er to helsetninger, og «og» binder dem sammen."},
+  {r:"hs", t:"Vi tok på oss lue,^ for det var kaldt ute.", x:"«Det var kaldt ute» er en hel setning med eget subjekt og verb. To helsetninger bundet sammen med «for»."},
+  {r:"hs", t:"Vi kan ta bussen,^ eller vi kan sykle.", x:"To helsetninger, begge med «vi» som subjekt, bundet sammen med «eller»."},
+  {r:"hs", t:"Jeg ble hjemme,^ for jeg var syk.", x:"«For» betyr her «fordi», men er en sideordnende konjunksjon. «Jeg var syk» er en helsetning."},
+  {r:"hs", t:"Da vi kom hjem, var huset tomt,^ og katten hadde forsvunnet.", x:"Dette kommaet står mellom to helsetninger («var huset tomt» og «katten hadde forsvunnet») bundet sammen med «og». Det første kommaet i setningen følger en annen regel."},
+  {r:"men", t:"Hun likte boka,^ men ikke filmen.", x:"Etter «men» kommer bare «ikke filmen», ingen hel setning. Komma foran «men» skal stå uansett."},
+  {r:"men", t:"Han er liten,^ men sterk.", x:"«Sterk» er ikke en setning. Det står likevel alltid komma foran «men»."},
+  {r:"men", t:"Maten var dyr,^ men god.", x:"«God» er bare ett ord, men komma foran «men» skal stå likevel."},
+  {r:"ls", t:"Når klokka ringer,^ må alle gå inn.", x:"«Når klokka ringer» kan ikke stå alene. Det er en leddsetning, og den står først. Da kommer det komma etter den."},
+  {r:"ls", t:"Hvis du er sulten,^ kan du ta en brødskive.", x:"Setningen starter med leddsetningen «hvis du er sulten». Kommaet markerer hvor den slutter."},
+  {r:"ls", t:"Fordi det var glatt,^ falt jeg på vei hjem.", x:"«Fordi det var glatt» er en leddsetning som står først. Legg merke til at verbet «falt» kommer rett etter kommaet."},
+  {r:"ls", t:"Da vi kom hjem,^ var huset tomt, og katten hadde forsvunnet.", x:"«Da vi kom hjem» er en leddsetning som starter setningen. Det andre kommaet følger en annen regel."},
+  {r:"ls", t:"Mens vi ventet på bussen,^ begynte det å snø.", x:"Leddsetningen «mens vi ventet på bussen» står først, så den får komma etter seg."},
+  {r:"inn", t:"Gutten som vant konkurransen,^ fikk en pokal.", x:"«Som vant konkurransen» er klemt inn mellom subjektet «gutten» og verbet «fikk». Kommaet står etter den innskutte leddsetningen."},
+  {r:"inn", t:"Boka som jeg lånte av deg,^ var veldig spennende.", x:"Subjektet er «boka», verbet er «var». Leddsetningen «som jeg lånte av deg» er skutt inn mellom dem."},
+  {r:"inn", t:"Alle som har levert,^ kan gå ut.", x:"«Som har levert» er klemt inn mellom «alle» og «kan». Uten kommaet blir det vanskelig å se hvor leddsetningen slutter."},
+  {r:"inn", t:"Huset der jeg vokste opp,^ er revet nå.", x:"«Der jeg vokste opp» er en leddsetning skutt inn mellom subjektet «huset» og verbet «er»."},
+  {r:"ram", t:"Vi kjøpte melk,^ brød, egg og ost.", x:"Melk, brød, egg og ost er en liste. Komma mellom leddene, ikke foran det siste «og»."},
+  {r:"ram", t:"Hun kan spille gitar, piano,^ fiolin og trommer.", x:"Dette er en oppramsing av instrumenter. Kommaet skiller «piano» og «fiolin»."},
+  {r:"ram", t:"I sekken hadde jeg en bok,^ en matpakke og en flaske vann.", x:"Tre ting i sekken: en bok, en matpakke og en flaske vann. Det er en liste."},
+  {r:"tilt", t:"Ja,^ jeg kommer straks.", x:"«Ja» er et svarord. Etter ja, nei og hei står det komma."},
+  {r:"tilt", t:"Kari,^ kan du lukke vinduet?", x:"Kari er den du snakker til. Navnet skilles ut med komma."},
+  {r:"tilt", t:"Takk for maten,^ mamma!", x:"Mamma er den du snakker til. Når navnet eller tiltalen står sist, kommer kommaet foran."},
+  {r:"tilt", t:"Vi skal spise,^ bestemor!", x:"Bestemor er den du snakker til. Uten kommaet står det at dere skal spise bestemor. 😱"},
+  {r:"tilt", t:"Nei,^ det er ikke din tur.", x:"«Nei» er et svarord og skal ha komma etter seg."},
+  {r:"feil", t:"Jeg går hjem,^ når klokka ringer.", x:"Leddsetningen «når klokka ringer» står sist, etter helsetningen. Da skal det ikke være komma. Riktig: «Jeg går hjem når klokka ringer.»"},
+  {r:"feil", t:"Vi spiste pizza,^ og drakk brus.", x:"Det er bare ett subjekt («vi»). «Og» binder sammen to verb, ikke to helsetninger. Riktig: «Vi spiste pizza og drakk brus.»"},
+  {r:"feil", t:"Hun sa,^ at hun var trøtt.", x:"Det skal ikke stå komma foran en at-setning etter verb som «sa», «tror» og «vet». Riktig: «Hun sa at hun var trøtt.»"},
+  {r:"feil", t:"Jeg tror,^ at det blir sol i morgen.", x:"At-setningen er det du tror. Den skal ikke skilles ut med komma."},
+  {r:"feil", t:"Vi kjøpte melk, brød, egg,^ og ost.", x:"I en oppramsing skal det ikke være komma foran det siste «og». Riktig: «Vi kjøpte melk, brød, egg og ost.»"}
+];
+
+const GOAL = 3;
+const $ = id=>document.getElementById(id);
+let mastery={}, wrongs={}, attempts=0, rightCount=0, cur=null, recent=[], answered=false;
+
+function ruleCards(el){
+  el.innerHTML = RULES.map(r=>`<div class="rcard"><div class="ic">${r.ic}</div><b>${r.name}</b><p>${r.text}</p><div class="ex">${r.ex}</div></div>`).join("");
+}
+ruleCards($("rulelist")); ruleCards($("rulelist2"));
+
+function renderProg(){
+  $("prog").innerHTML = RULES.map(r=>{
+    const m=mastery[r.id]; const done=m>=GOAL;
+    return `<div class="chip ${done?"done":""}" title="${r.name}">${r.ic}<span class="st">${"★".repeat(m)}${"☆".repeat(GOAL-m)}</span></div>`;
+  }).join("");
+}
+
+function pick(){
+  const open = RULES.filter(r=>mastery[r.id]<GOAL).map(r=>r.id);
+  // mest trening på reglene som ikke er løst, men litt repetisjon av de løste
+  let pool = ITEMS.filter(i=> open.includes(i.r) || Math.random()<0.15);
+  pool = pool.filter(i=>!recent.includes(i));
+  if(!pool.length) pool = ITEMS.filter(i=>open.includes(i.r));
+  const it = pool[Math.floor(Math.random()*pool.length)];
+  recent.push(it); if(recent.length>8) recent.shift();
+  return it;
+}
+
+function start(){
+  mastery={}; wrongs={}; RULES.forEach(r=>{mastery[r.id]=0;wrongs[r.id]=0;});
+  attempts=0; rightCount=0; recent=[];
+  $("start").classList.add("hidden"); $("end").classList.add("hidden"); $("game").classList.remove("hidden");
+  next();
+}
+
+function next(){
+  if(RULES.every(r=>mastery[r.id]>=GOAL)) return finish();
+  answered=false; cur=pick(); renderProg();
+  const html = cur.t.split(" ").map(w=>{
+    if(w.endsWith(",^")) return w.slice(0,-2)+'<span class="tc" id="tc">,</span>';
+    return w;
+  }).join(" ");
+  $("sentence").innerHTML=html;
+  $("choices").innerHTML = RULES.map((r,i)=>`<button class="ch" data-id="${r.id}"><span class="ic">${r.ic}</span><b>${r.name}</b><span class="k">${i+1}</span></button>`).join("");
+  document.querySelectorAll(".ch").forEach(b=>b.onclick=()=>answer(b.dataset.id));
+  $("fb").className="fb"; $("fb").innerHTML="";
+  $("hint").classList.remove("show");
+}
+
+function answer(id){
+  if(answered) return; answered=true; attempts++;
+  const ok = id===cur.r;
+  document.querySelectorAll(".ch").forEach(b=>{
+    b.disabled=true;
+    if(b.dataset.id===cur.r) b.classList.add("correct");
+    else if(b.dataset.id===id) b.classList.add("wrong");
+  });
+  const tc=$("tc");
+  let html="";
+  if(ok){
+    rightCount++;
+    const before=mastery[cur.r];
+    mastery[cur.r]=Math.min(GOAL,mastery[cur.r]+1);
+    tc.classList.add(cur.r==="feil"?"gone":"right");
+    const solved = before<GOAL && mastery[cur.r]===GOAL;
+    confetti(solved?160:60);
+    html=`<h3>${solved?`${R[cur.r].ic} Regel løst: ${R[cur.r].name}!`:pickOne(["Godt etterforsket!","Riktig!","Skarpt!","Akkurat!"])}</h3><p>${cur.x}</p>`;
+  } else {
+    wrongs[cur.r]++;
+    mastery[cur.r]=Math.max(0,mastery[cur.r]-1);
+    if(cur.r==="feil") tc.classList.add("gone");
+    html=`<h3>Ikke denne gangen</h3>
+      <p><b>Riktig svar: ${R[cur.r].ic} ${R[cur.r].name}.</b> ${cur.x}</p>
+      <div class="cmp"><b>Hvorfor ikke ${R[id].name}?</b> Den regelen gjelder når: ${R[id].text.charAt(0).toLowerCase()+R[id].text.slice(1)} Sjekk om det stemmer for kommaet i denne setningen.</div>`;
+  }
+  html+=`<div class="row"><button class="btn" id="nextBtn">Neste sak →</button><span style="color:var(--muted);font-weight:700;font-size:14px">eller trykk Enter</span></div>`;
+  const fb=$("fb"); fb.innerHTML=html; fb.className="fb show "+(ok?"good":"bad");
+  $("nextBtn").onclick=next;
+  renderProg();
+}
+
+function finish(){
+  $("game").classList.add("hidden"); $("end").classList.remove("hidden");
+  const pct=Math.round(rightCount/attempts*100);
+  $("endSub").textContent=`Du løste alle sju reglene på ${attempts} forsøk (${pct} % riktig).`;
+  const hard=RULES.filter(r=>wrongs[r.id]>0).sort((a,b)=>wrongs[b.id]-wrongs[a.id]);
+  $("hardest").innerHTML = hard.length
+    ? `<h2>Reglene som var vanskeligst</h2><div class="rulelist">${hard.map(r=>`<div class="rcard"><div class="ic">${r.ic}</div><b>${r.name}</b><p>Bom ×${wrongs[r.id]}</p><div class="ex">${r.ex}</div></div>`).join("")}</div>`
+    : `<p class="tag">Ingen bom i det hele tatt. Imponerende.</p>`;
+  confetti(240);
+}
+
+function pickOne(a){return a[Math.floor(Math.random()*a.length)];}
+
+// konfetti
+const cv=$("fx"),cx=cv.getContext("2d");let parts=[],running=false;
+function resize(){cv.width=innerWidth;cv.height=innerHeight;}resize();addEventListener("resize",resize);
+function confetti(n){const cols=["#ff7a45","#ffc83d","#2bb673","#6cc4ff","#fff"];
+  for(let i=0;i<n;i++)parts.push({x:innerWidth/2,y:innerHeight*.4,vx:(Math.random()-.5)*15,vy:-Math.random()*13-4,s:Math.random()*7+4,c:cols[i%5],r:0,vr:(Math.random()-.5)*.4,cm:Math.random()<.35,l:120});
+  if(!running){running=true;loop();}}
+function loop(){cx.clearRect(0,0,cv.width,cv.height);
+  parts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.42;p.r+=p.vr;p.l--;cx.save();cx.translate(p.x,p.y);cx.rotate(p.r);cx.fillStyle=p.c;
+    if(p.cm){cx.font=`800 ${p.s*3}px Nunito`;cx.fillText(",",0,0);}else cx.fillRect(-p.s/2,-p.s/2,p.s,p.s*.6);cx.restore();});
+  parts=parts.filter(p=>p.l>0&&p.y<cv.height+40);
+  if(parts.length)requestAnimationFrame(loop);else{running=false;cx.clearRect(0,0,cv.width,cv.height);}}
+
+// knapper og tastatur
+$("go").onclick=start; $("again").onclick=start;
+$("hintBtn").onclick=()=>$("hint").classList.toggle("show");
+$("rulesBtn").onclick=()=>$("modal").classList.add("show");
+$("closeModal").onclick=()=>$("modal").classList.remove("show");
+$("modal").onclick=e=>{if(e.target.id==="modal")$("modal").classList.remove("show");};
+document.addEventListener("keydown",e=>{
+  if($("game").classList.contains("hidden")) return;
+  if(e.key==="Escape") $("modal").classList.remove("show");
+  if(!answered && /^[1-7]$/.test(e.key)) answer(RULES[+e.key-1].id);
+  else if(answered && e.key==="Enter"){e.preventDefault();next();}
+});
+</script>
+</body>
+</html>
