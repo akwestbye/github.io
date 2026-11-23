@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Veien til Løvebakken, del 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,800&display=swap" rel="stylesheet">
+<style>
+/* VOICE  klasseromsspill for Vg1: tydelig, varmt, litt spenning
+   IDEA   en reise på et kart, fra skolevalget til Stortinget, fortalt som illustrerte scener
+   PICTURE en egen politiker eleven lager selv, som blir eldre fra scene til scene
+   COLOUR lys grunn, mørk blekkfarge, murstein #b94a34 som hovedfarge, grønn for riktig
+   TYPE   Familjen Grotesk til titler, Nunito Sans til tekst
+   LAYOUT kart som bånd øverst, spillkort med illustrasjon til venstre og profil til høyre */
+:root{color-scheme:light dark;--bg:light-dark(#f6f4ef,#14151b);--ink:light-dark(#1d1b2e,#efece4);--muted:light-dark(#5e5c6b,#a8a6b3);--card:light-dark(#ffffff,#1e1f27);--line:light-dark(#e2ddd2,#33343f);--brick:#b94a34;--ok:#1d7f62;--bad:#c23b30;--soft:light-dark(#f3ede4,#262732)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 "Nunito Sans",system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3{font-family:"Familjen Grotesk",system-ui,sans-serif;line-height:1.08;margin:0;text-wrap:balance}
+.band{padding:clamp(20px,3.5vw,44px) max(5vw,16px)}
+.wrap{max-width:1180px;margin:0 auto}
+.hero{background:var(--brick);color:#fff;padding-bottom:12px}
+.hero h1{font-size:clamp(34px,5.5vw,56px);font-weight:700;letter-spacing:-.02em}
+.hero p{margin:8px 0 0;max-width:62ch;opacity:.92}
+.map{margin-top:18px}
+.map svg{display:block;width:100%;height:auto;max-height:170px}
+.stops{list-style:none;margin:4px 0 0;padding:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;font-size:14px;font-weight:700}
+.stops li{opacity:.6;text-align:center}.stops li.on{opacity:1;text-decoration:underline;text-underline-offset:4px}.stops li.done{opacity:.85}
+.game{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px;align-items:start}
+.card{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:clamp(16px,2.6vw,30px);min-height:440px}
+.ill{display:block;width:100%;aspect-ratio:640/300;border-radius:14px;margin-bottom:18px;background:#efe7da}
+.ill.pop{animation:pop .5s ease}
+@keyframes pop{from{opacity:.3;transform:scale(.985)}to{opacity:1;transform:none}}
+.step{font-size:14px;font-weight:800;color:var(--brick);margin:0 0 6px}
+.card h2{font-size:clamp(25px,3vw,34px);margin-bottom:12px;letter-spacing:-.01em}
+.card p{margin:0 0 14px;max-width:66ch}
+.opts{display:grid;gap:10px;margin-top:8px}
+button{font:inherit;color:inherit;cursor:pointer}
+.opt{text-align:left;background:var(--soft);border:2px solid var(--line);border-radius:12px;padding:12px 16px;min-height:52px;line-height:1.4;font-weight:600;transition:border-color .15s,transform .1s}
+.opt:hover:not(:disabled){border-color:var(--brick)}
+.opt:active:not(:disabled){transform:scale(.99)}
+.opt.ok{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 14%,var(--card))}
+.opt.no{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,var(--card));opacity:.75}
+.opt:disabled{cursor:default}
+.fb{margin-top:16px;border-left:6px solid var(--ok);background:var(--soft);border-radius:0 12px 12px 0;padding:12px 16px}
+.fb.no{border-color:var(--bad)}
+.fb p{margin:0 0 8px}.fb p:last-child{margin:0}
+.fb b.v{color:var(--ok)}.fb.no b.v{color:var(--bad)}
+.go{margin-top:20px;background:var(--ink);color:var(--bg);border:0;border-radius:999px;padding:12px 26px;min-height:48px;font-weight:800}
+.go:disabled{opacity:.35;cursor:default}
+button:focus-visible,input:focus-visible{outline:3px solid var(--brick);outline-offset:2px}
+input[type=text]{font:inherit;font-size:18px;padding:10px 14px;border:2px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);width:min(100%,320px)}
+/* lag politiker */
+.maker{display:grid;grid-template-columns:minmax(0,220px) minmax(0,1fr);gap:20px;align-items:start;margin:6px 0 4px}
+.maker svg{width:100%;aspect-ratio:1/1.15;background:var(--soft);border-radius:14px;display:block}
+.row{margin-bottom:12px}.row b{display:block;font-size:14px;margin-bottom:6px}
+.sws{display:flex;flex-wrap:wrap;gap:8px}
+.sw{width:40px;height:40px;border-radius:50%;border:3px solid var(--card);box-shadow:0 0 0 2px var(--line)}
+.sw[aria-pressed=true]{box-shadow:0 0 0 3px var(--ink)}
+.chip{border:2px solid var(--line);background:var(--soft);border-radius:999px;padding:6px 14px;min-height:40px;font-weight:700;font-size:15px}
+.chip[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+/* uke */
+.week{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:6px}
+.act{display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;background:var(--soft);border:2px solid var(--line);border-radius:14px;padding:12px;min-height:96px;font-weight:700;line-height:1.25}
+.act small{font-weight:600;color:var(--muted)}
+.act svg{width:34px;height:34px}
+.act[aria-pressed=true]{border-color:var(--brick);background:color-mix(in srgb,var(--brick) 13%,var(--card))}
+.act:disabled{cursor:default}
+/* stand */
+.hud2{display:flex;gap:12px;flex-wrap:wrap;margin:-6px 0 12px}
+.hud2 span{background:var(--soft);border-radius:999px;padding:6px 16px;font-weight:800}
+.walker{cursor:pointer}
+/* side */
+.side{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:18px 20px;position:sticky;top:16px}
+.side .face{width:96px;height:96px;border-radius:50%;background:var(--soft);display:block;margin-bottom:8px}
+.side h3{font-size:20px;margin-bottom:10px}
+.side dl{margin:0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 12px;font-size:15px}
+.side dt{color:var(--muted);font-weight:700}.side dd{margin:0;font-weight:700;overflow-wrap:anywhere}
+.meter{height:12px;background:var(--soft);border-radius:999px;overflow:hidden;margin-top:4px}.meter i{display:block;height:100%;background:var(--brick);transition:width .5s}
+.know{margin-top:16px;padding-top:14px;border-top:1px dashed var(--line);font-size:15px;color:var(--muted)}
+.know b{color:var(--ink);font-size:22px;font-family:"Familjen Grotesk",sans-serif}
+/* opptelling */
+.count{overflow-x:auto;margin:10px 0}
+table{border-collapse:collapse;width:100%;min-width:460px;font-variant-numeric:tabular-nums}
+th,td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-size:14px;color:var(--muted)}
+.pc{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:7px;vertical-align:-1px}
+.q{font:inherit;font-weight:700;background:var(--soft);border:2px solid transparent;border-radius:8px;padding:6px 10px;min-width:84px;min-height:40px}
+.q:hover:not(:disabled){border-color:var(--brick)}
+.q.won{background:var(--ink);color:var(--bg)}
+.q.won small{display:block;font-size:12px;font-weight:600;opacity:.8}
+.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.seats{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.seat{width:30px;height:30px;border-radius:50% 50% 6px 6px;border:2px solid var(--ink)}
+/* rekkefølge */
+.order{display:grid;gap:8px;margin-top:8px}
+.ord{display:flex;gap:12px;align-items:center;text-align:left;background:var(--soft);border:2px solid var(--line);border-radius:12px;padding:10px 14px;min-height:52px;font-weight:600}
+.ord .n{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--card);border:2px solid var(--line);font-weight:800}
+.ord.set{border-color:var(--ok)}.ord.set .n{background:var(--ok);color:#fff;border-color:var(--ok)}
+.ord.shake{border-color:var(--bad)}
+/* budsjett */
+.items{display:grid;gap:8px;margin-top:8px}
+.item{display:flex;justify-content:space-between;gap:12px;align-items:center;text-align:left;background:var(--soft);border:2px solid var(--line);border-radius:12px;padding:10px 14px;min-height:52px;font-weight:600}
+.item b{white-space:nowrap}
+.item[aria-pressed=true]{border-color:var(--brick);background:color-mix(in srgb,var(--brick) 12%,var(--card))}
+.frame{margin-top:14px;font-weight:700}
+.frame .meter{height:16px}.frame .meter i.over{background:var(--bad)}
+/* nominasjon */
+.nl{opacity:0;animation:drop .5s ease forwards}
+@keyframes drop{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:none}}
+.cardup{animation:up 1.2s ease-in-out infinite alternate}
+@keyframes up{from{transform:translateY(6px)}to{transform:translateY(-4px)}}
+.conf{animation:fall 2.4s linear infinite}
+@keyframes fall{from{transform:translateY(-40px)}to{transform:translateY(320px)}}
+/* slutt */
+.path{list-style:none;padding:0;margin:8px 0 16px;border-left:4px solid var(--brick)}
+.path li{padding:4px 0 10px 16px;position:relative}
+.path li::before{content:"";position:absolute;left:-10px;top:10px;width:16px;height:16px;border-radius:50%;background:var(--card);border:3px solid var(--brick)}
+.keys{margin:0;padding-left:20px}.keys li{margin-bottom:6px}
+.teach{padding-top:0}
+.teach details{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:14px 20px}
+.teach summary{cursor:pointer;font-weight:800;min-height:28px}
+.teach a,.credit a{color:inherit}
+.credit{font-size:14px;color:var(--muted);margin-top:16px}
+@media(max-width:860px){.game{grid-template-columns:minmax(0,1fr)}.side{position:static;display:grid;grid-template-columns:96px minmax(0,1fr);gap:0 16px}.side .face{grid-row:span 3}}
+@media(max-width:560px){.stops{font-size:12px}.stops li:not(.on){visibility:hidden}.side dl{grid-template-columns:minmax(0,1fr)}.side dt{margin-top:4px}.week{grid-template-columns:repeat(2,minmax(0,1fr))}.maker{grid-template-columns:minmax(0,1fr)}.maker svg{max-width:220px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}.nl{opacity:1}}
+
+/* chat */
+.phone{max-width:460px;background:#1d1b2e;border-radius:28px;padding:12px;margin:6px 0 4px;box-shadow:0 14px 34px -18px #000a}
+.ph{display:flex;gap:10px;align-items:center;color:#fff;padding:6px 8px 10px}
+.ph svg{width:44px;height:44px;border-radius:50%;background:#f3ede4;flex:none}
+.ph b{display:block;font-size:16px}.ph small{opacity:.7;font-size:13px}
+.msgs{background:#f3ede4;border-radius:18px;padding:12px;display:grid;gap:8px;min-height:120px}
+.bub{max-width:85%;padding:9px 13px;border-radius:16px 16px 16px 4px;background:#fff;color:#1d1b2e;font-size:16px;line-height:1.4;animation:pop .3s ease}
+.bub.mine{justify-self:end;background:#b94a34;color:#fff;border-radius:16px 16px 4px 16px}
+.bub.sys{justify-self:center;background:transparent;color:#5e5c6b;font-size:13px;font-weight:700;padding:2px}
+.replies{display:grid;gap:8px;margin-top:10px}
+.rep{text-align:left;background:#fff;border:2px solid #b94a34;color:#1d1b2e;border-radius:16px;padding:10px 14px;font-weight:700;min-height:48px}
+.rep:hover{background:#fbe9e5}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.dc{font-size:13px;font-weight:800;border-radius:999px;padding:3px 10px;background:#dff1e9;color:#155f49}.dc.neg{background:#fbe1de;color:#9a2c22}
+/* delegater */
+.dele{background:var(--soft);border-radius:14px;padding:14px 16px;margin:4px 0 16px}
+.dtop{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-weight:800;margin-bottom:10px}
+.dtop .big{font-family:"Familjen Grotesk",sans-serif;font-size:28px;line-height:1}
+.dtop .ok{color:var(--ok)}.dtop .no{color:var(--bad)}
+.regs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.reg b{display:block;font-size:13px;margin-bottom:5px}
+.dots{display:flex;flex-wrap:wrap;gap:3px}
+.dots i{width:9px;height:9px;border-radius:50%;background:#c9c2b4;transition:background .4s}
+.dots i.me{background:#b94a34}
+.reg small{display:block;font-size:12px;color:var(--muted);margin-top:4px;font-weight:700}
+/* avstemning */
+.vote{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:10px 0}
+.vote div{background:var(--soft);border-radius:14px;padding:14px;text-align:center}
+.vote b{display:block;font-family:"Familjen Grotesk",sans-serif;font-size:48px;line-height:1.05}
+.paper{background:#fffdf7;color:#1d1b2e;border:1px solid #d9d2c3;border-radius:6px;padding:14px 18px;max-width:460px;box-shadow:0 8px 20px -14px #000;margin:6px 0 14px;font-family:Georgia,serif}
+.paper small{font-family:"Nunito Sans",sans-serif;font-weight:800;color:#b94a34;letter-spacing:.02em}
+.paper h3{font-family:Georgia,serif;font-size:26px;margin:4px 0}
+/* test */
+.tq{border-top:1px solid var(--line);padding:14px 0}
+.tq p{margin:0 0 8px;font-weight:700}
+.tf{display:flex;gap:8px;flex-wrap:wrap}
+.tf button,.tm button{background:var(--soft);border:2px solid var(--line);border-radius:10px;padding:8px 14px;min-height:44px;font-weight:700}
+.tm{display:grid;gap:6px}
+.tm button{text-align:left}
+.tf button[aria-pressed=true],.tm button[aria-pressed=true]{border-color:var(--ink);background:color-mix(in srgb,var(--ink) 10%,var(--card))}
+.tq.r .right{border-color:var(--ok)!important;background:color-mix(in srgb,var(--ok) 15%,var(--card))!important}
+.tq.r .wrong{border-color:var(--bad)!important;background:color-mix(in srgb,var(--bad) 12%,var(--card))!important}
+.tq .ex{display:none;font-weight:400;color:var(--muted);margin-top:8px}.tq.r .ex{display:block}
+.mini{font-variant-numeric:tabular-nums;margin:6px 0 10px;min-width:0}
+.mini td,.mini th{padding:4px 8px}
+.res{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:10px 0}
+.res div{background:var(--soft);border-radius:12px;padding:12px}
+.res b{display:block;font-family:"Familjen Grotesk",sans-serif;font-size:28px}
+@media(max-width:560px){.regs,.res{grid-template-columns:minmax(0,1fr)}.vote b{font-size:38px}}
+</style>
+</head>
+<body>
+<header class="band hero"><div class="wrap">
+  <h1>Veien til Løvebakken <span style="opacity:.75;font-weight:500">· del 1</span></h1>
+  <p>Hvordan blir man stortingsrepresentant? Lag din egen politiker, kjemp deg opp på lista og overlev valgnatta.</p>
+  <div class="map">
+    <svg id="map" viewBox="0 0 1000 150" role="img" aria-label="Kart over veien fra ungdomsparti til Stortinget"></svg>
+    <ol class="stops" id="stops"><li>Partiet</li><li>Lokalpolitikk</li><li>Nominasjon</li><li>Valgnatt</li><li>Sjekk deg selv</li></ol>
+  </div>
+</div></header>
+
+<main class="band"><div class="wrap game">
+  <section class="card" id="card" aria-live="polite"></section>
+  <aside class="side" id="side"></aside>
+</div></main>
+
+<section class="band teach"><div class="wrap">
+  <details>
+    <summary>For læreren</summary>
+    <p>Del 1 tar for seg veien fram til Stortinget: parti, lokalpolitikk, nominasjon med innstilling, delegater, benkeforslag og kampvotering, lukkede lister, mandatfordeling, sperregrense og utjevningsmandater. Til slutt kommer en test uten hint, med resultat per tema. Del 2 handler om arbeidet på Stortinget. Partiene, personene, valgdistriktet Fjordvik og alle tall er oppdiktet. Reglene er slik de var ved stortingsvalget i 2025.</p><p>Nominasjonen er forenklet. Valgloven stiller ingen krav til hvordan partiene skal nominere, så hvert parti har sine egne regler. Avtalene og intrigene i spillet er laget for å vise hvorfor nominasjonen er så viktig når listene er lukket.</p><p>Merk at ny valglov gjelder fra 1. mai 2024. Velgerne kan ikke lenger endre listene ved stortingsvalg, så eldre lærebøker kan si noe annet.</p>
+    <p>Kilder: <a href="https://www.stortinget.no/no/stortinget-og-demokratiet/valg-og-konstituering/stortingsvalg/">Stortinget: Stortingsvalg</a>, <a href="https://www.stortinget.no/no/stortinget-og-demokratiet/arbeidet/lovarbeidet/">Stortinget: Lovarbeidet</a>, <a href="https://snl.no/Valgordning_i_Norge">Store norske leksikon: Valgordning i Norge</a>.</p>
+  </details>
+  <p class="credit">Utviklet av Anne Katrine Westbye med Claude (KI). Lisens: <a href="https://creativecommons.org/licenses/by/4.0/deed.no">CC BY 4.0</a>. Du kan fritt dele og endre spillet så lenge du oppgir hvem som har laget det.</p>
+</div></section>
+
+<script>
+{
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt=n=>Math.round(n).toLocaleString("nb-NO");
+function shade(hex,f){const n=parseInt(hex.slice(1),16);return "#"+[n>>16,n>>8&255,n&255].map(v=>Math.max(0,Math.min(255,Math.round(f<1?v*f:v+(255-v)*(f-1)))).toString(16).padStart(2,"0")).join("");}
+
+/* ================= FIGURER ================= */
+const ARMS={
+ down:[["M-17,-102 Q-23,-84 -21,-66","M17,-102 Q23,-84 21,-66"],[[-21,-64],[21,-64]]],
+ wave:[["M-17,-102 Q-23,-84 -21,-66","M17,-102 Q31,-112 28,-134"],[[-21,-64],[28,-137]]],
+ cheer:[["M-17,-102 Q-31,-112 -28,-134","M17,-102 Q31,-112 28,-134"],[[-28,-137],[28,-137]]],
+ give:[["M-17,-102 Q-30,-96 -39,-100","M17,-102 Q23,-84 21,-66"],[[-41,-100],[21,-64]]],
+ take:[["M-17,-102 Q-23,-84 -21,-66","M17,-102 Q30,-96 39,-100"],[[-21,-64],[41,-100]]],
+ talk:[["M-17,-102 Q-23,-84 -21,-66","M17,-102 Q32,-94 37,-106"],[[-21,-64],[38,-108]]],
+ hold:[["M-17,-102 Q-22,-82 -8,-80","M17,-102 Q22,-82 8,-80"],[[-7,-80],[7,-80]]],
+ vote:[["M-17,-102 Q-23,-84 -21,-66","M17,-102 Q28,-118 25,-136"],[[-21,-64],[25,-139]]],
+ crossed:[["M-17,-102 Q-25,-88 -12,-84 L10,-87","M17,-102 Q25,-88 12,-82 L-10,-85"],[[11,-87],[-11,-85]]],
+ pockets:[["M-17,-102 Q-22,-86 -14,-77","M17,-102 Q22,-86 14,-77"],[]],
+ chin:[["M-17,-102 Q-25,-88 -12,-84 L10,-87","M17,-102 Q27,-96 16,-100 L5,-112"],[[11,-87],[5,-114]]]
+};
+function limb(d,c,w){return `<path d="${d}" stroke="${c}" stroke-width="${w}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;}
+function face(m){
+ const E='fill="#25212b"',L='stroke="#25212b" fill="none" stroke-linecap="round" stroke-width="1.6"';
+ const eyes=`<ellipse cx="-5" cy="-125" rx="1.8" ry="2.2" ${E}/><ellipse cx="5" cy="-125" rx="1.8" ry="2.2" ${E}/><circle cx="-4.4" cy="-125.8" r=".6" fill="#fff"/><circle cx="5.6" cy="-125.8" r=".6" fill="#fff"/>`;
+ const brow=`<path d="M-8,-130.5 q3,-1.6 5.5,-.6 M8,-130.5 q-3,-1.6 -5.5,-.6" ${L}/>`;
+ const blush=`<ellipse cx="-8.5" cy="-119" rx="2.6" ry="1.5" fill="#e2706a" opacity=".4"/><ellipse cx="8.5" cy="-119" rx="2.6" ry="1.5" fill="#e2706a" opacity=".4"/>`;
+ return ({
+  happy:brow+eyes+blush+`<path d="M-4.5,-117 q4.5,4.5 9,0" ${L}/>`,
+  big:brow+`<path d="M-7,-125 q2,-3 4,0 M3,-125 q2,-3 4,0" ${L}/>`+blush+`<path d="M-5,-118 q5,7 10,0z" fill="#7a2a30"/>`,
+  talk:brow+eyes+`<ellipse cx="0" cy="-116.5" rx="2.6" ry="2.1" fill="#7a2a30"/>`,
+  nervous:`<path d="M-8,-130 q3,-.5 5,-2.5 M8,-130 q-3,-.5 -5,-2.5" ${L}/>`+eyes+`<path d="M-4,-116 q1,-1.4 2,0 t2,0 t2,0 t2,0" ${L} stroke-width="1.3"/><path d="M12,-134 q2.6,4.2 0,5.2 q-2.6,-1 0,-5.2z" fill="#7fc7ef"/>`,
+  calm:brow+`<path d="M-7,-125 q2,2 4,0 M3,-125 q2,2 4,0" ${L}/>`+`<path d="M-3.5,-117 q3.5,2.6 7,0" ${L}/>`,
+  neutral:brow+eyes+`<path d="M-3,-116.5 h6" ${L}/>`
+ })[m||"happy"];
+}
+function hairBack(h,c){
+ if(h==="long") return `<path d="M-17,-128 Q-19,-151 0,-150 Q19,-151 17,-128 L18,-100 Q9,-96 6,-108 L-6,-108 Q-9,-96 -18,-100Z" fill="${c}"/>`;
+ if(h==="curly") return [[-14,-137],[14,-137],[-8,-148],[8,-148],[0,-151],[-17,-125],[17,-125],[-16,-114],[16,-114]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="9" fill="${c}"/>`).join("")+`<circle cx="0" cy="-130" r="16" fill="${c}"/>`;
+ if(h==="bun") return `<circle cx="0" cy="-149" r="8" fill="${c}"/>`;
+ return "";
+}
+function hairFront(h,c){
+ const hl=shade(c,1.6);
+ if(h==="long") return `<path d="M-14.6,-126 Q-16,-147 0,-147 Q16,-147 14.6,-126 Q12,-138 2,-139 Q-4,-134 -14.6,-126Z" fill="${c}"/><path d="M-6,-144 q6,-2 12,0" stroke="${hl}" stroke-width="1.6" fill="none" opacity=".6" stroke-linecap="round"/>`;
+ if(h==="short") return `<path d="M-14.6,-127 Q-16,-146 0,-146 Q16,-146 14.6,-127 Q13,-136 4,-137 Q-6,-139 -14.6,-127Z" fill="${c}"/><path d="M-4,-143 q5,-1.5 10,.5" stroke="${hl}" stroke-width="1.6" fill="none" opacity=".6" stroke-linecap="round"/>`;
+ if(h==="curly") return [[-11,-138],[-4,-142],[4,-142],[11,-138]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="6" fill="${c}"/>`).join("");
+ if(h==="bun") return `<path d="M-14.6,-126 Q-15,-146 1,-146 Q15,-145 14.6,-127 Q10,-139 -4,-137Z" fill="${c}"/>`;
+ if(h==="buzz") return `<path d="M-14.4,-129 Q-14,-144 0,-144 Q14,-144 14.4,-129 Q8,-137 0,-137 Q-8,-137 -14.4,-129Z" fill="${c}"/>`;
+ if(h==="bald") return `<path d="M-14.6,-124 Q-15,-133 -12,-136 L-11,-126Z M14.6,-124 Q15,-133 12,-136 L11,-126Z" fill="${c}"/>`;
+ return "";
+}
+function person(o){
+ const k=(o.s||1)*(o.teen?.92:1),sk=o.skin||"#e8b48f",hc=o.hairC||"#2a1c14",tp=o.top||"#d64534",pa=o.pants||"#2f3447",dk=shade(tp,.82),sks=shade(sk,.88);
+ const [A,H]=ARMS[o.pose||"down"];
+ let g=`<g transform="translate(${o.x} ${o.y}) scale(${k})">`;
+ g+=`<ellipse rx="24" ry="4" fill="#000" opacity=".12"/>`+hairBack(o.hair,hc);
+ g+=limb("M6,-64 L7,-6",shade(pa,.85),11)+limb("M-6,-64 L-7,-6",pa,11);
+ g+=`<ellipse cx="-9" cy="-3" rx="7.5" ry="3.6" fill="#22232b"/><ellipse cx="9" cy="-3" rx="7.5" ry="3.6" fill="#22232b"/>`;
+ if(o.pack) g+=`<rect x="-22" y="-104" width="44" height="34" rx="8" fill="${o.pack}"/>`;
+ const T="M-18,-104 Q-19,-109 -11,-109 L11,-109 Q19,-109 18,-104 L15,-60 Q0,-56 -15,-60Z";
+ const bz=o.blazer;
+ g+=`<path d="${T}" fill="${bz||tp}"/><path d="M5,-109 L11,-109 Q19,-109 18,-104 L15,-60 Q9,-58 6,-58.4 Q10,-86 5,-109Z" fill="${shade(bz||tp,.82)}"/>`;
+ if(bz) g+=`<path d="M-7,-109 L0,-86 L7,-109Z" fill="${tp}"/><path d="M-8,-109 L-1,-88 L-6,-92 L-11,-108Z M8,-109 L1,-88 L6,-92 L11,-108Z" fill="${shade(bz,.7)}"/>`;
+ else if(o.hoodie) g+=`<path d="M-10,-84 L10,-84 L12,-70 L-12,-70Z" fill="${dk}"/><path d="M-3.5,-108 v12 M3.5,-108 v12" stroke="#f3efe6" stroke-width="1.5" stroke-linecap="round"/>`;
+ else g+=`<path d="M-6,-109 Q0,-103 6,-109" stroke="${dk}" stroke-width="2" fill="none"/>`;
+ if(o.lanyard) g+=`<path d="M-6,-108 L0,-88 L6,-108" stroke="#1d7f62" stroke-width="1.8" fill="none"/><rect x="-4" y="-90" width="8" height="10" rx="1.5" fill="#fff" stroke="#1d7f62" stroke-width="1"/>`;
+ g+=`<rect x="-4" y="-117" width="8" height="10" fill="${sks}"/>`;
+ if(o.hoodie&&!bz) g+=`<path d="M-14,-110 Q-16,-118 0,-118 Q16,-118 14,-110 Q7,-105 0,-105 Q-7,-105 -14,-110Z" fill="${dk}"/>`;
+ g+=`<ellipse cx="-14.5" cy="-123" rx="2.5" ry="3.8" fill="${sk}"/><ellipse cx="14.5" cy="-123" rx="2.5" ry="3.8" fill="${sks}"/>`;
+ g+=`<path d="M-14,-128 Q-14.5,-142 0,-142 Q14.5,-142 14,-128 L13,-118 Q9,-108 0,-107 Q-9,-108 -13,-118Z" fill="${sk}"/><path d="M6,-141 Q14.5,-140 14,-128 L13,-118 Q9,-108 0,-107 Q8,-114 8.5,-126 Q8.5,-136 6,-141Z" fill="${sks}"/>`;
+ g+=face(o.mood)+hairFront(o.hair,hc);
+ if(o.beard) g+=`<path d="M-12,-118 Q-10,-106 0,-105 Q10,-106 12,-118 Q8,-112 0,-113 Q-8,-112 -12,-118Z" fill="${hc}"/>`;
+ if(o.glasses) g+=`<g fill="none" stroke="#25212b" stroke-width="1.4"><circle cx="-5.5" cy="-125" r="4.2"/><circle cx="5.5" cy="-125" r="4.2"/><path d="M-1.3,-125 h2.6"/></g>`;
+ g+=limb(A[0],bz||tp,9)+limb(A[1],shade(bz||tp,.82),9)+H.map(([x,y])=>`<circle cx="${x}" cy="${y}" r="4.4" fill="${x>0?sks:sk}"/>`).join("");
+ if(o.prop==="flyer"){const [hx,hy]=o.pose==="take"?[41,-100]:[-41,-100];g+=`<g transform="translate(${hx+(o.pose==="take"?-2:-8)} ${hy-12}) rotate(-8)"><rect width="11" height="15" rx="1.5" fill="#fff" stroke="#d64534" stroke-width="1.5"/><path d="M3,5 h5 M3,8 h5 M3,11 h3" stroke="#d64534" stroke-width="1"/></g>`;}
+ if(o.prop==="paper") g+=`<rect x="-10" y="-93" width="20" height="14" rx="1.5" fill="#fff" stroke="#c9c2b4"/><path d="M-6,-88 h12 M-6,-84 h8" stroke="#9a948a" stroke-width="1"/>`;
+ if(o.prop==="card") g+=`<rect x="19" y="-157" width="13" height="17" rx="2" fill="#f5c242" stroke="#25212b" stroke-width="1"/>`;
+ if(o.prop==="phone") g+=`<rect x="31" y="-118" width="8" height="14" rx="2" fill="#25212b"/><path d="M42,-122 q4,4 0,8 M45,-125 q7,7 0,14" stroke="#1d7f62" stroke-width="1.6" fill="none"/>`;
+ return g+"</g>";
+}
+const NPC=[
+ {skin:"#f6d3b3",hair:"short",hairC:"#b88a3e",top:"#2b59c3"},
+ {skin:"#8d5a3b",hair:"curly",hairC:"#1a1310",top:"#f2a93b"},
+ {skin:"#e8b48f",hair:"long",hairC:"#5a3a22",top:"#1d7f62"},
+ {skin:"#c68b62",hair:"bun",hairC:"#2a1c14",top:"#6b5d72"},
+ {skin:"#f2c9a6",hair:"bald",hairC:"#8a8a8a",top:"#4b5446",beard:1},
+ {skin:"#5b3a26",hair:"buzz",hairC:"#1a1310",top:"#d64534"},
+ {skin:"#e3a77f",hair:"long",hairC:"#d9c27a",top:"#8e5bd0",glasses:1},
+ {skin:"#f6d3b3",hair:"short",hairC:"#a8432b",top:"#2e8b57",glasses:1}];
+const npc=(i,o)=>person(Object.assign({},NPC[i%NPC.length],o));
+
+/* ================= SCENER ================= */
+const DEFS=`<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bfe0f2"/><stop offset="1" stop-color="#e9f3f8"/></linearGradient><linearGradient id="night" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b1d33"/><stop offset="1" stop-color="#3a2a4a"/></linearGradient><radialGradient id="spot" cx=".5" cy="0" r="1"><stop offset="0" stop-color="#fff7d6" stop-opacity=".5"/><stop offset="1" stop-color="#fff7d6" stop-opacity="0"/></radialGradient><pattern id="dots" width="8" height="8" patternUnits="userSpaceOnUse"><circle cx="4" cy="4" r="1" fill="#000" opacity=".06"/></pattern></defs>`;
+const room=(wall,floor,fy=232)=>`<rect width="640" height="300" fill="${wall}"/><rect width="640" height="${fy}" fill="url(#dots)"/><rect y="${fy}" width="640" height="${300-fy}" fill="${floor}"/><rect y="${fy}" width="640" height="4" fill="#000" opacity=".08"/>`;
+const win=(x,y,w,h)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4" fill="url(#sky)" stroke="#fff" stroke-width="6"/><path d="M${x+w/2},${y} v${h} M${x},${y+h/2} h${w}" stroke="#fff" stroke-width="4"/>`;
+const table=(x,y,w,c="#8a5a3b",h=34)=>`<rect x="${x}" y="${y}" width="${w}" height="10" rx="3" fill="${c}"/><rect x="${x+6}" y="${y+10}" width="${w-12}" height="${h}" fill="${shade(c,.8)}"/>`;
+const banner=(x,y,w,t,c)=>`<rect x="${x}" y="${y}" width="${w}" height="26" rx="4" fill="${c}"/><text x="${x+w/2}" y="${y+18}" text-anchor="middle" font-family="Familjen Grotesk,sans-serif" font-weight="700" font-size="14" fill="#fff">${t}</text>`;
+const lighthouse=(x,y,s=1)=>`<g transform="translate(${x} ${y}) scale(${s})"><path d="M-6,0 L-4,-26 L4,-26 L6,0Z" fill="#fff"/><path d="M-5.3,-9 h10.6 l.4,4 h-11.4z M-4.6,-19 h9.2 l.3,4 h-9.8z" fill="#d64534"/><rect x="-5" y="-31" width="10" height="5" fill="#25212b"/><path d="M5,-29 l16,-6 v12z" fill="#f5c242" opacity=".9"/></g>`;
+const balloon=(x,y,c)=>`<g class="cardup" style="transform-box:fill-box"><ellipse cx="${x}" cy="${y}" rx="13" ry="16" fill="${c}"/><path d="M${x},${y+16} q4,20 -2,40" stroke="#25212b" stroke-width="1" fill="none" opacity=".5"/></g>`;
+const confetti=()=>Array.from({length:26},(_,i)=>`<rect class="conf" x="${(i*53)%640}" y="${-20-(i*37)%140}" width="7" height="11" fill="${["#d64534","#f5c242","#2b59c3","#1d7f62","#fff"][i%5]}" transform="rotate(${i*29} ${(i*53)%640} 0)" style="animation-delay:-${(i*.37)%2.4}s"/>`).join("");
+function me(o){const L=G.look,st=STEPS[G.i].st;const age=o.age||STEPS[G.i].age||16;
+ return person(Object.assign({skin:L.skin,hair:L.hair,hairC:L.hairC,top:L.top,teen:age<18,hoodie:age<20&&!o.blazer,blazer:age>=27?(L.top==="#2b59c3"?"#2f3447":"#2f3447"):null,lanyard:st>=4&&age>=28},o));}
+
+const SC={
+ maker:()=>"",
+ skolevalg:()=>room("#e9e0cf","#cdbb9e")+win(270,24,100,64)+
+  `<rect x="24" y="28" width="150" height="44" rx="10" fill="#fff"/><path d="M60,72 l10,16 l12,-16z" fill="#fff"/><text x="99" y="57" text-anchor="middle" font-family="Familjen Grotesk,sans-serif" font-weight="700" font-size="20" fill="#25212b">Skolevalg!</text>`+
+  npc(0,{x:100,y:236,s:.8,teen:1,pose:"talk",mood:"talk"})+table(20,196,170)+`<rect x="32" y="210" width="146" height="24" rx="3" fill="#2b59c3"/><text x="105" y="227" text-anchor="middle" font-family="Familjen Grotesk,sans-serif" font-weight="700" font-size="13" fill="#fff">Ankerpartiet</text>`+
+  npc(5,{x:560,y:236,s:.8,teen:1,pose:"give",prop:"flyer",mood:"talk"})+table(440,196,190)+`<rect x="452" y="210" width="166" height="24" rx="3" fill="#d64534"/><text x="535" y="227" text-anchor="middle" font-family="Familjen Grotesk,sans-serif" font-weight="700" font-size="13" fill="#fff">Fyrlykta</text>${lighthouse(464,196,.7)}<rect x="590" y="186" width="22" height="12" fill="#fff" stroke="#d64534"/>`+
+  me({x:330,y:292,s:1.1,pose:"take",prop:"flyer",mood:"happy"}),
+ bursdag:()=>room("#f1d9d2","#cdbb9e")+`<rect x="40" y="40" width="90" height="120" rx="4" fill="#d64534"/>${lighthouse(85,140,1.6)}<text x="85" y="62" text-anchor="middle" font-family="Familjen Grotesk,sans-serif" font-weight="700" font-size="14" fill="#fff">FYRLYKTA U</text>`+win(470,36,130,90)+
+  table(160,200,320,"#c98a5b")+`<rect x="230" y="168" width="96" height="34" rx="6" fill="#fff"/><rect x="230" y="168" width="96" height="10" rx="5" fill="#f3a6b5"/>${[0,1,2,3,4,5].map(i=>`<rect x="${240+i*14}" y="152" width="4" height="16" fill="#f5c242"/><ellipse cx="${242+i*14}" cy="149" rx="3" ry="5" fill="#ff9d2e"/>`).join("")}<text x="278" y="196" text-anchor="middle" font-family="Familjen Grotesk,sans-serif" font-weight="700" font-size="18" fill="#d64534">18</text>`+
+  me({x:400,y:292,s:1.05,pose:"cheer",mood:"big",age:17}),
+ lokallag:()=>room("#e3e8ea","#b9a58a")+`<rect x="40" y="34" width="250" height="140" rx="6" fill="#fff" stroke="#c7cdd1" stroke-width="5"/><text x="58" y="66" font-family="Familjen Grotesk,sans-serif" font-weight="700" font-size="17" fill="#d64534">Styremøte · Fyrlykta U</text>${[88,110,132,154].map((y,i)=>`<path d="M60,${y} h${[160,120,180,100][i]}" stroke="#9aa4ab" stroke-width="5" stroke-linecap="round"/>`).join("")}`+win(450,36,140,96)+
+  npc(1,{x:110,y:262,s:.85,teen:1,mood:"happy"})+npc(2,{x:190,y:262,s:.85,teen:1,mood:"talk",pose:"talk"})+npc(7,{x:270,y:262,s:.85,teen:1,mood:"neutral"})+table(60,214,280,"#c98a5b",86)+`<rect x="110" y="206" width="20" height="10" fill="#fff"/><rect x="250" y="205" width="16" height="12" rx="3" fill="#d64534"/>`+
+  me({x:460,y:292,s:1.08,pose:"talk",mood:"talk",age:17}),
+ stand:()=>`<rect width="640" height="300" fill="url(#sky)"/>`+[[0,"#e8c9a1",150],[150,"#c9d6c3",120],[290,"#e3b8a8",170],[480,"#d1c8e3",160]].map(([x,c,h])=>`<rect x="${x}" y="${232-h}" width="${x===480?160:x===290?190:150}" height="${h}" fill="${c}"/>${[0,1,2].map(i=>`<rect x="${x+16+i*44}" y="${232-h+20}" width="28" height="34" rx="3" fill="#fff" opacity=".7"/>`).join("")}`).join("")+
+  `<rect x="20" y="186" width="110" height="46" fill="#5a4a3a"/><rect x="28" y="192" width="94" height="32" fill="#bfe0f2" opacity=".8"/><text x="75" y="182" text-anchor="middle" font-family="Familjen Grotesk,sans-serif" font-weight="700" font-size="12" fill="#25212b">KAFÉ</text>`+
+  `<rect y="232" width="640" height="68" fill="#b8b2a8"/><path d="M0,262 h640" stroke="#a29b90" stroke-width="2"/>`+
+  `<path d="M380,96 L470,70 L560,96Z" fill="#d64534"/><path d="M380,96 L470,70 L560,96" fill="none" stroke="#b13426" stroke-width="3"/><path d="M470,70 V232" stroke="#6b6157" stroke-width="4"/><text x="470" y="92" text-anchor="middle" font-family="Familjen Grotesk,sans-serif" font-weight="700" font-size="14" fill="#fff">FYRLYKTA</text>`+
+  me({x:520,y:262,s:.95,pose:"give",prop:"flyer",mood:"happy",age:19})+table(400,204,140,"#d64534",40)+`<rect x="414" y="194" width="30" height="12" fill="#fff"/><rect x="498" y="186" width="10" height="20" rx="3" fill="#2f3447"/>`+`<g id="walkers"></g>`,
+ kommunestyre:()=>room("#e7dccb","#9c7b5c",226)+`<rect x="0" y="0" width="640" height="40" fill="#c9b08f"/><text x="320" y="27" text-anchor="middle" font-family="Familjen Grotesk,sans-serif" font-weight="700" font-size="15" fill="#5e4a35">HAVNØY KOMMUNESTYRE</text><path d="M296,50 h48 v32 q0,20 -24,26 q-24,-6 -24,-26z" fill="#1f4f8f"/><path d="M310,66 l10,-8 l10,8 v16 h-20z" fill="#f5c242"/>`+
+  npc(3,{x:120,y:254,s:.78,mood:"neutral"})+npc(4,{x:200,y:250,s:.78,mood:"neutral",pose:"chin"})+npc(6,{x:440,y:250,s:.78,mood:"happy"})+npc(0,{x:520,y:254,s:.78,mood:"neutral"})+
+  `<path d="M40,220 Q320,176 600,220 L600,300 L40,300Z" fill="#7a5537"/><path d="M40,220 Q320,176 600,220" stroke="#5e4129" stroke-width="6" fill="none"/>`+
+  me({x:320,y:292,s:1.05,pose:"talk",mood:"talk",age:24})+`<path d="M250,248 Q320,236 390,248 L390,300 L250,300Z" fill="#8a6142"/><path d="M332,248 l12,-30" stroke="#25212b" stroke-width="3"/><circle cx="345" cy="216" r="4" fill="#25212b"/>`,
+ nomkom:()=>room("#dfe6e0","#b9a58a")+win(250,30,140,96)+`<rect x="440" y="40" width="160" height="110" rx="6" fill="#d64534"/>${lighthouse(520,138,1.7)}`+
+  npc(4,{x:70,y:262,s:.86,mood:"neutral",glasses:1,pose:"hold",prop:"paper"})+npc(3,{x:150,y:262,s:.86,mood:"calm"})+npc(1,{x:230,y:262,s:.86,mood:"neutral",pose:"chin"})+table(20,214,270,"#c98a5b",86)+`<rect x="40" y="205" width="40" height="10" fill="#fff"/><rect x="190" y="205" width="40" height="10" fill="#fff"/>`+
+  me({x:440,y:292,s:1.08,pose:"talk",mood:"talk",age:27}),
+ nommote:()=>room("#e9e0cf","#b9a58a",216)+`<rect x="330" y="20" width="290" height="176" rx="8" fill="#25212b"/><text x="350" y="50" font-family="Familjen Grotesk,sans-serif" font-weight="700" font-size="16" fill="#f5c242">Fyrlykta · Fjordvik</text>`+
+  (G.list||[]).slice(0,4).map((n,j)=>`<g class="nl" style="animation-delay:${.4+j*.55}s"><rect x="350" y="${62+j*31}" width="250" height="25" rx="4" fill="${j===G.plass-1?"#d64534":"#3a3850"}"/><text x="360" y="${79+j*31}" font-family="Nunito Sans,sans-serif" font-weight="800" font-size="13" fill="#fff">${j+1}. ${esc(n)}</text></g>`).join("")+
+  `<rect x="40" y="150" width="240" height="66" fill="#c98a5b"/>`+me({x:160,y:206,s:.8,pose:"wave",mood:"big",age:27})+
+  Array.from({length:9},(_,i)=>{const x=30+i*70,y=290-(i%2)*10,c=["#2f3447","#4b5446","#6b5d72","#3a5f8f"][i%4];return `<g><rect class="cardup" style="animation-delay:-${i*.3}s;transform-box:fill-box" x="${x+18}" y="${y-92}" width="16" height="20" rx="2" fill="#f5c242"/><path d="M${x+22},${y-72} v24" stroke="${c}" stroke-width="7" stroke-linecap="round"/><path d="M${x-22},${y} q0,-34 22,-36 q22,2 22,36z" fill="${c}"/><circle cx="${x}" cy="${y-48}" r="14" fill="${["#e8b48f","#8d5a3b","#f6d3b3","#c68b62"][i%4]}"/><path d="M${x-14},${y-50} q0,-18 14,-18 q14,0 14,18 q-6,-10 -14,-10 q-8,0 -14,10z" fill="${["#2a1c14","#5a3a22","#b88a3e","#1a1310"][i%4]}"/></g>`}).join(""),
+ valglokale:()=>room("#e1e6ec","#c4b49a")+`<rect x="40" y="60" width="150" height="172" fill="#3a5f8f"/><rect x="50" y="70" width="60" height="162" fill="#4f78ad"/><rect x="120" y="70" width="60" height="162" fill="#4f78ad"/><rect x="200" y="60" width="150" height="172" fill="#3a5f8f"/><rect x="210" y="70" width="130" height="162" fill="#4f78ad"/><text x="275" y="54" text-anchor="middle" font-family="Familjen Grotesk,sans-serif" font-weight="700" font-size="14" fill="#3a5f8f">STEMMEAVLUKKE</text>`+
+  table(440,200,170,"#d8d2c4")+`<rect x="480" y="150" width="90" height="52" rx="4" fill="#fff" stroke="#9aa4ab" stroke-width="3"/><rect x="505" y="146" width="40" height="6" fill="#25212b"/><text x="525" y="182" text-anchor="middle" font-family="Familjen Grotesk,sans-serif" font-weight="700" font-size="13" fill="#25212b">URNE</text>`+
+  me({x:400,y:292,s:1.08,pose:"hold",prop:"paper",mood:"calm",age:28}),
+ valgnatt:()=>`<rect width="640" height="300" fill="url(#night)"/><rect y="236" width="640" height="64" fill="#2a2238"/><rect x="170" y="24" width="300" height="160" rx="8" fill="#0f1020" stroke="#4a4466" stroke-width="5"/><text x="190" y="54" font-family="Familjen Grotesk,sans-serif" font-weight="700" font-size="16" fill="#fff">VALGNATT · Fjordvik</text>`+
+  [["#2b59c3",27],["#2e8b57",22],["#8e5bd0",16],["#d98a1c",12],["#d64534",9]].map(([c,v],i)=>`<rect x="${196+i*52}" y="${168-v*3.6}" width="34" height="${v*3.6}" fill="${c}"/>`).join("")+
+  balloon(60,70,"#d64534")+balloon(100,50,"#f5c242")+balloon(560,60,"#d64534")+balloon(600,90,"#fff")+
+  npc(0,{x:80,y:262,s:.82,pose:"cheer",mood:"big"})+npc(2,{x:560,y:262,s:.82,pose:"crossed",mood:"nervous"})+npc(6,{x:150,y:268,s:.82,mood:"nervous",pose:"chin"})+
+  me({x:330,y:296,s:1.1,pose:"crossed",mood:"nervous",age:28}),
+ sperre:()=>`<rect width="640" height="300" fill="#0f1020"/><text x="30" y="40" font-family="Familjen Grotesk,sans-serif" font-weight="700" font-size="18" fill="#fff">Hele landet, prosent</text>`+
+  [["Ankerpartiet","#2b59c3",27.1],["Bjørkelista","#2e8b57",22.4],["Måkepartiet","#8e5bd0",15.2],["Tindepartiet","#d98a1c",11.8],["Fyrlykta","#d64534",4.3],["Andre","#7a7890",3.6]].map(([n,c,v],i)=>{const h=v*7;return `<rect x="${50+i*96}" y="${250-h}" width="62" height="${h}" fill="${c}"/><text x="${81+i*96}" y="${244-h}" text-anchor="middle" font-family="Nunito Sans,sans-serif" font-weight="800" font-size="15" fill="#fff">${String(v).replace(".",",")}</text><text x="${81+i*96}" y="272" text-anchor="middle" font-family="Nunito Sans,sans-serif" font-weight="700" font-size="12" fill="#c9c6d8">${n}</text>`}).join("")+
+  `<path d="M30,${250-4*7} H610" stroke="#f5c242" stroke-width="2.5" stroke-dasharray="8 6"/><path d="M430,34 h40" stroke="#f5c242" stroke-width="2.5" stroke-dasharray="8 6"/><text x="478" y="39" font-family="Nunito Sans,sans-serif" font-weight="800" font-size="14" fill="#f5c242">sperregrense 4 %</text>`,
+ utj:()=>`<rect width="640" height="300" fill="url(#night)"/><rect y="236" width="640" height="64" fill="#2a2238"/>`+balloon(70,70,"#d64534")+balloon(570,70,"#f5c242")+
+  npc(1,{x:110,y:268,s:.85,pose:"cheer",mood:"big"})+npc(7,{x:530,y:268,s:.85,pose:"cheer",mood:"big"})+npc(3,{x:190,y:262,s:.8,pose:"cheer",mood:"big"})+
+  me({x:330,y:296,s:1.14,pose:G.plass===3?"talk":"cheer",prop:G.plass===3?"phone":null,mood:"big",age:28})+confetti(),
+ salen:()=>`<rect width="640" height="300" fill="#e8dcc6"/><rect width="640" height="90" fill="#cdb58f"/><rect y="80" width="640" height="14" fill="#a88c66"/>`+
+  [0,1,2].map(r=>`<path d="M${40+r*30},${300-r*44} Q320,${170-r*44} ${600-r*30},${300-r*44}" stroke="#7a5537" stroke-width="22" fill="none"/>`).join("")+
+  `<rect x="270" y="110" width="100" height="44" fill="#7a5537"/><rect x="290" y="96" width="60" height="16" fill="#5e4129"/>`+
+  [[120,236],[200,212],[440,212],[520,236],[160,190],[480,190]].map(([x,y],i)=>npc(i+2,{x,y,s:.55,mood:"neutral",blazer:"#2f3447"})).join("")+
+  me({x:320,y:300,s:1.05,pose:"wave",mood:"big",age:28}),
+ talerstol:()=>`<rect width="640" height="300" fill="#e8dcc6"/><rect width="640" height="70" fill="#cdb58f"/>`+[0,1].map(r=>`<path d="M${20+r*40},${200-r*40} Q320,${110-r*40} ${620-r*40},${200-r*40}" stroke="#7a5537" stroke-width="18" fill="none" opacity=".7"/>`).join("")+
+  [[110,180],[190,160],[450,160],[530,180]].map(([x,y],i)=>npc(i+4,{x,y,s:.45,mood:"neutral",blazer:"#2f3447"})).join("")+
+  me({x:320,y:276,s:1.08,pose:"talk",mood:"talk",age:28})+`<path d="M262,214 L378,214 L368,300 L272,300Z" fill="#7a5537"/><rect x="256" y="206" width="128" height="12" rx="3" fill="#5e4129"/><path d="M330,206 l14,-26" stroke="#25212b" stroke-width="3"/><circle cx="345" cy="178" r="4" fill="#25212b"/>`,
+ budsjett:()=>room("#e3e8ea","#b9a58a")+`<rect x="40" y="30" width="230" height="150" rx="6" fill="#fff" stroke="#c7cdd1" stroke-width="5"/><text x="58" y="58" font-family="Familjen Grotesk,sans-serif" font-weight="700" font-size="16" fill="#25212b">Statsbudsjettet</text><circle cx="120" cy="120" r="44" fill="#2b59c3"/><path d="M120,120 L120,76 A44,44 0 0 1 162,132Z" fill="#d64534"/><path d="M120,120 L162,132 A44,44 0 0 1 96,157Z" fill="#f5c242"/>${[0,1,2].map(i=>`<rect x="186" y="${92+i*22}" width="12" height="12" fill="${["#d64534","#f5c242","#2b59c3"][i]}"/><path d="M204,${98+i*22} h${[40,28,48][i]}" stroke="#9aa4ab" stroke-width="5" stroke-linecap="round"/>`).join("")}`+win(470,36,130,90)+
+  me({x:420,y:270,s:1.05,pose:"hold",prop:"paper",mood:"calm",age:28})+table(300,214,300,"#c98a5b",86)+`<rect x="330" y="200" width="70" height="16" rx="2" fill="#fff"/><rect x="520" y="196" width="40" height="20" rx="3" fill="#2f3447"/><path d="M528,202 h24 M528,208 h16" stroke="#9aa4ab" stroke-width="2"/>`,
+ sporretime:()=>`<rect width="640" height="300" fill="#e8dcc6"/><rect width="640" height="70" fill="#cdb58f"/>`+
+  `<rect x="22" y="22" width="190" height="64" rx="10" fill="#fff"/><path d="M60,86 l14,22 l10,-22z" fill="#fff"/><text x="117" y="50" text-anchor="middle" font-family="Familjen Grotesk,sans-serif" font-weight="700" font-size="15" fill="#25212b">Hvorfor fikk ikke</text><text x="117" y="70" text-anchor="middle" font-family="Familjen Grotesk,sans-serif" font-weight="700" font-size="15" fill="#25212b">Stortinget vite det?</text>`+
+  me({x:150,y:286,s:1.02,pose:"talk",mood:"talk",age:29})+`<path d="M100,222 L200,222 L192,300 L108,300Z" fill="#7a5537"/><rect x="94" y="214" width="112" height="12" rx="3" fill="#5e4129"/>`+
+  npc(4,{x:480,y:286,s:1.02,mood:"nervous",blazer:"#25212b",top:"#f3efe6",glasses:1})+`<path d="M430,222 L530,222 L522,300 L438,300Z" fill="#5e4129"/><rect x="424" y="214" width="112" height="12" rx="3" fill="#3f2b1b"/><rect x="450" y="236" width="60" height="18" rx="3" fill="#e8dcc6"/><text x="480" y="249" text-anchor="middle" font-family="Nunito Sans,sans-serif" font-weight="800" font-size="10" fill="#25212b">STATSRÅD</text>`,
+ mistillit:()=>`<rect width="640" height="300" fill="#e8dcc6"/><rect x="150" y="24" width="340" height="150" rx="8" fill="#0f1020"/><text x="320" y="56" text-anchor="middle" font-family="Familjen Grotesk,sans-serif" font-weight="700" font-size="17" fill="#fff">Forslag om mistillit</text><text x="240" y="118" text-anchor="middle" font-family="Familjen Grotesk,sans-serif" font-weight="700" font-size="44" fill="#4cc38a">88</text><text x="240" y="146" text-anchor="middle" font-family="Nunito Sans,sans-serif" font-weight="800" font-size="14" fill="#c9c6d8">FOR</text><text x="400" y="118" text-anchor="middle" font-family="Familjen Grotesk,sans-serif" font-weight="700" font-size="44" fill="#ef6b5e">81</text><text x="400" y="146" text-anchor="middle" font-family="Nunito Sans,sans-serif" font-weight="800" font-size="14" fill="#c9c6d8">MOT</text>`+
+  [0,1].map(r=>`<path d="M${20+r*40},${300-r*40} Q320,${200-r*40} ${620-r*40},${300-r*40}" stroke="#7a5537" stroke-width="18" fill="none" opacity=".7"/>`).join("")+
+  npc(1,{x:90,y:300,s:.85,mood:"nervous",blazer:"#2f3447",pose:"chin"})+npc(6,{x:550,y:300,s:.85,mood:"talk",blazer:"#2f3447"})+me({x:320,y:300,s:.95,pose:"crossed",mood:"nervous",age:29}),
+ ende:()=>`<rect width="640" height="300" fill="url(#sky)"/><rect y="250" width="640" height="50" fill="#b8b2a8"/>`+
+  `<g><rect x="100" y="120" width="440" height="130" fill="#d9775f"/><path d="M240,120 A80,80 0 0 1 400,120Z" fill="#c25a42"/><rect x="240" y="120" width="160" height="130" fill="#c25a42"/><rect x="90" y="110" width="460" height="14" fill="#5e3a2c"/>${[120,160,200,440,480,520].map(x=>`<path d="M${x-10},230 V178 a10,10 0 0 1 20,0 V230Z" fill="#f6f4ef"/>`).join("")}${[270,320,370].map(x=>`<path d="M${x-12},250 V182 a12,12 0 0 1 24,0 V250Z" fill="#f6f4ef"/>`).join("")}<path d="M320,40 V20"/><rect x="320" y="18" width="34" height="22" fill="#ba0c2f"/><rect x="329" y="18" width="6" height="22" fill="#fff"/><rect x="320" y="26" width="34" height="6" fill="#fff"/><rect x="331" y="18" width="2.6" height="22" fill="#00205b"/><rect x="320" y="27.7" width="34" height="2.6" fill="#00205b"/><path d="M320,40 V60" stroke="#5e3a2c" stroke-width="3"/></g>`+
+  me({x:320,y:292,s:1.08,pose:"wave",mood:"big",age:29})
+};
+
+/* ================= KART ================= */
+const PTS=[[70,104],[250,72],[430,100],[610,66],[842,118]];
+function drawMap(stage){
+  let s=`<path d="M70,104 C140,58 190,58 250,72 S370,122 430,100 S550,50 610,66 S770,124 842,118" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="6" stroke-dasharray="2 12" stroke-linecap="round"/>`;
+  s+=`<g stroke="#1d1b2e" stroke-width="3" stroke-linejoin="round"><rect x="790" y="84" width="180" height="48" fill="#d9775f"/><path d="M840,84 A40,40 0 0 1 920,84 Z" fill="#c25a42"/><rect x="840" y="84" width="80" height="48" fill="#c25a42"/><rect x="784" y="78" width="192" height="8" fill="#1d1b2e"/><path d="M880,44 V20"/></g><g fill="#f6f4ef">${[800,822,936,958].map(x=>`<path d="M${x-6},122 V100 a6,6 0 0 1 12,0 V122Z"/>`).join("")}${[858,880,902].map(x=>`<path d="M${x-6},118 V100 a6,6 0 0 1 12,0 V118Z"/>`).join("")}</g><g><rect x="881" y="20" width="24" height="16" fill="#ba0c2f"/><rect x="887" y="20" width="5" height="16" fill="#fff"/><rect x="881" y="26" width="24" height="5" fill="#fff"/><rect x="888.5" y="20" width="2" height="16" fill="#00205b"/><rect x="881" y="27.5" width="24" height="2" fill="#00205b"/></g><path d="M760,132 H990" stroke="#1d1b2e" stroke-width="3"/>`;
+  PTS.slice(0,4).forEach(([x,y],i)=>{const d=i<stage;s+=`<circle cx="${x}" cy="${y}" r="13" fill="${d?"#1d7f62":"#f6f4ef"}" stroke="#1d1b2e" stroke-width="3"/>`+(d?`<path d="M${x-6},${y} l4,4 l8,-9" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`:"")});
+  const [tx,ty]=PTS[Math.min(stage,4)];const L=G.look;
+  s+=`<g transform="translate(${tx} ${ty-34})"><circle r="18" fill="#fff" stroke="#1d1b2e" stroke-width="2.5"/><clipPath id="mc"><circle r="16"/></clipPath><g clip-path="url(#mc)">${person({x:0,y:58,s:.36,skin:L.skin,hair:L.hair,hairC:L.hairC,top:L.top,mood:"happy"})}</g><path d="M-6,17 L0,28 L6,17Z" fill="#1d1b2e"/></g>`;
+  $("map").innerHTML=s;
+  [...$("stops").children].forEach((li,i)=>{li.className=i===stage?"on":i<stage?"done":""});
+}
+
+/* ================= NYE SCENER ================= */
+SC.kveld=()=>`<rect width="640" height="300" fill="#2b2d4a"/><rect width="640" height="232" fill="url(#dots)"/><rect y="232" width="640" height="68" fill="#4a3b3a"/>`+
+ `<rect x="430" y="30" width="150" height="110" rx="4" fill="#141632" stroke="#5a5c7a" stroke-width="6"/><path d="M505,30 v110 M430,85 h150" stroke="#5a5c7a" stroke-width="4"/><circle cx="548" cy="60" r="12" fill="#fff6c8"/>${[[450,50],[470,110],[530,118],[560,100]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="1.6" fill="#fff"/>`).join("")}`+
+ `<path d="M80,60 L120,60 L136,100 L64,100Z" fill="#f5c242"/><path d="M100,100 V232" stroke="#25212b" stroke-width="4"/><ellipse cx="100" cy="232" rx="24" ry="5" fill="#25212b"/><circle cx="100" cy="120" r="120" fill="url(#spot)" opacity=".6"/>`+
+ `<rect x="150" y="170" width="250" height="70" rx="18" fill="#6b5d72"/><rect x="150" y="150" width="250" height="40" rx="16" fill="#7d6f86"/>`+
+ me({x:300,y:290,s:1.12,pose:"talk",prop:"phone",mood:"nervous",age:26});
+SC.innstilling=()=>SC.nommote();
+
+/* ================= DATA ================= */
+const PARTIES=[{n:"Ankerpartiet",c:"#2b59c3",v:41000},{n:"Bjørkelista",c:"#2e8b57",v:33000},{n:"Måkepartiet",c:"#8e5bd0",v:24000},{n:"Tindepartiet",c:"#d98a1c",v:18000},{n:"Fyrlykta",c:"#d64534",v:13500}];
+const DIV=[1.4,3,5,7],SEATS=8;
+const ICON={
+ meet:`<svg viewBox="0 0 34 34"><rect x="3" y="18" width="28" height="6" rx="2" fill="#c98a5b"/><circle cx="10" cy="11" r="5" fill="#d64534"/><circle cx="24" cy="11" r="5" fill="#2b59c3"/></svg>`,
+ stand:`<svg viewBox="0 0 34 34"><path d="M3,13 L17,5 L31,13Z" fill="#d64534"/><path d="M17,5 V31" stroke="#6b6157" stroke-width="2"/><rect x="6" y="20" width="22" height="8" fill="#d64534"/></svg>`,
+ pen:`<svg viewBox="0 0 34 34"><rect x="6" y="4" width="20" height="26" rx="2" fill="#fff" stroke="#9aa4ab" stroke-width="2"/><path d="M10,11 h12 M10,16 h12 M10,21 h8" stroke="#9aa4ab" stroke-width="2"/><path d="M22,24 l8,-8 l3,3 l-8,8 l-4,1z" fill="#f5c242"/></svg>`,
+ ball:`<svg viewBox="0 0 34 34"><circle cx="17" cy="17" r="12" fill="#fff" stroke="#25212b" stroke-width="2"/><path d="M17,11 l5,4 l-2,6 h-6 l-2,-6z" fill="#25212b"/></svg>`,
+ book:`<svg viewBox="0 0 34 34"><path d="M4,8 q7,-3 13,1 v19 q-6,-4 -13,-1z" fill="#2e8b57"/><path d="M30,8 q-7,-3 -13,1 v19 q6,-4 13,-1z" fill="#1d7f62"/></svg>`,
+ pop:`<svg viewBox="0 0 34 34"><path d="M8,10 h18 l-3,20 h-12z" fill="#fff" stroke="#d64534" stroke-width="2"/><path d="M12,10 v20 M17,10 v20 M22,10 v20" stroke="#d64534" stroke-width="2"/><circle cx="12" cy="8" r="4" fill="#fff6d6"/><circle cx="18" cy="6" r="4" fill="#fff6d6"/><circle cx="23" cy="8" r="4" fill="#fff6d6"/></svg>`};
+const ACTS=[{n:"Styremøte i lokallaget",i:"meet",p:1},{n:"Stå på stand i sentrum",i:"stand",p:1},{n:"Skrive leserinnlegg",i:"pen",p:1},{n:"Fotballtrening",i:"ball",p:0},{n:"Lese til prøven",i:"book",p:0},{n:"Kino med venner",i:"pop",p:0}];
+
+const PPL={
+ rita:{n:"Rita Berg",r:"stortingsrepresentant, Byen",l:{skin:"#f2c9a6",hair:"short",hairC:"#8a8a8a",top:"#d64534",glasses:1}},
+ amir:{n:"Amir Haddad",r:"fylkestingspolitiker, Innlandet",l:{skin:"#c68b62",hair:"short",hairC:"#1a1310",top:"#3a5f8f",beard:1}},
+ ingrid:{n:"Ingrid Solheim",r:"Byen",l:{skin:"#e8b48f",hair:"bun",hairC:"#5a3a22",top:"#6b5d72"}},
+ mona:{n:"Mona",r:"leder i Fyrlykta Øyene",l:{skin:"#e8b48f",hair:"long",hairC:"#d9c27a",top:"#1d7f62"}},
+ sofie:{n:"Sofie",r:"leder i Fyrlykta U",l:{skin:"#8d5a3b",hair:"curly",hairC:"#1a1310",top:"#f2a93b"}},
+ kjell:{n:"Kjell",r:"leder i Fyrlykta Innlandet",l:{skin:"#f6d3b3",hair:"bald",hairC:"#b0a89a",top:"#4b5446",beard:1}},
+ ole:{n:"Ole Vik",r:"journalist, Fjordvik Avis",l:{skin:"#e3a77f",hair:"buzz",hairC:"#5a3a22",top:"#6b5d72",glasses:1}}};
+const REG={b:["Byen",40],o:["Øyene",25],i:["Innlandet",35]};
+
+/* hendelser i nominasjonskampen: d = endring i delegater per region */
+const EVENTS=[
+ {who:"mona",msg:["Hei! Komiteens forslag er ute, og du står som nr. 3. Folk her ute på øyene er sinte for at ferja kanskje blir lagt ned.","Lover du å kjempe for ferja, stemmer alle Øyene-delegatene for deg på nominasjonsmøtet. Er du med?"],
+  o:[{t:"Ja! Ferja er saken min.",r:"Yes! Da har du hele Øyene i ryggen 💪",d:{o:10},f:"ferje"},
+     {t:"Jeg vil jobbe for hele fylket, ikke bare øyene.",r:"Hm. Greit, det respekterer jeg. Men noen her blir skuffa.",d:{o:3,b:3}}]},
+ {who:"sofie",msg:["Hei! Vi i ungdomspartiet vil ha en ung kandidat blant de to øverste. Vi har 8 delegater fra Byen.","Men da må du stille benkeforslag mot Amir på møtet. Altså foreslå at DU skal ha andreplassen i stedet for ham. Tør du?"],
+  o:[{t:"Ja. Jeg stiller benkeforslag.",r:"YES. Vi mobiliserer alle 🔥",d:{b:8},f:"benk"},
+     {t:"Jeg vil ikke gå imot komiteen.",r:"Ok… men da blir det vanskelig å komme høyere enn tredjeplass.",d:{}}]},
+ {who:"kjell",msg:["Hei. Jeg har hørt rykter om at du vil utfordre Amir. Innlandet står bak ham.","Men hvis du lover at sykehuset vårt kommer foran ferja, kan noen av oss kanskje støtte deg. Hva sier du?"],
+  o:[{t:"Avtale. Sykehuset først.",r:"Da snakker vi samme språk. Jeg skal få med noen.",d:{i:12},f:"sykehus"},
+     {t:"Jeg støtter både sykehuset og ferja.",r:"Hm. Alle sier det. Vi får se.",d:{i:5},f:"alt"},
+     {t:"Jeg kan ikke love det.",r:"Det er i det minste ærlig. Det skal du ha.",d:{i:2}}]},
+ {who:"ole",msg:["Hei, Ole Vik fra Fjordvik Avis. Jeg hører det er strid i Fyrlykta. Stemmer det at du vil vippe Amir Haddad ut av andreplassen?"],
+  o:[{t:"Lista trenger en ung kandidat fra øyene. Det er det jeg vil.",r:"Takk, det siterer jeg.",d:{b:3},f:"sak"},
+     {t:"Ingen kommentar.",r:"Ok. Saken kommer på trykk uansett.",d:{}},
+     {t:"Amir har sittet lenge nok. Han er utgått på dato.",r:"Oi. Det blir overskrift.",d:{b:-4,i:-8},f:"angrep"}]}
+];
+const SPEECH=[
+ {t:"«Lista vår mangler en ung kandidat fra øyene. Jeg vil være den stemmen.»",d:4,r:"Mange nikker. Du snakker om hva lista trenger, ikke om deg selv."},
+ {t:"«Jeg vil kjempe for skole og kollektivtrafikk i hele fylket.»",d:2,r:"Greit innlegg. Noen klapper, men det skiller deg ikke så mye fra Amir."},
+ {t:"«Amir er en dyktig politiker, men det er på tide med fornyelse.»",d:-3,r:"Det mumles i salen. Noen synes det høres ut som et angrep."}];
+
+const STEPS=[
+ {t:"intro",st:0,pic:"maker"},
+ {t:"quiz",st:0,age:16,pic:"skolevalg",h:"Skolevalget",p:"Det er skolevalg, og partiene har stand i gangen. Du vil være med og bestemme. Hva gjør nesten alle som ender opp på Stortinget først?",
+  o:[["Melder seg inn i et parti eller et ungdomsparti",1],["Sender en søknad til Stortinget",0],["Venter til de er 18 og stiller til valg alene",0]],
+  w:"Nesten alle stortingsrepresentanter er valgt fra et partis liste, og det er partiet som bestemmer hvem som står på den. Du melder deg inn i Fyrlykta U."},
+ {t:"week",st:0,age:17,pic:"lokallag"},
+ {t:"stand",st:1,age:19,pic:"stand"},
+ {t:"innst",st:2,age:26,pic:"innstilling"},
+ {t:"chat",st:2,age:26,pic:"kveld"},
+ {t:"avis",st:2,age:26,pic:null},
+ {t:"mote",st:2,age:27,pic:"nommote"},
+ {t:"quiz",st:3,age:28,pic:"valglokale",h:"Kan velgerne flytte deg opp?",p:"Valgdagen. Kan velgerne flytte deg oppover på lista ved å krysse av ved navnet ditt?",
+  o:[["Nei, ved stortingsvalg er listene lukket",1],["Ja, hvis mange nok krysser av ved navnet mitt",0],["Ja, men bare i byene",0]],
+  w:"Fra 2024 kan ikke velgerne endre listene ved stortingsvalg. Listene er lukket. Det er plassen du fikk på nominasjonsmøtet, som avgjør. Derfor er kampen om lista så hard."},
+ {t:"count",st:3,age:28,pic:"valgnatt"},
+ {t:"quiz",st:3,age:28,pic:"sperre",h:"Sperregrensen",p:"Fyrlykta fikk 4,3 prosent i hele landet. Får partiet være med når utjevningsmandatene skal fordeles?",
+  o:[["Ja, fordi partiet har over 4 prosent",1],["Nei, partiet må ha minst 5 prosent",0],["Nei, utjevningsmandater er bare for de største partiene",0]],
+  w:"Bare partier med minst 4 prosent av stemmene i hele landet får utjevningsmandater. Det kalles sperregrensen. Et parti under 4 prosent kan likevel få distriktsmandater."},
+ {t:"utj",st:3,age:28,pic:"utj"},
+ {t:"end",st:4,age:28,pic:"ende"},
+ {t:"test",st:4,age:28,pic:null}
+];
+const QMAX=STEPS.filter(s=>s.t==="quiz").length+1;
+
+/* ================= TILSTAND ================= */
+let G,RAF=null;
+const LOOK={skin:["#f6d3b3","#e8b48f","#c68b62","#8d5a3b","#5b3a26"],hair:[["short","Kort"],["long","Langt"],["curly","Krøller"],["bun","Knute"],["buzz","Snauklipt"]],hairC:["#2a1c14","#5a3a22","#b88a3e","#d9c27a","#a8432b"],top:["#d64534","#2b59c3","#1d7f62","#f2a93b","#6b5d72"]};
+function reset(){if(RAF)cancelAnimationFrame(RAF);G={i:0,name:"",look:{skin:"#e8b48f",hair:"short",hairC:"#2a1c14",top:"#d64534"},sup:0,know:0,plass:0,status:"Ikke medlem ennå",tries:0,done:false,log:[],count:null,week:[],weekDone:false,stand:null,
+ del:{b:12,o:12,i:4},flags:{},ev:0,evDone:false,chatLog:[],speech:null,benkAsk:false,voted:false,list:null,test:{},testDone:false};}
+reset();
+const total=()=>Math.max(0,Math.min(100,G.del.b+G.del.o+G.del.i));
+function addDel(d){for(const k in d){G.del[k]=Math.max(0,Math.min(REG[k][1],G.del[k]+d[k]));}}
+const pname=()=>G.name||"Deg";
+
+function avatar(l,id){return `<svg viewBox="-30 -150 60 60"><clipPath id="${id}"><circle cx="0" cy="-120" r="30"/></clipPath><g clip-path="url(#${id})"><rect x="-30" y="-150" width="60" height="60" fill="#f3ede4"/>${person(Object.assign({},l,{x:0,y:0,mood:"happy"}))}</g></svg>`;}
+function side(){
+  const s=STEPS[G.i];
+  $("side").innerHTML=`<svg class="face" viewBox="-40 -160 80 80"><clipPath id="fc"><circle cx="0" cy="-120" r="40"/></clipPath><g clip-path="url(#fc)"><rect x="-40" y="-160" width="80" height="80" fill="#f3ede4"/>${me({x:0,y:0,pose:"down",mood:"happy",age:s.age||16})}</g></svg>
+  <div><h3>${G.name?esc(G.name):"Politikeren din"}</h3><dl>
+    <dt>Alder</dt><dd>${s.age||16} år</dd>
+    <dt>Status</dt><dd>${G.status}</dd>
+    ${G.plass?`<dt>Listeplass</dt><dd>Nr. ${G.plass} for Fyrlykta</dd>`:""}
+    ${s.st===2&&!G.voted?`<dt>Delegater</dt><dd>${total()} av 100</dd>`:""}
+  </dl></div>
+  <div><div style="margin-top:14px;font-size:15px"><b>Støtte i partiet</b><div class="meter"><i style="width:${Math.min(G.sup,4)/4*100}%"></i></div></div>
+  <p class="know">Kunnskap: <b>${G.know}</b> av ${QMAX} riktige på første forsøk</p></div>`;
+}
+function head(s){return `<p class="step">${s.age?s.age+" år · ":""}${["Partiet","Lokalpolitikk","Nominasjonskampen","Valgnatt","Sjekk deg selv"][s.st]}</p>`;}
+function ill(s){return s.pic&&s.pic!=="maker"?`<svg class="ill pop" id="ill" viewBox="0 0 640 300" role="img" aria-label="Illustrasjon">${DEFS}${SC[s.pic]()}</svg>`:"";}
+function next(){if(RAF){cancelAnimationFrame(RAF);RAF=null;}G.i++;G.tries=0;G.done=false;render();$("card").scrollIntoView({block:"start",behavior:"smooth"});}
+function dele(){
+  const t=total(),ok=t>=51;
+  return `<div class="dele" aria-label="Delegater"><div class="dtop"><span>Delegater som vil stemme for deg til andreplass</span><span class="big ${ok?"ok":"no"}">${t} <small style="font-size:15px;color:var(--muted)">av 100 · trenger 51</small></span></div>
+  <div class="regs">${Object.keys(REG).map(k=>`<div class="reg"><b>${REG[k][0]}</b><div class="dots">${Array.from({length:REG[k][1]},(_,j)=>`<i class="${j<G.del[k]?"me":""}"></i>`).join("")}</div><small>${G.del[k]} av ${REG[k][1]}</small></div>`).join("")}</div></div>`;
+}
+const chip=d=>Object.keys(d).filter(k=>d[k]).map(k=>`<span class="dc ${d[k]<0?"neg":""}">${d[k]>0?"+":""}${d[k]} ${REG[k][0]}</span>`).join("");
+
+/* ================= VISNING ================= */
+function render(){
+  const s=STEPS[G.i];drawMap(s.t==="test"?4:s.t==="end"?4:s.st);side();
+  const c=$("card");
+  if(s.t==="intro") return renderIntro(c);
+  if(s.t==="quiz"){c.innerHTML=ill(s)+head(s)+`<h2>${s.h}</h2><p>${s.p}</p><div class="opts">${s.o.map((o,j)=>`<button class="opt" data-j="${j}">${o[0]}</button>`).join("")}</div><div id="fb"></div>`;return;}
+  ({week:renderWeek,stand:renderStand,innst:renderInnst,chat:renderChat,avis:renderAvis,mote:renderMote,count:renderCount,utj:renderUtj,end:renderEnd,test:renderTest})[s.t](c,s);
+}
+function renderIntro(c){
+  const L=G.look,sw=(k,v)=>`<button class="sw" style="background:${v}" data-lk="${k}" data-lv="${v}" aria-pressed="${L[k]===v}" aria-label="${k}"></button>`;
+  c.innerHTML=`<p class="step">Start</p><h2>Lag politikeren din</h2>
+  <p>169 personer sitter på Stortinget. Hvordan havner man der? Det meste avgjøres lenge før valgdagen, og ikke alltid på pene måter. Du følger din egen politiker i det oppdiktede partiet Fyrlykta, fra du er 16 til valgnatta.</p>
+  <div class="maker"><svg viewBox="0 -170 120 180">${DEFS}<rect x="0" y="-170" width="120" height="180" fill="#f3ede4"/>${me({x:60,y:0,pose:"wave",mood:"big",age:16})}</svg>
+  <div>
+   <div class="row"><b>Hudfarge</b><div class="sws">${LOOK.skin.map(v=>sw("skin",v)).join("")}</div></div>
+   <div class="row"><b>Frisyre</b><div class="sws">${LOOK.hair.map(([v,n])=>`<button class="chip" data-lk="hair" data-lv="${v}" aria-pressed="${L.hair===v}">${n}</button>`).join("")}</div></div>
+   <div class="row"><b>Hårfarge</b><div class="sws">${LOOK.hairC.map(v=>sw("hairC",v)).join("")}</div></div>
+   <div class="row"><b>Farge på klærne</b><div class="sws">${LOOK.top.map(v=>sw("top",v)).join("")}</div></div>
+  </div></div>
+  <label for="nm"><b>Navn</b></label><br><input type="text" id="nm" maxlength="24" placeholder="Hva heter politikeren din?" autocomplete="off" value="${esc(G.name)}">
+  <br><button class="go" id="start">Start</button>`;
+}
+function renderWeek(c,s){
+  const done=G.weekDone,n=G.week.length;
+  c.innerHTML=ill(s)+head(s)+`<h2>En uke i ungdomspartiet</h2><p>Du har tid til tre ting denne uka, i tillegg til skolen. Hva velger du?</p>
+  <div class="week">${ACTS.map((a,j)=>`<button class="act" data-a="${j}" aria-pressed="${G.week.includes(j)}" ${done||(n>=3&&!G.week.includes(j))?"disabled":""}>${ICON[a.i]}${a.n}<small>${a.p?"Partiarbeid":"Fritid og skole"}</small></button>`).join("")}</div>
+  <div id="fb">${done?weekFb():`<button class="go" id="weekgo" ${n<3?"disabled":""}>${n<3?`Velg ${3-n} til`:"Kjør på"}</button>`}</div>`;
+}
+function weekFb(){
+  const p=G.week.filter(j=>ACTS[j].p).length;
+  const t=["Fin uke! Men ingen i partiet vet hvem du er ennå. De som stiller opp, blir husket når lista skal lages.","Du er med litt, og noen i partiet begynner å kjenne navnet ditt.","Du er aktiv, og folk legger merke til deg. Etter hvert blir du valgt inn i styret i ungdomspartiet.","Du er overalt, og alle vet hvem du er. Men det er lov å ha et liv ved siden av. Mange som starter for hardt, gir seg før de kommer langt."][p];
+  return `<div class="fb"><p>${t}</p></div><button class="go" id="nx">Neste</button>`;
+}
+function renderStand(c,s){
+  const S=G.stand;
+  c.innerHTML=ill(s)+head(s)+`<h2>Valgkamp på stand</h2><p>Du står på lista til kommunestyrevalget. Trykk på folk som går forbi, så får de en løpeseddel. Jo flere du når, jo større sjanse for å komme inn i kommunestyret. Du har 20 sekunder.</p>
+  <div class="hud2"><span id="tleft">${S?Math.max(0,Math.ceil(S.t)):20} sekunder</span><span id="fly">${S?S.n:0} løpesedler</span></div>
+  <div id="fb">${!S?`<button class="go" id="standgo" style="margin-top:0">Start valgkampen</button>`:S.over?standFb():""}</div>`;
+}
+function standFb(){
+  const n=G.stand.n,pts=n>=10?2:n>=5?1:0;
+  const t=pts===2?`${n} løpesedler! Fyrlykta får en ekstra plass i kommunestyret, og den går til deg.`:pts===1?`${n} løpesedler. Du kom ikke inn, men du ble vararepresentant og møter når noen er borte.`:`Bare ${n} løpesedler, og du kom ikke inn. Men partiet så at du stilte opp.`;
+  return `<div class="fb"><p>${t} Mange stortingsrepresentanter har startet i lokalpolitikken.</p></div><button class="go" id="nx">Spol fram sju år</button>`;
+}
+function startStand(){
+  G.stand={t:20,n:0,w:[],last:performance.now(),spawn:0,over:false,id:0};
+  renderStand($("card"),STEPS[G.i]);
+  const layer=document.querySelector("#walkers"),S=G.stand,slow=matchMedia("(prefers-reduced-motion: reduce)").matches?.6:1;
+  const loop=now=>{
+    const dt=Math.min(.05,(now-S.last)/1000);S.last=now;S.t-=dt;S.spawn-=dt;
+    if(S.spawn<=0&&S.t>1.2){S.spawn=.75+Math.random()*.6;const id=++S.id,look=Math.floor(Math.random()*NPC.length),dir=Math.random()<.5?1:-1,sp=(70+Math.random()*60)*slow;
+      S.w.push({id,x:dir>0?-40:680,dir,sp,look,given:false});
+      layer.insertAdjacentHTML("beforeend",`<g class="walker" data-w="${id}" tabindex="0" role="button" aria-label="Person som går forbi"><g class="body">${npc(look,{x:0,y:0,s:.95,mood:"neutral"})}</g><rect x="-26" y="-140" width="52" height="144" fill="transparent"/></g>`);}
+    S.w.forEach(w=>{w.x+=w.dir*w.sp*dt;const el=layer.querySelector(`[data-w="${w.id}"]`);if(el)el.setAttribute("transform",`translate(${w.x} 296)`);});
+    S.w=S.w.filter(w=>{if(w.x<-60||w.x>700){layer.querySelector(`[data-w="${w.id}"]`)?.remove();return false}return true});
+    const tl=$("tleft");if(tl)tl.textContent=Math.max(0,Math.ceil(S.t))+" sekunder";
+    if(S.t<=0){S.over=true;RAF=null;const p=S.n>=10?2:S.n>=5?1:0;G.sup+=p;
+      G.log.push(`19 år: ${p===2?"valgt inn i kommunestyret":p===1?"vararepresentant i kommunestyret":"stod på lista ved kommunevalget"}.`);
+      G.status=p===2?"Medlem av kommunestyret":p===1?"Vara i kommunestyret":"Medlem av Fyrlykta";$("fb").innerHTML=standFb();side();return;}
+    RAF=requestAnimationFrame(loop);
+  };
+  RAF=requestAnimationFrame(loop);
+  const give=e=>{const el=e.target.closest(".walker");if(!el||S.over)return;const w=S.w.find(x=>x.id===+el.dataset.w);if(!w||w.given)return;w.given=true;S.n++;w.sp*=.55;
+    el.querySelector(".body").innerHTML=npc(w.look,{x:0,y:0,s:.95,mood:"big",pose:"take",prop:"flyer"});$("fly").textContent=S.n+" løpesedler";};
+  layer.addEventListener("pointerdown",give);
+  layer.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();give(e);}});
+}
+function renderInnst(c,s){
+  if(!G.inst){G.inst=true;G.list=["Rita Berg (54)","Amir Haddad (41)",pname()+" (26)","Ingrid Solheim (35)"];G.plass=3;G.status="Kandidat";
+    const b=Math.min(G.sup,4)*2;addDel({b:Math.ceil(b/2),o:Math.floor(b/2)});}
+  side();
+  c.innerHTML=ill(s)+head(s)+`<h2>Komiteens forslag</h2>
+  <p>Det er snart stortingsvalg. Partiets <b>nominasjonskomité</b> har laget et forslag til liste for Fjordvik, kalt en <b>innstilling</b>. Du står som nr. 3.</p>
+  <p>Fyrlykta får sannsynligvis bare ett eller to mandater. Nr. 3 kommer nesten aldri inn. Vil du ha en sjanse, må du opp på andreplass, og der står Amir.</p>
+  <p>Lista blir ikke bestemt av komiteen. Den blir vedtatt på et <b>nominasjonsmøte</b> der 100 <b>delegater</b> fra lokallagene stemmer over hver plass. Akkurat nå er det sånn:</p>
+  ${dele()}
+  <p>Du har noen uker på deg. Telefonen kommer til å ringe.</p>
+  <button class="go" id="nx">Se på mobilen</button>`;
+}
+function renderChat(c,s){
+  const e=EVENTS[G.ev],P=PPL[e.who];
+  const log=G.chatLog;
+  c.innerHTML=ill(s)+head(s)+`<h2>Ukene før møtet</h2><p>Alle vil ha noe. Hver avtale du gjør, kan gi deg delegater, eller koste deg noen.</p>
+  ${dele()}
+  <div class="phone"><div class="ph">${avatar(P.l,"av"+G.ev)}<div><b>${P.n}</b><small>${P.r}</small></div><span style="margin-left:auto;font-size:13px;opacity:.7">${G.ev+1} av ${EVENTS.length}</span></div>
+  <div class="msgs">${e.msg.map(m=>`<div class="bub">${m}</div>`).join("")}${log.map(x=>`<div class="bub ${x.m?"mine":x.sys?"sys":""}">${x.t}</div>`).join("")}</div>
+  ${G.evDone?"":`<div class="replies">${e.o.map((o,j)=>`<button class="rep" data-r="${j}">${o.t}</button>`).join("")}</div>`}</div>
+  <div id="fb">${G.evDone?`<button class="go" id="evnx">${G.ev<EVENTS.length-1?"Neste melding":"Les avisa"}</button>`:""}</div>`;
+}
+function choose(j){
+  const e=EVENTS[G.ev],o=e.o[j],d=Object.assign({},o.d);
+  if(o.f==="sykehus"&&G.flags.ferje){d.o=(d.o||0)-8;}
+  if(o.f==="benk"&&G.sup<2){d.b=4;}
+  if(o.f)G.flags[o.f]=true;
+  addDel(d);
+  G.chatLog=[{m:1,t:esc(o.t)},{t:o.f==="benk"&&G.sup<2?"Ok! Men ærlig talt: mange av oss kjenner deg ikke så godt. Jeg får med noen.":o.r}];
+  if(o.f==="sykehus"&&G.flags.ferje)G.chatLog.push({sys:1,t:"Mona fikk høre om avtalen med Kjell. Hun føler seg lurt."});
+  const ch=chip(d);if(ch)G.chatLog.push({sys:1,t:`<span class="chips" style="justify-content:center">${ch}</span>`});
+  G.evDone=true;renderChat($("card"),STEPS[G.i]);side();
+}
+function renderAvis(c,s){
+  const F=G.flags;let h,t;
+  if(F.angrep){h="– Haddad er utgått på dato";t=`Strid i Fyrlykta. Unge ${esc(pname())} går hardt ut mot partifellen Amir Haddad. – Det der var stygt, sier en kilde i partiet.`;}
+  else if(F.alt){h="Lover alt til alle?";t=`${esc(pname())} har lovet både ferja og sykehuset. – Man kan ikke love alle alt, sier fylkeslederen.`;}
+  else if(F.sak){h="Ung kandidat vil ha plass for øyene";t=`${esc(pname())} vil ha en ung stemme fra øyene blant de to øverste på Fyrlykta-lista.`;}
+  else{h="Uro i Fyrlykta før nominasjonen";t="Flere kilder melder om kamp om andreplassen. Ingen vil uttale seg.";}
+  const d=F.alt?{b:-4}:{};if(!G.avisDone){addDel(d);G.avisDone=true;}
+  side();
+  c.innerHTML=head(s)+`<h2>Dagen før møtet</h2><div class="paper"><small>FJORDVIK AVIS · NYHETER</small><h3>${h}</h3><p style="margin:0">${t}</p></div>
+  ${chip(d)?`<p><span class="chips">${chip(d)}</span></p>`:""}
+  <p>Rita Berg, som står øverst på lista, sender deg en melding: «Uansett hva som skjer i morgen, skal vi vinne valget sammen etterpå. Husk det.»</p>
+  ${dele()}<button class="go" id="nx">Til nominasjonsmøtet</button>`;
+}
+function renderMote(c,s){
+  const F=G.flags;
+  if(!F.benk&&!G.benkAsk){c.innerHTML=ill(s)+head(s)+`<h2>Nominasjonsmøtet</h2><p>Møtelederen spør om noen har forslag til endringer på andreplassen. Du har ikke lovet Sofie noe. Vil du stille <b>benkeforslag</b>, altså foreslå deg selv i stedet for Amir?</p>${dele()}
+    <div class="opts"><button class="opt" data-bk="1">Ja, jeg reiser meg og foreslår meg selv.</button><button class="opt" data-bk="0">Nei, jeg godtar tredjeplassen.</button></div>`;return;}
+  if(G.benkAsk==="nei"){G.voted=true;G.log.push("26 år: godtok tredjeplassen på lista.");
+    c.innerHTML=ill(s)+head(s)+`<h2>Nominasjonsmøtet</h2><p>Du blir sittende. Komiteens forslag blir vedtatt uten kampvotering, og du står som nr. 3 på lista.</p><div class="fb"><p>Det er ingen skam. Partiet gikk samlet inn i valgkampen, og mange husker at du var lojal. Men nr. 3 for et lite parti kommer sjelden inn.</p></div><button class="go" id="nx">Videre til valget</button>`;return;}
+  if(!G.speech){c.innerHTML=ill(s)+head(s)+`<h2>Nominasjonsmøtet</h2><p>Du har fremmet benkeforslag. Nå blir det <b>kampvotering</b> om andreplassen mellom deg og Amir. Du får ett minutt på talerstolen. Hva sier du?</p>${dele()}
+    <div class="opts">${SPEECH.map((x,j)=>`<button class="opt" data-sp="${j}">${x.t}</button>`).join("")}</div>`;return;}
+  const sp=SPEECH[G.speech-1];
+  if(!G.voted){G.voted=true;addDel({b:Math.round(sp.d*.5),o:Math.round(sp.d*.2),i:sp.d-Math.round(sp.d*.5)-Math.round(sp.d*.2)});
+    const t=total();G.win=t>=51;if(G.win){G.plass=2;G.list=["Rita Berg (54)",pname()+" (27)","Amir Haddad (41)","Ingrid Solheim (35)"];}
+    G.log.push(`27 år: ${G.win?"vant kampvoteringen om andreplassen":"tapte kampvoteringen og beholdt tredjeplassen"} (${t} mot ${100-t}).`);}
+  const t=total();side();
+  c.innerHTML=ill(s)+head(s)+`<h2>Kampvotering</h2><p>${sp.r}</p><p>Delegatene rekker opp stemmekortene …</p>
+  <div class="vote"><div><span>${esc(pname())}</span><b id="vA">0</b></div><div><span>Amir Haddad</span><b id="vB">0</b></div></div>
+  <div id="fb"></div>`;
+  let k=0;const A=t,B=100-t,step=()=>{k=Math.min(1,k+.04);$("vA").textContent=Math.round(A*k);$("vB").textContent=Math.round(B*k);
+    if(k<1)setTimeout(step,45);else $("fb").innerHTML=`<div class="fb ${G.win?"":"no"}"><p><b class="v">${G.win?"Du vant!":"Du tapte."}</b> ${G.win?"Du står som nr. 2 på lista. Amir rykker ned til tredjeplass, og han ser ikke fornøyd ut.":"Amir beholder andreplassen. Du står fortsatt som nr. 3."}</p><p>Sånn er det i mange partier: komiteen foreslår, men det er delegatene som bestemmer. Avtaler, lokallag og hvem som snakker med hvem kan avgjøre hvem som kommer på Stortinget.</p></div><button class="go" id="nx">Videre til valget</button>`;};
+  setTimeout(step,500);
+}
+function quotients(){const a=[];PARTIES.forEach((p,pi)=>DIV.forEach((d,di)=>a.push({pi,di,v:p.v/d})));return a.sort((x,y)=>y.v-x.v);}
+function renderCount(c,s){
+  if(!G.count)G.count={won:[],miss:0};
+  const C=G.count,taken=k=>C.won.indexOf(k),fin=C.won.length>=SEATS,seatsOf=pi=>C.won.filter(k=>+k.split("-")[0]===pi).length;
+  c.innerHTML=(C.won.length===0?ill(s):"")+head(s)+`<h2>Valgnatt i Fjordvik</h2>
+  <p>Fjordvik skal ha ${SEATS} distriktsmandater. Stemmene til hvert parti deles på 1,4, så på 3, 5 og 7. Det største tallet i hele tabellen får det første mandatet, det nest største det andre, og så videre.</p>
+  <p><b>${fin?"Alle mandatene er fordelt.":`Trykk på tallet som skal få mandat nr. ${C.won.length+1}.`}</b></p>
+  <div class="count"><table><thead><tr><th>Parti</th><th>Stemmer</th>${DIV.map(d=>`<th>÷ ${String(d).replace(".",",")}</th>`).join("")}<th>Mandater</th></tr></thead><tbody>
+  ${PARTIES.map((p,pi)=>`<tr><td><span class="pc" style="background:${p.c}"></span>${p.n}</td><td>${fmt(p.v)}</td>${DIV.map((d,di)=>{const k=pi+"-"+di,t=taken(k);return `<td><button class="q ${t>=0?"won":""}" data-k="${k}" ${t>=0||fin?"disabled":""}>${fmt(p.v/d)}${t>=0?`<small>mandat ${t+1}</small>`:""}</button></td>`}).join("")}<td><b>${seatsOf(pi)}</b></td></tr>`).join("")}
+  </tbody></table></div>
+  <div class="seats">${C.won.map(k=>`<span class="seat" style="background:${PARTIES[+k.split("-")[0]].c}" title="${PARTIES[+k.split("-")[0]].n}"></span>`).join("")}</div>
+  <div id="fb">${fin?`<div class="fb"><p><b class="v">${C.miss===0?"Helt riktig opptelling!":"Ferdig talt."}</b> Fyrlykta fikk ett distriktsmandat. Det går til nr. 1 på lista, Rita Berg. ${G.plass===2?"Du står som nr. 2, så nå håper du på et utjevningsmandat.":"Du står som nr. 3. Det ser mørkt ut."}</p><p>Se hvor jevnt det siste mandatet var: Ankerpartiet fikk det med ${fmt(41000/5)}, mens Måkepartiet hadde ${fmt(24000/3)}.</p></div><button class="go" id="nx">Hva nå?</button>`:""}</div>`;
+}
+function renderUtj(c,s){
+  let out;
+  if(G.plass===2){out=`<p><b>Det er deg!</b> Rita tok distriktsmandatet, og nr. 2 på lista får utjevningsmandatet. Du er valgt til Stortinget.</p>`;G.status="Valgt til Stortinget";}
+  else{out=`<p>Utjevningsmandatet går til nr. 2 på lista, Amir Haddad. Du kom ikke inn, men du er første vararepresentant.</p><p>To uker senere ringer telefonen. Rita Berg skal bli statsråd i den nye regjeringen, og en statsråd kan ikke møte på Stortinget samtidig. Vararepresentanten møter i stedet. <b>Det er deg.</b></p>`;G.status="Vara som møter fast";}
+  side();
+  c.innerHTML=ill(s)+head(s)+`<h2>Utjevningsmandatet</h2><p>Alle stemmene i landet er talt. Hvert valgdistrikt har ett utjevningsmandat, 19 til sammen. De går til partier over sperregrensen som har fått for få mandater i forhold til stemmene sine. Fyrlykta er et slikt parti, og distriktet der partiet var nærmest et mandat til, er Fjordvik.</p>
+  <div class="fb">${out}</div><button class="go" id="nx">Til Løvebakken</button>`;
+}
+function renderEnd(c,s){
+  try{localStorage.setItem("lovebakken",JSON.stringify({name:G.name,look:G.look,flags:G.flags,plass:G.plass}))}catch(e){}
+  c.innerHTML=ill(s)+`<p class="step">Del 1 ferdig</p><h2>${esc(pname())} er på vei inn på Stortinget</h2>
+  <ol class="path">${G.log.map(l=>`<li>${l}</li>`).join("")}<li>28 år: ${G.plass===2?"valgt på utjevningsmandat":"første vara, møter fast når Rita blir statsråd"}.</li></ol>
+  <p>I del 2 skal du jobbe på Stortinget: lage lover, forhandle om budsjettet og kontrollere regjeringen. Del 2 husker politikeren din og løftene du ga. Men først: hvor mye husker du?</p>
+  <button class="go" id="nx">Sjekk deg selv</button>`;
+}
+
+/* ================= SJEKK DEG SELV ================= */
+const TEST=[
+ {id:"m1",tema:"v",type:"mc",q:"Valgdistriktet Nordvik skal ha 4 mandater. Ankerpartiet fikk 30 000 stemmer, Bjørkelista 21 000 og Fyrlykta 9 000. Hvem får mandat nr. 4?",
+  table:true,o:["Ankerpartiet","Bjørkelista","Fyrlykta"],a:1,ex:"Tallene i rekkefølge: 21 429 (Anker), 15 000 (Bjørke), 10 000 (Anker), 7 000 (Bjørke). Fyrlykta har 9 000 ÷ 1,4 = 6 429, så de kommer akkurat ikke med."},
+ {id:"m2",tema:"v",type:"mc",q:"Hvorfor deles stemmene på 1,4 og ikke på 1 når et parti skal få sitt første mandat?",o:["For å gjøre det litt vanskeligere for veldig små partier","For å gi store partier flere utjevningsmandater","Fordi det er 14 valgdistrikter"],a:0,ex:"Det første delingstallet er 1,4 for å lage en liten sperre mot småpartier."},
+ {id:"t1",tema:"l",type:"tf",q:"Ved stortingsvalg kan velgerne flytte en kandidat oppover på lista.",a:false,ex:"Feil. Fra 2024 er listene ved stortingsvalg lukket."},
+ {id:"t2",tema:"n",type:"tf",q:"Det er partiet som bestemmer hvem som står på lista, og i hvilken rekkefølge.",a:true,ex:"Riktig. Det skjer på et nominasjonsmøte i partiet."},
+ {id:"t3",tema:"v",type:"tf",q:"Et parti med 3,5 prosent i hele landet kan få utjevningsmandater.",a:false,ex:"Feil. Sperregrensen for utjevningsmandater er 4 prosent."},
+ {id:"t4",tema:"v",type:"tf",q:"Et parti under 4 prosent kan likevel få distriktsmandater.",a:true,ex:"Riktig. Sperregrensen gjelder bare utjevningsmandatene. Et parti som står sterkt i ett distrikt, kan vinne mandat der."},
+ {id:"n1",tema:"n",type:"mc",q:"Hva er et benkeforslag på et nominasjonsmøte?",o:["Et forslag fra en delegat i salen om å endre komiteens innstilling","Et forslag om å utsette møtet","Komiteens eget forslag til liste"],a:0,ex:"Et benkeforslag kommer fra salen og utfordrer komiteens innstilling. Da kan det bli kampvotering."},
+ {id:"n2",tema:"n",type:"mc",q:"Hvorfor prøver nominasjonskomiteen å få kandidater fra hele fylket, med ulik alder og kjønn?",o:["Velgere i hele fylket skal kjenne seg igjen, og partiet kan vinne flere stemmer","Loven krever like mange fra hver kommune","Det er tilfeldig"],a:0,ex:"Loven stiller ikke slike krav, men partiene vil ha lister som mange velgere kjenner seg igjen i."},
+ {id:"v5",tema:"v",type:"mc",q:"Hvor mange utjevningsmandater er det til sammen?",o:["4","19","169"],a:1,ex:"Det er 19 utjevningsmandater, ett i hvert valgdistrikt."}
+];
+const TEMA={v:"Valgordningen",n:"Nominasjon",l:"Listene"};
+function renderTest(c,s){
+  const A=G.test,d=G.testDone;
+  c.innerHTML=head(s)+`<h2>Sjekk deg selv</h2><p>Ingen hint denne gangen. Svar på alt, og trykk på knappen nederst.</p>`+
+  TEST.map((q,qi)=>{const ans=A[q.id];const cls=(v)=>d?(v===(q.type==="tf"?q.a:q.a)?"right":(ans===v?"wrong":"")):"";
+   return `<div class="tq ${d?"r":""}"><p>${qi+1}. ${q.q}</p>${q.table?`<table class="mini"><tr><th></th><th>÷ 1,4</th><th>÷ 3</th></tr><tr><td>Ankerpartiet</td><td>21 429</td><td>10 000</td></tr><tr><td>Bjørkelista</td><td>15 000</td><td>7 000</td></tr><tr><td>Fyrlykta</td><td>6 429</td><td>3 000</td></tr></table>`:""}
+   ${q.type==="tf"?`<div class="tf">${[[true,"Stemmer"],[false,"Stemmer ikke"]].map(([v,n])=>`<button data-tq="${q.id}" data-tv="${v}" aria-pressed="${ans===v}" class="${cls(v)}" ${d?"disabled":""}>${n}</button>`).join("")}</div>`
+     :`<div class="tm">${q.o.map((o,j)=>`<button data-tq="${q.id}" data-tv="${j}" aria-pressed="${ans===j}" class="${cls(j)}" ${d?"disabled":""}>${o}</button>`).join("")}</div>`}
+   <p class="ex">${q.ex}</p></div>`}).join("")+
+  (d?testRes():`<button class="go" id="testgo" ${Object.keys(A).length<TEST.length?"disabled":""}>${Object.keys(A).length<TEST.length?`Svar på ${TEST.length-Object.keys(A).length} til`:"Se resultatet"}</button>`);
+}
+function testRes(){
+  const by={};TEST.forEach(q=>{by[q.tema]=by[q.tema]||[0,0];by[q.tema][1]++;if(G.test[q.id]===q.a)by[q.tema][0]++;});
+  const sum=TEST.filter(q=>G.test[q.id]===q.a).length;
+  return `<h3 style="font-size:24px;margin-top:18px">${sum} av ${TEST.length} riktige</h3><div class="res">${Object.keys(TEMA).map(k=>`<div>${TEMA[k]}<b>${by[k][0]} av ${by[k][1]}</b></div>`).join("")}</div>
+  <p>${esc(pname())} · Kunnskap i spillet: ${G.know} av ${QMAX}. Ta et skjermbilde og vis læreren hvis du blir bedt om det.</p><button class="go" id="again">Spill igjen</button>`;
+}
+
+/* ================= HENDELSER ================= */
+$("card").addEventListener("click",e=>{
+  const b=e.target.closest("button");if(!b||b.disabled)return;
+  const s=STEPS[G.i];
+  if(s.t==="intro"&&b.dataset.lk){G.name=$("nm").value;G.look[b.dataset.lk]=b.dataset.lv;renderIntro($("card"));drawMap(0);side();return;}
+  if(b.id==="start"){G.name=$("nm").value.trim().slice(0,24);next();return;}
+  if(b.id==="nx"){next();return;}
+  if(b.id==="again"){reset();render();window.scrollTo(0,0);return;}
+  if(s.t==="quiz"&&b.dataset.j!==undefined&&!G.done){
+    const o=s.o[+b.dataset.j];
+    if(o[1]){G.done=true;if(G.tries===0)G.know++;b.classList.add("ok");$("card").querySelectorAll(".opt").forEach(x=>x.disabled=true);
+      if(G.i===1)G.status="Medlem av Fyrlykta U";
+      $("fb").innerHTML=`<div class="fb"><p><b class="v">${G.tries===0?"Riktig!":"Ja, det stemmer."}</b> ${s.w}</p></div><button class="go" id="nx">Neste</button>`;side();}
+    else{G.tries++;b.classList.add("no");b.disabled=true;$("fb").innerHTML=`<div class="fb no"><p><b class="v">Ikke helt.</b> Prøv igjen.</p></div>`;}
+    return;}
+  if(s.t==="week"){
+    if(b.dataset.a!==undefined){const j=+b.dataset.a;G.week=G.week.includes(j)?G.week.filter(x=>x!==j):[...G.week,j];renderWeek($("card"),s);return;}
+    if(b.id==="weekgo"){G.weekDone=true;const p=G.week.filter(j=>ACTS[j].p).length;G.sup+=[0,1,2,2][p];if(p>=2)G.status="Styremedlem i Fyrlykta U";G.log.push(`17 år: ${p>=2?"styremedlem i ungdomspartiet":p===1?"med i ungdomspartiet innimellom":"medlem av ungdomspartiet"}.`);renderWeek($("card"),s);side();return;}
+  }
+  if(s.t==="stand"&&b.id==="standgo"){startStand();return;}
+  if(s.t==="chat"){
+    if(b.dataset.r!==undefined&&!G.evDone){choose(+b.dataset.r);return;}
+    if(b.id==="evnx"){if(G.ev<EVENTS.length-1){G.ev++;G.evDone=false;G.chatLog=[];renderChat($("card"),s);$("card").scrollIntoView({block:"start",behavior:"smooth"});}else next();return;}
+  }
+  if(s.t==="mote"){
+    if(b.dataset.bk!==undefined){G.benkAsk=b.dataset.bk==="1"?"ja":"nei";if(G.benkAsk==="ja")G.flags.benk=true;renderMote($("card"),s);return;}
+    if(b.dataset.sp!==undefined){G.speech=+b.dataset.sp+1;renderMote($("card"),s);return;}
+  }
+  if(s.t==="count"&&b.dataset.k){
+    const C=G.count,need=quotients()[C.won.length],k=b.dataset.k;
+    if(k===need.pi+"-"+need.di){C.won.push(k);if(C.won.length===SEATS&&C.miss===0)G.know++;renderCount($("card"),s);side();}
+    else{C.miss++;b.classList.remove("shake");void b.offsetWidth;b.classList.add("shake");
+      const v=PARTIES[+k.split("-")[0]].v/DIV[+k.split("-")[1]];
+      $("fb").innerHTML=`<div class="fb no"><p><b class="v">Ikke det.</b> ${v<need.v?"Det finnes et større tall som ikke har fått mandat ennå.":"Se på tallene som ikke har fått mandat ennå."}</p></div>`;}
+    return;}
+  if(s.t==="test"){
+    if(b.dataset.tq){const q=TEST.find(x=>x.id===b.dataset.tq);G.test[q.id]=q.type==="tf"?b.dataset.tv==="true":+b.dataset.tv;renderTest($("card"),s);return;}
+    if(b.id==="testgo"){G.testDone=true;renderTest($("card"),s);$("card").scrollIntoView({block:"start",behavior:"smooth"});return;}
+  }
+});
+$("card").addEventListener("input",e=>{if(e.target.id==="nm"){G.name=e.target.value;side();}});
+$("card").addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="nm")$("start").click();});
+
+render();
+}
+</script>
+</body>
+</html>
