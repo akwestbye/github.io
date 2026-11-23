@@ -625,6 +625,12 @@ function testRes(){
   <p>${esc(pname())} · Kunnskap i spillet: ${G.know} av ${QMAX}. Ta et skjermbilde og vis læreren hvis du blir bedt om det.</p><button class="go" id="again">Spill igjen</button>`;
 }
 
+/* bland svaralternativene så det riktige ikke alltid står først */
+const shuf=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+STEPS.forEach(s=>{if(s.t==="quiz")shuf(s.o);});
+TEST.forEach(q=>{if(q.type==="mc"){const r=q.o[q.a];shuf(q.o);q.a=q.o.indexOf(r);}});
+CTRL.forEach(c=>shuf(c.o));
+
 /* ================= HENDELSER ================= */
 $("card").addEventListener("click",e=>{
   const b=e.target.closest("button");if(!b||b.disabled)return;
