@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Der Kaffee-Krimi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;800&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+/* VOICE occasion: a detective game for 13-year-olds, playful but tidy
+   IDEA a police case file under crime-scene tape, with typewritten witness statements
+   PICTURE the game board itself: radio messages, suspect portraits, the interrogation
+   COLOUR white / night ground, tape yellow, coffee-machine red accent, manila paper cards
+   TYPE Rubik 800 display + Rubik text, Special Elite for statements
+   LAYOUT tape band and title on top, one centred game column; same column on phone */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#15171c);--ink:light-dark(#1b1b1f,#f1efe8);--paper:light-dark(#fff6df,#22252c);--line:light-dark(#e6dcc0,#3a3e48);--mute:light-dark(#5a5a64,#a9a9b4);--tape:#ffd23f;--red:#e63946;--ok:light-dark(#1d7a50,#5fd39a);--chip:light-dark(#ffffff,#2d313a)}
+:root[data-theme=light]{color-scheme:light}
+:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 Rubik,system-ui,sans-serif;overflow-x:clip}
+button{font:inherit;color:inherit;cursor:pointer}
+.tape{background:repeating-linear-gradient(-45deg,var(--tape) 0 28px,#1b1b1f 28px 40px);height:14px}
+.tapetext{background:var(--tape);color:#1b1b1f;font-weight:800;letter-spacing:.04em;white-space:nowrap;overflow:hidden;padding:6px 0;font-size:14px}
+.tapetext span{display:inline-block;padding-left:100%;animation:run 38s linear infinite}
+@keyframes run{to{transform:translateX(-100%)}}
+header{max-width:780px;margin:0 auto;padding:18px 16px 6px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+header svg{width:56px;height:56px;flex:none}
+h1{font-size:clamp(30px,6vw,44px);line-height:1.05;letter-spacing:-.02em;margin:0;font-weight:800;flex:1 1 auto}
+.beans{display:flex;align-items:center;gap:6px;background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-weight:700;font-size:18px;white-space:nowrap}
+.beans.hit{animation:hit .5s}
+@keyframes hit{30%{background:var(--red);color:#fff}}
+main{max-width:780px;margin:0 auto;padding:6px 16px 48px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:clamp(16px,3vw,26px);margin-top:14px;box-shadow:0 2px 0 var(--line)}
+h2{font-size:24px;line-height:1.15;margin:0 0 8px;font-weight:800}
+h3{font-size:17px;margin:18px 0 6px}
+p{margin:6px 0}
+.mute{color:var(--mute)}
+.typed{font-family:"Special Elite",ui-monospace,monospace;font-size:19px;line-height:1.45}
+.q{font-weight:700;font-size:20px;line-height:1.35}
+.static{display:inline-block;min-width:4.2em;padding:0 .3em;border-radius:6px;color:#fff;background:repeating-linear-gradient(90deg,#555 0 3px,#999 3px 5px,#333 5px 9px);animation:fz .25s steps(2) infinite;font-family:"Special Elite",monospace;text-align:center}
+@keyframes fz{50%{background-position:7px 0}}
+.wordhit{background:var(--tape);color:#1b1b1f;border-radius:6px;padding:0 .25em}
+.words{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:14px}
+.btn{min-height:46px;border-radius:10px;border:2px solid var(--ink);background:var(--chip);font-weight:700;font-size:17px;padding:8px 12px}
+.btn:hover{background:var(--tape);color:#1b1b1f}
+.btn:focus-visible,.tile:focus-visible,.sus:focus-visible,.qitem:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+.btn.main{background:var(--red);border-color:var(--red);color:#fff;font-size:18px;padding:10px 20px}
+.btn.main:hover{filter:brightness(1.1);color:#fff}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.wrong{animation:shake .35s;border-color:var(--red);color:var(--red)}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.fb{margin-top:12px;padding:10px 14px;border-radius:10px;border-left:5px solid var(--red);background:color-mix(in srgb,var(--red) 10%,transparent)}
+.fb.good{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,transparent)}
+.gloss{font-size:14px;color:var(--mute);margin-top:6px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px}
+.sus-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:12px}
+@media(max-width:600px){.sus-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.sus{background:var(--chip);border:2px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+.sus:hover{border-color:var(--ink)}
+.sus svg{width:100%;max-width:110px;aspect-ratio:1}
+.sus b{display:block;font-size:16px}
+.sus small{display:block;color:var(--mute);font-size:13px}
+.prog{height:6px;border-radius:3px;background:var(--line);margin-top:6px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--red)}
+.notes{list-style:none;padding:0;margin:0}
+.notes li{padding:7px 0;border-bottom:1px dashed var(--line);font-family:"Special Elite",monospace;font-size:16px}
+.notes li b{font-family:Rubik,sans-serif;font-size:13px;color:var(--mute);display:block;font-weight:500}
+.who{display:flex;gap:14px;align-items:center}
+.who svg{width:84px;height:84px;flex:none}
+.qitem{display:block;width:100%;text-align:left;background:var(--chip);border:2px solid var(--line);border-radius:10px;padding:10px 14px;margin-top:8px;min-height:46px}
+.qitem:hover:not(:disabled){border-color:var(--ink)}
+.qitem.done{border-style:dashed;cursor:default}
+.qitem .de{font-weight:700}
+.qitem .an{font-family:"Special Elite",monospace;display:block;margin-top:4px}
+.line{display:flex;flex-wrap:wrap;gap:8px;min-height:58px;padding:8px;border:2px dashed var(--line);border-radius:12px;margin-top:12px;align-items:center}
+.bank{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.tile{min-height:44px;padding:8px 14px;border-radius:9px;border:2px solid var(--ink);background:var(--chip);font-weight:500;font-size:17px}
+.tile.fixed{background:var(--tape);color:#1b1b1f;border-color:#1b1b1f;font-weight:800;cursor:default}
+.tile.bad{border-color:var(--red);color:var(--red)}
+.qmark{font-weight:800;font-size:22px}
+.say{position:relative;background:var(--chip);border:2px solid var(--ink);border-radius:14px;padding:14px 16px;margin-top:14px}
+.link{background:none;border:0;padding:8px 0;text-decoration:underline;color:var(--mute);min-height:44px}
+.opts{display:grid;gap:8px;margin-top:12px}
+.opts .btn{text-align:left;font-weight:500}
+.big{font-size:clamp(40px,9vw,64px);font-weight:800;line-height:1;color:var(--red)}
+.small{font-size:13px;color:var(--mute)}
+@media(prefers-reduced-motion:reduce){.tapetext span,.static,.btn.wrong,.beans.hit{animation:none}}
+</style>
+</head>
+<body>
+<div class="tape"></div>
+<div class="tapetext" aria-hidden="true"><span>POLIZEI · TATORT · NICHT BETRETEN · POLIZEI · TATORT · NICHT BETRETEN · POLIZEI · TATORT · NICHT BETRETEN · POLIZEI · TATORT · NICHT BETRETEN</span></div>
+<header>
+  <svg viewBox="0 0 60 60" aria-hidden="true"><rect x="12" y="8" width="36" height="40" rx="5" fill="none" stroke="#e63946" stroke-width="3" stroke-dasharray="5 4"/><rect x="18" y="14" width="24" height="10" rx="2" fill="#e63946" opacity=".35"/><rect x="22" y="32" width="16" height="12" rx="2" fill="none" stroke="#e63946" stroke-width="2"/><text x="30" y="27" text-anchor="middle" font-size="16" font-weight="800" fill="#e63946" font-family="Rubik,sans-serif" dy="14">?</text></svg>
+  <h1>Der Kaffee-Krimi</h1>
+  <div class="beans" id="beans" title="Kaffebønner igjen"></div>
+</header>
+<main id="app"></main>
+<script>
+{
+const WORDS=[["Wer","hvem"],["Was","hva"],["Wo","hvor (på hvilket sted)"],["Wohin","hvor hen"],["Woher","hvor fra"],["Wann","når"],["Wie","hvordan"],["Warum","hvorfor"],["Wie viel","hvor mye / hvor mange"]];
+const NO=Object.fromEntries(WORDS);
+const START=15;
+const RADIO=[
+{k:"Was",q:"ist passiert?",a:"Die Kaffeemaschine von Frau Becker ist weg!",g:"weg = borte"},
+{k:"Wo",q:"war die Maschine?",a:"Im Lehrerzimmer, neben dem Fenster.",g:"Lehrerzimmer = lærerværelset, Fenster = vindu"},
+{k:"Wann",q:"ist sie verschwunden?",a:"Heute Morgen, zwischen 7:00 und 7:30 Uhr.",g:"verschwunden = forsvunnet"},
+{k:"Wer",q:"hat einen Schlüssel zum Lehrerzimmer?",a:"Alle Lehrer und der Hausmeister. Die Schüler nicht!",g:"Schlüssel = nøkkel, Hausmeister = vaktmester"},
+{k:"Wie",q:"sieht die Maschine aus?",a:"Sie ist rot und sehr groß.",g:"aussehen = se ut"},
+{k:"Warum",q:"ist Frau Becker so wütend?",a:"Weil sie ohne Kaffee nicht arbeiten kann!",g:"wütend = sint"},
+{k:"Wie viel",q:"kostet die Maschine?",a:"800 Euro! Sie ist ganz neu.",g:""},
+{k:"Woher",q:"kommt die Maschine?",a:"Aus Italien.",g:""},
+{k:"Wohin",q:"führen die Kaffeeflecken?",a:"Zum Parkplatz!",g:"Kaffeeflecken = kaffeflekker, Parkplatz = parkeringsplass"}];
+const SUS=[
+{id:"schulz",name:"Herr Schulz",role:"Hausmeister",look:{bg:"#9fd3e8",shirt:"#2b5ea8",skin:"#f0c49a",hair:"#7a7a7a",style:"cap",cap:"#2b5ea8"},qs:[
+{no:"Spør hvor han var klokka 7.15.",k:"Wo",t:["waren","Sie","um 7:15 Uhr"],a:"In der Turnhalle. Die Heizung war kaputt.",g:"Turnhalle = gymsal, Heizung = oppvarming"},
+{no:"Spør hvem som også var i gymsalen.",k:"Wer",t:["war","auch","in der Turnhalle"],a:"Lena aus der 8b. Sie hatte Basketballtraining."},
+{no:"Spør hvordan han kommer seg til skolen.",k:"Wie",t:["kommen","Sie","zur Schule"],a:"Mit dem Fahrrad. Ich habe kein Auto.",g:"Fahrrad = sykkel"},
+{no:"Spør hvor kopimaskinen står.",k:"Wo",t:["steht","der Kopierer"],a:"Im Lehrerzimmer. Nur dort!",g:"Kopierer = kopimaskin, nur dort = bare der"},
+{no:"Spør hva han drikker om morgenen.",k:"Was",t:["trinken","Sie","am Morgen"],a:"Kaffee, natürlich! Aber heute nicht. Die Maschine ist ja weg."}]},
+{id:"lena",name:"Lena",role:"Schülerin, 8b",look:{bg:"#ffd9a0",shirt:"#e63946",skin:"#f6d2b0",hair:"#e2b54a",style:"pony"},qs:[
+{no:"Spør hvor hun var klokka 7.15.",k:"Wo",t:["warst","du","um 7:15 Uhr"],a:"In der Turnhalle. Ich hatte Basketballtraining."},
+{no:"Spør når treningen begynner.",k:"Wann",t:["beginnt","das Training"],a:"Um 7 Uhr. Um halb acht ist es fertig.",g:"halb acht = halv åtte"},
+{no:"Spør hvem som var der hele tiden.",k:"Wer",t:["war","die ganze Zeit","da"],a:"Herr Schulz. Er hat die Heizung repariert."},
+{no:"Spør hva hun så fra vinduet i gymsalen.",k:"Was",t:["hast","du","gesehen"],a:"Um 7:20 Uhr war eine Frau auf dem Parkplatz. Sie hatte einen großen roten Karton.",g:"Karton = eske"},
+{no:"Spør hvor mange spillere som var der.",k:"Wie viel",f:"Wie viele",t:["Spieler","waren","da"],a:"Nur drei. Es war so früh!"}]},
+{id:"max",name:"Max",role:"Schüler, 8b",look:{bg:"#c8e6b5",shirt:"#3b3b46",skin:"#c98d63",hair:"#2a1d16",style:"curly"},qs:[
+{no:"Spør når han kom til skolen.",k:"Wann",t:["bist","du","zur Schule","gekommen"],a:"Um 7:05 Uhr. Mein Bus kommt immer zu früh."},
+{no:"Spør hvor han ventet.",k:"Wo",t:["hast","du","gewartet"],a:"Vor Raum 204. Von 7:05 bis 7:30 Uhr.",g:"warten = vente, vor = foran"},
+{no:"Spør hvorfor han ventet der.",k:"Warum",t:["hast","du","dort","gewartet"],a:"Ich wollte Frau Novak meine Hausaufgaben geben.",g:"Hausaufgaben = lekser"},
+{no:"Spør hvem som kom til rom 204.",k:"Wer",t:["ist","gekommen"],a:"Niemand! Der Raum war leer. Die ganze Zeit.",g:"niemand = ingen, leer = tom"},
+{no:"Spør hvor han kommer fra.",k:"Woher",t:["kommst","du"],a:"Aus Polen. Aber ich wohne schon fünf Jahre hier."}]},
+{id:"novak",name:"Frau Novak",role:"Deutschlehrerin",look:{bg:"#e7c6f0",shirt:"#7b2d8b",skin:"#f3cfb3",hair:"#4a2a1a",style:"bun"},qs:[
+{no:"Spør hvor hun var klokka 7.15.",k:"Wo",t:["waren","Sie","um 7:15 Uhr"],a:"In Raum 204. Ich war ganz allein.",g:"allein = alene"},
+{no:"Spør hva hun gjorde der.",k:"Was",t:["haben","Sie","dort","gemacht"],a:"Ich habe Tests kopiert. Für die 8b."},
+{no:"Spør hvordan hun kommer seg til skolen.",k:"Wie",t:["kommen","Sie","zur Schule"],a:"Mit dem Auto. Es steht auf dem Parkplatz."},
+{no:"Spør hvor hun skal etter skolen.",k:"Wohin",t:["fahren","Sie","nach der Schule"],a:"Zu meiner Schwester. Sie hat morgen Geburtstag."},
+{no:"Spør hva hun drikker om morgenen.",k:"Was",t:["trinken","Sie","am Morgen"],a:"Tee! Ich trinke nie Kaffee. Wirklich nie!"},
+{no:"Spør hva hun skal gi søsteren sin i gave.",k:"Was",t:["schenken","Sie","Ihrer Schwester"],a:"Äh, das ist eine Überraschung!",g:"schenken = gi i gave, Überraschung = overraskelse"}]}];
+const WRONGWHO={schulz:"Lena sier at Herr Schulz var i gymsalen hele tiden. Og han har ikke bil.",lena:"Lena har ikke nøkkel til lærerværelset. Og hun var på trening.",max:"Max har ikke nøkkel. Og han har ikke bil, han tar bussen."};
+const P1={q:"Frau Novak sagt: «Ich war in Raum 204.» Was zeigt, dass das nicht stimmt?",o:[["Frau Novak trinkt nie Kaffee.",0,"Det beviser ikke hvor hun var."],["Max hat vor Raum 204 gewartet. Niemand ist gekommen.",1],["Der Kopierer steht nur im Lehrerzimmer.",1],["Lena hatte Basketballtraining.",0,"Det handler om Lena, ikke om Frau Novak."]]};
+const P2={q:"Und wo war die Maschine um 7:20 Uhr?",o:[["Im Lehrerzimmer.",0,"Nei, da var den allerede borte."],["In Raum 204.",0,"Raum 204 var tom, sier Max."],["Auf dem Parkplatz, in einem roten Karton.",1]]};
+
+const fresh=()=>({screen:"intro",beans:START,ri:0,rDone:false,asked:{},notes:[],conf:{},sus:null,q:null,step:null,line:[],bank:[],bad:-1,fb:null,acc:0});
+let S=fresh();
+const app=document.getElementById("app");
+const beansEl=document.getElementById("beans");
+const bean='<svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><ellipse cx="10" cy="10" rx="6.5" ry="8.5" transform="rotate(30 10 10)" fill="#6b3b1f"/><path d="M6 15 Q11 10 14 5" stroke="#c98d63" stroke-width="1.6" fill="none"/></svg>';
+
+function face(l){
+  let hair="";
+  const top='<path d="M29 44 Q28 22 50 22 Q72 22 71 44 Q66 30 50 30 Q34 30 29 44Z" fill="'+l.hair+'"/>';
+  if(l.style==="cap")hair='<path d="M30 44 Q28 40 31 38 L33 46Z" fill="'+l.hair+'"/><path d="M70 44 Q72 40 69 38 L67 46Z" fill="'+l.hair+'"/><path d="M28 38 Q30 18 50 18 Q70 18 72 38Z" fill="'+l.cap+'"/><rect x="58" y="34" width="24" height="6" rx="3" fill="'+l.cap+'"/><path d="M41 52 Q50 48 59 52 Q50 55 41 52Z" fill="'+l.hair+'"/>';
+  if(l.style==="bun")hair='<circle cx="50" cy="17" r="9" fill="'+l.hair+'"/>'+top+'<g fill="none" stroke="#1b1b1f" stroke-width="1.8"><circle cx="43" cy="45" r="5"/><circle cx="57" cy="45" r="5"/><path d="M48 45h4"/></g>';
+  if(l.style==="pony")hair='<path d="M68 32 Q90 40 80 66 Q76 50 66 42Z" fill="'+l.hair+'"/>'+top+'<rect x="29" y="31" width="42" height="5" rx="2.5" fill="#fff" opacity=".9"/>';
+  if(l.style==="curly")hair=[30,38,46,54,62,70].map((x,i)=>'<circle cx="'+x+'" cy="'+(i%2?25:29)+'" r="8" fill="'+l.hair+'"/>').join("")+'<circle cx="50" cy="22" r="8" fill="'+l.hair+'"/>';
+  return '<svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="50" fill="'+l.bg+'"/><path d="M16 100 Q18 72 50 70 Q82 72 84 100Z" fill="'+l.shirt+'"/><rect x="44" y="60" width="12" height="12" fill="'+l.skin+'"/><circle cx="50" cy="44" r="21" fill="'+l.skin+'"/><circle cx="43" cy="45" r="2.3" fill="#1b1b1f"/><circle cx="57" cy="45" r="2.3" fill="#1b1b1f"/><path d="M44 55 Q50 59 56 55" stroke="#1b1b1f" stroke-width="2" fill="none" stroke-linecap="round"/>'+hair+'</svg>';
+}
+const shuffle=a=>{const b=a.slice();for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b};
+function lose(){S.beans=Math.max(0,S.beans-1);beansEl.classList.remove("hit");void beansEl.offsetWidth;beansEl.classList.add("hit")}
+function addConf(ch,ok){const k=ch+"|"+ok;S.conf[k]=(S.conf[k]||0)+1}
+const wordBtns=()=>'<div class="words">'+WORDS.map(w=>'<button class="btn" data-act="word" data-w="'+w[0]+'">'+w[0]+'</button>').join("")+'</div>';
+const asked=s=>Object.keys(S.asked).filter(k=>k.startsWith(s.id+":")).length;
+
+function notesHTML(){
+  if(!S.notes.length)return '<p class="mute">Notatboka er tom.</p>';
+  return '<ul class="notes">'+S.notes.map(n=>'<li><b>'+n[0]+'</b>'+n[1]+'</li>').join("")+'</ul>';
+}
+
+const V={
+intro:()=>'<section class="card"><h2>Fall 204: Die rote Maschine</h2><p class="typed">Freitag, 7:45 Uhr. Frau Becker, die Rektorin, schreit im Lehrerzimmer: «Meine Kaffeemaschine ist weg!»</p><h3>Slik spiller du</h3><p>Du er etterforsker. Først kommer meldinger over politiradioen, men spørreordet forsvinner i støyen. Les svaret og finn ut hvilket spørreord som mangler.</p><p>Så avhører du fire mistenkte. Velg riktig spørreord og bygg spørsmålet selv. Spør du feil, får du ikke svar.</p><p>Du starter med '+START+' kaffebønner. Hver feil koster én.</p><div class="row"><button class="btn main" data-act="go" data-to="radio">Start saken</button></div></section>',
+radio:()=>{
+  const r=RADIO[S.ri];const solved=S.fb&&S.fb.good;
+  let h='<section class="card"><p class="mute">Funkspruch '+(S.ri+1)+' von '+RADIO.length+'</p>';
+  h+='<p class="q">'+(solved?'<span class="wordhit">'+r.k+'</span>':'<span class="static">kschhh</span>')+' '+r.q+'</p>';
+  h+='<p class="typed">– '+r.a+'</p>';
+  if(solved){h+='<div class="fb good">Richtig! «'+r.k+'» betyr '+NO[r.k]+'.'+(r.g?'<div class="gloss">'+r.g+'</div>':'')+'</div><div class="row"><button class="btn main" data-act="rnext">'+(S.ri<RADIO.length-1?'Neste melding':'Til de mistenkte')+'</button></div>';}
+  else{h+='<p class="mute">Hvilket spørreord passer til svaret?</p>'+wordBtns();if(S.fb)h+='<div class="fb">'+S.fb.t+'</div>';}
+  return h+'</section>';
+},
+board:()=>{
+  let h='<section class="card"><h2>Die Verdächtigen</h2><p>Hvem vil du avhøre? Trykk på en person.</p><div class="sus-grid">';
+  h+=SUS.map(s=>'<button class="sus" data-act="sus" data-id="'+s.id+'">'+face(s.look)+'<b>'+s.name+'</b><small>'+s.role+'</small><div class="prog"><i style="width:'+(asked(s)/s.qs.length*100)+'%"></i></div></button>').join("");
+  h+='</div><div class="row"><button class="btn main" data-act="go" data-to="accuse">Ich weiß, wer es war!</button></div></section>';
+  return h+'<section class="card"><h2>Notizbuch</h2>'+notesHTML()+'</section>';
+},
+talk:()=>{
+  const s=SUS.find(x=>x.id===S.sus);
+  let h='<section class="card"><button class="link" data-act="go" data-to="board">← Tilbake til alle mistenkte</button><div class="who">'+face(s.look)+'<div><h2>'+s.name+'</h2><p class="mute">'+s.role+(s.id==="lena"||s.id==="max"?' · du':' · Sie')+'</p></div></div>';
+  if(S.q===null){
+    h+=s.qs.map((q,i)=>{const d=S.asked[s.id+":"+i];return d?'<button class="qitem done" disabled><span class="de">'+(q.f||q.k)+' '+q.t.join(" ")+'?</span><span class="an">– '+q.a+'</span></button>':'<button class="qitem" data-act="pickq" data-i="'+i+'">'+q.no+'</button>'}).join("");
+  }else{
+    const q=s.qs[S.q];
+    h+='<div class="say"><p class="mute">Oppdrag</p><p class="q">'+q.no+'</p>';
+    if(S.step==="word"){h+='<p class="mute">Hvilket spørreord trenger du?</p>'+wordBtns();if(S.fb)h+='<div class="fb">'+S.fb.t+'</div>';h+='<button class="link" data-act="cancel">Velg et annet spørsmål</button>';}
+    else if(S.step==="build"){
+      h+='<p class="mute">Trykk på ordene i riktig rekkefølge.</p><div class="line"><span class="tile fixed">'+(q.f||q.k)+'</span>'+S.line.map((t,i)=>'<button class="tile'+(S.bad>-1&&i>=S.bad?' bad':'')+'" data-act="unplace" data-i="'+i+'">'+t+'</button>').join("")+'<span class="qmark">?</span></div>';
+      h+='<div class="bank">'+S.bank.map((t,i)=>'<button class="tile" data-act="place" data-i="'+i+'">'+t+'</button>').join("")+'</div>';
+      h+='<div class="row"><button class="btn main" data-act="ask"'+(S.bank.length?' disabled':'')+'>Fragen!</button><button class="link" data-act="cancel">Avbryt</button></div>';
+      if(S.fb)h+='<div class="fb">'+S.fb.t+'</div>';
+    }else if(S.step==="answer"){
+      h+='<p class="q"><span class="wordhit">'+(q.f||q.k)+'</span> '+q.t.join(" ")+'?</p><p class="typed" data-type="– '+q.a.replace(/"/g,"&quot;")+'"></p>'+(q.g?'<div class="gloss">'+q.g+'</div>':'')+'<div class="row"><button class="btn main" data-act="cancel">Notert! Neste spørsmål</button></div>';
+    }
+    h+='</div>';
+  }
+  return h+'</section>';
+},
+accuse:()=>{
+  let h='<section class="card">';
+  if(S.acc===0){h+='<h2>Wer war es?</h2><p>Se i notatboka. Hvem stjal kaffemaskinen?</p><div class="sus-grid">'+SUS.map(s=>'<button class="sus" data-act="blame" data-id="'+s.id+'">'+face(s.look)+'<b>'+s.name+'</b><small>'+s.role+'</small></button>').join("")+'</div><button class="link" data-act="go" data-to="board">← Jeg vil avhøre mer først</button>';}
+  else{const P=S.acc===1?P1:P2;h+='<h2>'+(S.acc===1?'Beweis 1':'Beweis 2')+'</h2><p class="q">'+P.q+'</p><div class="opts">'+P.o.map((o,i)=>'<button class="btn" data-act="proof" data-i="'+i+'">'+o[0]+'</button>').join("")+'</div>';}
+  if(S.fb)h+='<div class="fb'+(S.fb.good?' good':'')+'">'+S.fb.t+'</div>';
+  return h+'</section><section class="card"><h2>Notizbuch</h2>'+notesHTML()+'</section>';
+},
+end:()=>{
+  const b=S.beans;const rank=b>=13?"Meisterdetektiv":b>=9?"Kommissar":b>=5?"Inspektor":"Praktikant";
+  const conf=Object.entries(S.conf).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  let h='<section class="card"><h2>Fall gelöst!</h2><div class="who">'+face(SUS[3].look)+'<p class="typed">«Okay, okay! Meine Schwester hat morgen Geburtstag. Ihre Kaffeemaschine ist kaputt. Ich wollte die Maschine nur leihen!»</p></div>';
+  h+='<div class="row"><div><div class="big">'+b+'</div><span class="small">av '+START+' bønner igjen</span></div><div><p class="mute">Din rang</p><p class="q">'+rank+'</p></div></div>';
+  if(conf.length){h+='<h3>Dette blandet du oftest</h3><ul class="notes">'+conf.map(c=>{const p=c[0].split("|");return '<li><b>'+c[1]+' gang'+(c[1]>1?'er':'')+'</b>Du valgte '+p[0]+' ('+NO[p[0]]+'), men riktig var '+p[1]+' ('+NO[p[1]]+')</li>'}).join("")+'</ul>';}
+  else h+='<p>Ingen feil med spørreordene. Imponerende!</p>';
+  return h+'<div class="row"><button class="btn main" data-act="reset">Spill igjen</button></div></section>';
+}};
+
+let typer=null;
+function render(){
+  beansEl.innerHTML=bean+' '+S.beans;
+  app.innerHTML=V[S.screen]();
+  clearInterval(typer);
+  const el=app.querySelector("[data-type]");
+  if(el){const full=el.dataset.type;if(matchMedia("(prefers-reduced-motion: reduce)").matches){el.textContent=full}else{let i=0;typer=setInterval(()=>{el.textContent=full.slice(0,++i);if(i>=full.length)clearInterval(typer)},22)}}
+}
+function wrongWord(ch,ok){lose();addConf(ch,ok);S.fb={t:'«'+ch+'» betyr '+NO[ch]+'. Du trenger et ord som betyr «'+NO[ok]+'».'}}
+
+app.addEventListener("click",e=>{
+  const b=e.target.closest("[data-act]");if(!b)return;const a=b.dataset.act;
+  if(a==="go"){S.screen=b.dataset.to;S.fb=null;S.q=null;if(S.screen==="accuse")S.acc=0;window.scrollTo(0,0)}
+  else if(a==="word"&&S.screen==="radio"){const r=RADIO[S.ri];if(b.dataset.w===r.k){S.fb={good:true};S.notes.push(["Funk",r.a])}else{wrongWord(b.dataset.w,r.k)}}
+  else if(a==="rnext"){S.fb=null;if(S.ri<RADIO.length-1)S.ri++;else{S.rDone=true;S.screen="board"}}
+  else if(a==="sus"){S.sus=b.dataset.id;S.q=null;S.fb=null;S.screen="talk";window.scrollTo(0,0)}
+  else if(a==="pickq"){S.q=+b.dataset.i;S.step="word";S.fb=null}
+  else if(a==="cancel"){S.q=null;S.step=null;S.fb=null}
+  else if(a==="word"&&S.screen==="talk"){const q=SUS.find(x=>x.id===S.sus).qs[S.q];if(b.dataset.w===q.k){S.step="build";S.fb=null;S.line=[];S.bad=-1;let sh=shuffle(q.t);let n=0;while(q.t.length>1&&sh.join()===q.t.join()&&n++<9)sh=shuffle(q.t);S.bank=sh}else wrongWord(b.dataset.w,q.k)}
+  else if(a==="place"){S.line.push(S.bank.splice(+b.dataset.i,1)[0]);S.bad=-1;S.fb=null}
+  else if(a==="unplace"){S.bank.push(S.line.splice(+b.dataset.i,1)[0]);S.bad=-1;S.fb=null}
+  else if(a==="ask"){const s=SUS.find(x=>x.id===S.sus);const q=s.qs[S.q];const i=S.line.findIndex((t,j)=>t!==q.t[j]);
+    if(i<0){S.step="answer";S.fb=null;S.asked[s.id+":"+S.q]=1;S.notes.push([s.name,q.a])}
+    else{lose();S.bad=i;S.fb={t:'«Wie bitte? Ich verstehe dich nicht.» '+(i===0?'Tips: verbet skal stå rett etter spørreordet.':'De røde ordene står feil. Trykk på dem for å flytte dem tilbake.')}}}
+  else if(a==="blame"){const id=b.dataset.id;if(id==="novak"){S.acc=1;S.fb={good:true,t:"Interessant. Men du må bevise det."}}else{lose();S.fb={t:WRONGWHO[id]}}}
+  else if(a==="proof"){const P=S.acc===1?P1:P2;const o=P.o[+b.dataset.i];if(o[1]){if(S.acc===1){S.acc=2;S.fb={good:true,t:"Genau! Hun var ikke i rom 204."}}else{S.screen="end";S.fb=null;window.scrollTo(0,0)}}else{lose();S.fb={t:o[2]}}}
+  else if(a==="reset"){S=fresh();window.scrollTo(0,0)}
+  render();
+  if(b.classList.contains("btn")&&S.fb&&!S.fb.good){const nb=app.querySelector('[data-act="'+a+'"][data-w="'+(b.dataset.w||"")+'"]');if(nb)nb.classList.add("wrong")}
+});
+
+const start=d=>{if(d&&d.screen)S=Object.assign(fresh(),d);render()};
+window.claude?.hot?.snapshot?.(()=>S);
+window.claude?.hot?.ready?window.claude.hot.ready(start):start(window.claude?.hot?.data??{});
+}
+</script>
+</body>
+</html>
