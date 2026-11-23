@@ -1,0 +1,1606 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Landskapsverkstedet</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%227%22 fill=%22%23253041%22/%3E%3Cpath d=%22M4 24l8-12 5 6 4-5 7 11z%22 fill=%22%23f2b27a%22/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#f3efe7; --ink-2:rgba(243,239,231,.74); --ink-3:rgba(243,239,231,.5);
+    --panel:rgba(18,22,30,.66); --panel-solid:#1a2029; --line:rgba(243,239,231,.14);
+    --sun:#f2b27a; --ice:#bfe3f0; --bad:#ef8f7a; --good:#9fd6a3;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+  body{background:linear-gradient(180deg,#141b26 0%,#253041 38%,#55505a 70%,#b9826a 100%)}
+  button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
+  button:focus-visible,textarea:focus-visible{outline:2px solid var(--ice);outline-offset:2px}
+  #scene{position:fixed;inset:0}
+  #scene.drawing{cursor:crosshair} #scene.placing{cursor:copy}
+  .hud{position:fixed;inset:0;pointer-events:none;z-index:5}
+  .hud .pe{pointer-events:auto}
+  .glass{background:var(--panel);border:1px solid var(--line);border-radius:14px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+  .eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--sun);font-weight:600}
+
+  /* mission panel */
+  .mission{position:absolute;left:40px;top:36px;width:380px}
+  .mission h1{font-weight:600;font-size:44px;letter-spacing:-.02em;margin:6px 0 10px;line-height:1.05}
+  .goal{font-size:15px;line-height:1.55;color:var(--ink-2)}
+  .checks{margin-top:18px;padding:14px 16px}
+  .checks li{list-style:none;display:flex;gap:10px;align-items:center;font-size:14px;padding:6px 0;color:var(--ink-2);transition:color .3s}
+  .dot{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--ink-3);flex:none;transition:all .3s;display:grid;place-items:center}
+  .done .dot{background:var(--sun);border-color:var(--sun)}
+  .done .dot::after{content:"";width:7px;height:4px;border-left:2px solid #2a1a0e;border-bottom:2px solid #2a1a0e;transform:rotate(-45deg) translate(1px,-1px)}
+  .checks li.done{color:var(--ink)}
+
+  /* top right */
+  .topright{position:absolute;right:40px;top:36px;display:flex;gap:10px}
+  .pill{display:flex;align-items:center;gap:8px;border-radius:999px;padding:10px 16px;font-size:14px}
+  .pill svg{width:18px;height:18px}
+  .pill:hover{background:rgba(40,46,58,.8)}
+  .badge{background:var(--sun);color:#2a1a0e;border-radius:999px;font-size:11px;font-weight:700;padding:2px 7px}
+
+  /* hint */
+  .hint{position:absolute;left:50%;top:36px;transform:translateX(-50%);padding:10px 16px;font-size:14px;color:var(--ink);display:none;align-items:center;gap:10px;max-width:520px;text-align:center}
+  .hint.show{display:flex}
+  .hint .pulse{width:8px;height:8px;border-radius:50%;background:var(--ice);box-shadow:0 0 0 0 rgba(191,227,240,.6);animation:pulse 1.6s infinite;flex:none}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(191,227,240,.6)}100%{box-shadow:0 0 0 10px rgba(191,227,240,0)}}
+
+  /* dock */
+  .dock{position:absolute;left:calc(50% - 150px);bottom:28px;transform:translateX(-50%);width:min(860px,calc(100% - 420px))}
+  .tools{display:flex;gap:10px;justify-content:center;margin-bottom:14px}
+  .tool{width:112px;padding:12px 10px 10px;text-align:center;transition:background .2s,border-color .2s,transform .1s}
+  .tool:hover{background:rgba(40,46,58,.82)}
+  .tool:active{transform:scale(.98)}
+  .tool svg{width:28px;height:28px;stroke:var(--ink);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+  .tool span{display:block;font-size:13px;margin-top:6px;color:var(--ink-2);line-height:1.25}
+  .tools.hide{display:none}
+  .ctrl7,.ctrl89{display:none;padding:12px 16px;margin-bottom:14px}
+  .ctrl7.show,.ctrl89.show{display:block}
+  .c7row{display:flex;align-items:center;gap:14px}
+  .c7row label{font-size:13px;color:var(--ink-2);white-space:nowrap}
+  .c7row input[type=range]{flex:1;accent-color:var(--sun);height:24px}
+  .c7year{font-size:14px;font-weight:600;min-width:140px;text-align:right}
+  .c7btns{justify-content:flex-end;margin-top:10px;gap:8px}
+  .btn.on{border-color:var(--ice);background:rgba(191,227,240,.16)}
+  .tabs{display:flex;gap:6px;margin-bottom:10px}
+  .tab{font-size:13px;padding:7px 12px;border-radius:999px;border:1px solid var(--line);color:var(--ink-2)}
+  .tab.on{background:rgba(242,178,122,.16);border-color:var(--sun);color:var(--ink)}
+  .tab .n{font-size:11px;color:var(--ink-3);margin-left:6px}
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{font-size:13.5px;padding:8px 13px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.06);cursor:grab;user-select:none;touch-action:none}
+  .chip:hover{border-color:var(--ice)}
+  .chip.on{border-color:var(--ice);background:rgba(191,227,240,.16)}
+  .chip.done{opacity:.4;text-decoration:line-through;cursor:default}
+  .ghost{position:fixed;z-index:40;pointer-events:none;font-size:13.5px;padding:8px 13px;border-radius:10px;border:1px solid var(--sun);background:rgba(22,27,36,.92);transform:translate(-50%,-140%)}
+  .label.pin{border-color:var(--good);color:var(--ink)}
+  .label.pin::before{content:"✓ ";color:var(--good)}
+  .mgrid .phead{grid-column:1/-1;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin-top:8px;font-weight:600}
+  .mgrid .phead:first-child{margin-top:0}
+  .tool.on{border-color:var(--ice);background:rgba(191,227,240,.16)}
+  .tool.on svg{stroke:var(--ice)} .tool.on span{color:var(--ink)}
+  .tool:disabled{opacity:.45;cursor:default}
+  .timeline{display:flex;align-items:center;gap:14px;padding:12px 16px}
+  .rew{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;flex:none}
+  .rew:hover{background:rgba(255,255,255,.08)}
+  .rew:disabled{opacity:.35;cursor:default}
+  .rew svg{width:18px;height:18px;stroke:var(--ink);fill:none;stroke-width:1.8;stroke-linejoin:round}
+  .track{position:relative;flex:1;height:34px}
+  .rail{position:absolute;left:0;right:0;top:16px;height:3px;background:rgba(243,239,231,.18);border-radius:2px}
+  .fill{position:absolute;left:0;top:16px;height:3px;background:var(--sun);border-radius:2px;transition:width .6s}
+  .knob{position:absolute;top:9px;width:17px;height:17px;margin-left:-8px;border-radius:50%;background:var(--ink);box-shadow:0 0 0 4px rgba(242,178,122,.35);transition:left .6s}
+  .tick{position:absolute;top:26px;font-size:11px;color:var(--ink-3);transform:translateX(-50%);white-space:nowrap}
+  .tick::before{content:"";position:absolute;left:50%;top:-12px;width:1px;height:6px;background:var(--ink-3)}
+  .now{font-size:13px;color:var(--ink-2);min-width:150px;text-align:right;line-height:1.35}
+  .now b{display:block;color:var(--ink);font-weight:600;font-size:14px}
+
+  /* profile */
+  .profile{position:absolute;right:40px;bottom:28px;width:290px;padding:12px 14px 10px}
+  .profile.wide{width:380px}
+  .profile .eyebrow{font-size:10.5px;margin-bottom:8px;color:var(--ink-3)}
+  .profile svg{width:100%;height:auto;display:block}
+  .plegend{display:flex;justify-content:space-between;font-size:11px;color:var(--ink-3);margin-top:4px}
+
+  /* feedback */
+  .feedback{position:absolute;right:40px;top:96px;width:360px;padding:16px 18px 14px;display:none;border-left-width:1px}
+  .feedback.show{display:block;animation:fadein .35s ease}
+  .feedback .fh{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;margin-bottom:6px}
+  .feedback .ic{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;flex:none;font-size:13px;font-weight:700;color:#1a1a1a}
+  .feedback.good .ic{background:var(--good)} .feedback.bad .ic{background:var(--bad)} .feedback.info .ic{background:var(--ice)}
+  .feedback p{font-size:14px;line-height:1.55;color:var(--ink-2)}
+  .feedback .fb-actions{display:flex;gap:8px;margin-top:12px;justify-content:flex-end}
+  @keyframes fadein{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+
+  .btn{border-radius:10px;padding:9px 14px;font-size:14px;font-weight:500;border:1px solid var(--line);background:rgba(255,255,255,.06)}
+  .btn:hover{background:rgba(255,255,255,.12)}
+  .btn.primary{background:var(--sun);border-color:var(--sun);color:#2a1a0e;font-weight:600}
+  .btn.primary:hover{background:#f5c194}
+
+
+  /* labels */
+  .label{position:absolute;font-size:12px;color:var(--ink);background:rgba(18,22,30,.74);border:1px solid var(--line);padding:4px 9px;border-radius:999px;white-space:nowrap;transform:translate(-50%,-100%);pointer-events:none;transition:opacity .4s}
+  .label::after{content:"";position:absolute;left:50%;bottom:-9px;width:1px;height:8px;background:var(--ink-2)}
+  .label.hidden{opacity:0}
+  .label{text-align:center;line-height:1.3}
+  .label small{display:block;font-size:10.5px;color:var(--ink-3)}
+  .label.hot{border-color:var(--sun);color:var(--sun)}
+  .marker{position:absolute;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;border:2px solid var(--ice);background:rgba(191,227,240,.3);pointer-events:none;display:none}
+
+  /* overlays */
+  .overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(10,13,19,.55);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);z-index:20}
+  .overlay.show{display:flex;animation:fadein .35s}
+  .card{background:rgba(22,27,36,.94);border:1px solid var(--line);border-radius:18px;padding:32px 34px;width:min(620px,92vw);max-height:90vh;overflow:auto}
+  .card h2{font-size:30px;font-weight:600;letter-spacing:-.015em;margin:6px 0 12px}
+  .card p{font-size:15.5px;line-height:1.6;color:var(--ink-2);margin-bottom:12px}
+  .card .actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
+  .card textarea{width:100%;min-height:84px;margin-top:6px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--ink);font:inherit;font-size:14.5px;padding:10px 12px;resize:vertical}
+  .card label{font-size:13px;color:var(--ink-3)}
+
+  /* intro */
+  #intro .card{width:min(860px,94vw)}
+  #intro h2{font-size:46px;letter-spacing:-.025em}
+  .mgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px}
+  .mcard{border:1px solid var(--line);border-radius:12px;padding:12px 14px;text-align:left;background:rgba(255,255,255,.04)}
+  .mcard:hover:not(:disabled){border-color:var(--sun);background:rgba(242,178,122,.08)}
+  .mcard:disabled{opacity:.42;cursor:default}
+  .mcard small{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--sun);font-weight:600}
+  .mcard b{display:block;font-size:15px;font-weight:600;margin-top:4px}
+  .mcard span{display:none}
+  .mcard.done small::after{content:" · fullført";color:var(--good)}
+  .howto{display:flex;gap:18px;font-size:13px;color:var(--ink-3);margin-top:16px;flex-wrap:wrap}
+
+  /* feltbok */
+  #feltbok{position:fixed;top:0;right:0;bottom:0;width:min(480px,100vw);background:#151a23;box-shadow:-20px 0 60px rgba(0,0,0,.35);border-left:1px solid var(--line);z-index:30;transform:translateX(100%);transition:transform .35s ease;display:flex;flex-direction:column}
+  #feltbok.open{transform:none}
+  .fb-head{padding:28px 28px 14px;display:flex;justify-content:space-between;align-items:flex-start}
+  .fb-head h2{font-size:28px;font-weight:600;margin-top:4px}
+  .fb-body{padding:0 28px 20px;overflow:auto;flex:1}
+  .entry{border-top:1px solid var(--line);padding:18px 0}
+  .entry h3{font-size:16px;font-weight:600;margin:2px 0 8px}
+  .entry p{font-size:14px;line-height:1.6;color:var(--ink-2)}
+  .entry textarea{width:100%;min-height:70px;margin-top:10px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--ink);font:inherit;font-size:14px;padding:9px 11px;resize:vertical}
+  .fb-foot{padding:16px 28px 24px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:space-between;align-items:center}
+  .fb-empty{font-size:14px;color:var(--ink-3);padding:18px 0;border-top:1px solid var(--line)}
+  .close{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center}
+  .close:hover{background:rgba(255,255,255,.08)}
+
+  #toosmall,#nogl{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;text-align:center;padding:30px;background:#141b26}
+  #toosmall p,#nogl p{max-width:420px;font-size:16px;line-height:1.6;color:var(--ink-2)}
+  #toosmall h2,#nogl h2{font-size:24px;margin-bottom:10px}
+  @media (max-width:900px){#toosmall{display:flex}}
+
+  @media (max-height:800px),(max-width:1300px){
+    .mission{width:310px;top:26px;left:26px}
+    .mission h1{font-size:34px;margin:4px 0 6px} .goal{font-size:14px;line-height:1.5}
+    .checks{margin-top:12px;padding:10px 14px} .checks li{padding:4px 0;font-size:13px}
+    .tool{width:94px;padding:9px 8px 8px} .tool svg{width:24px;height:24px} .tool span{font-size:12px}
+    .tools{margin-bottom:10px} .dock{bottom:18px;width:min(760px,calc(100% - 330px));left:calc(50% - 125px)} .timeline{padding:9px 14px}
+    .profile{width:240px;right:24px;bottom:18px} .topright{right:24px;top:26px}
+    .feedback{right:24px;top:80px;width:320px} .hint{top:26px}
+  }
+
+  @media print{
+    body{background:#fff!important;color:#111}
+    #scene,.hud,.overlay,#toosmall,#nogl{display:none!important}
+    #feltbok{position:static;transform:none;width:auto;background:#fff;border:none;color:#111}
+    .fb-foot,.close{display:none!important}
+    .fb-body{overflow:visible} .entry{border-color:#ccc;break-inside:avoid}
+    .entry p{color:#222} .eyebrow{color:#8a4a1c}
+    .entry textarea{display:none!important}
+    .pnote{display:block!important}
+    .printnote{display:block!important}
+  }
+  .printnote{display:none;font-size:13px;color:#555;margin-top:4px}
+  .pnote{display:none;margin-top:10px;font-size:14px;line-height:1.6;color:#111;white-space:pre-wrap}
+  .pnote b{font-weight:600}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+</head>
+<body>
+<div id="scene" aria-label="Landskapsblokk i 3D. Dra for å snu den."></div>
+
+<div class="hud">
+  <section class="mission pe" aria-live="polite">
+    <div class="eyebrow" id="m-eyebrow">Oppdrag 1 av 9</div>
+    <h1 id="m-title">Fjellet løftes</h1>
+    <p class="goal" id="m-goal"></p>
+    <ul class="checks glass" id="m-checks"></ul>
+  </section>
+
+  <div class="hint glass" id="hint"><span class="pulse"></span><span id="hint-text"></span></div>
+
+  <div class="topright pe">
+    <button class="pill glass" id="btn-menu" title="Oppdragsoversikt">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>Oppdrag</button>
+    <button class="pill glass" id="btn-feltbok">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/></svg>Feltbok <span class="badge" id="fb-count">0</span></button>
+  </div>
+
+  <div class="feedback glass pe" id="feedback" role="status">
+    <div class="fh"><span class="ic" id="fb-ic">!</span><span id="fb-title"></span></div>
+    <p id="fb-text"></p>
+    <div class="fb-actions" id="fb-actions"></div>
+  </div>
+
+  <div class="dock pe">
+    <div class="tools" role="toolbar" aria-label="Krefter">
+      <button class="tool glass" data-tool="loft"><svg viewBox="0 0 32 32"><path d="M3 26l8-12 5 6 4-5 9 11z"/><path d="M16 4v8M12 8l4-4 4 4"/></svg><span>Løfting</span></button>
+      <button class="tool glass" data-tool="vann"><svg viewBox="0 0 32 32"><path d="M8 4c6 5-4 9 2 14s-2 9 4 10"/><path d="M16 4c6 5-4 9 2 14s-2 9 4 10"/></svg><span>Rennende vann</span></button>
+      <button class="tool glass" data-tool="is"><svg viewBox="0 0 32 32"><path d="M4 22l7-14h10l7 14z"/><path d="M9 16h14M7 20h18"/></svg><span>Isbre</span></button>
+      <button class="tool glass" data-tool="plate"><svg viewBox="0 0 32 32"><path d="M3 22h11M18 22h11"/><path d="M8 17l-5 5 5 5"/><path d="M24 17l5 5-5 5"/><path d="M14 22l2-6 2 6"/><path d="M6 12h20M10 8h12"/></svg><span>Platene</span></button>
+      <button class="tool glass" data-tool="smelt"><svg viewBox="0 0 32 32"><path d="M16 3c4 6 7 9 7 13a7 7 0 0 1-14 0c0-4 3-7 7-13z"/><path d="M3 27c3-2 5-2 8 0s5 2 8 0 5-2 8 0"/></svg><span>Isen smelter</span></button>
+    </div>
+    <div class="ctrl7 glass" id="ctrl7">
+      <div class="c7row"><label for="vfslider">Spol tiden</label><input type="range" id="vfslider" min="0" max="1000" step="1" value="0"><span class="c7year" id="vfyear">13 500 år siden</span></div>
+      <div class="c7row c7btns"><button class="btn" id="btn-mark">Merk havets høyeste nivå</button><button class="btn" id="btn-oldsea">Finn gammel havbunn</button></div>
+    </div>
+    <div class="ctrl89 glass" id="ctrl89">
+      <div class="tabs" id="tabs89"></div>
+      <div class="chips" id="chips89"></div>
+    </div>
+    <div class="timeline glass">
+      <button class="rew" id="btn-rew" title="Spol tilbake ett steg" aria-label="Spol tilbake ett steg"><svg viewBox="0 0 24 24"><path d="M11 6L4 12l7 6V6zM20 6l-7 6 7 6V6z"/></svg></button>
+      <div class="track">
+        <div class="rail"></div><div class="fill" id="tl-fill"></div><div class="knob" id="tl-knob"></div>
+        <span class="tick" style="left:3%">Kollisjon</span>
+        <span class="tick" style="left:24%">Heving</span>
+        <span class="tick" style="left:45%">Elver</span>
+        <span class="tick" style="left:68%">Istider</span>
+        <span class="tick" style="left:95%">I dag</span>
+      </div>
+      <div class="now" id="tl-now"><b>For rundt 400 mill. år siden</b>kontinentene nærmer seg</div>
+    </div>
+  </div>
+
+  <div class="profile glass" id="profile">
+    <div class="eyebrow" id="prof-title">Tverrprofil gjennom dalen</div>
+    <svg id="prof" viewBox="0 0 260 96"></svg>
+    <div class="plegend" id="prof-legend"><span>Venstre</span><span>Høyden er overdrevet</span><span>Høyre</span></div>
+  </div>
+
+  <div id="labels"></div>
+  <div class="marker" id="marker"></div>
+</div>
+
+<!-- intro -->
+<div class="overlay show" id="intro">
+  <div class="card">
+    <div class="eyebrow">Landskapsverkstedet · geografi vg1</div>
+    <h2>Hvorfor ser landskapet slik ut?</h2>
+    <p>Folk reiser fra hele verden for å se fjordene på Vestlandet. I Vestfold dyrkes omtrent hver fjerde norske grønnsak. To helt ulike landsdeler, formet av de samme kreftene: kontinentplater, rennende vann og is. I dette spillet bygger du landskapene selv, gjennom 400 millioner år.</p>
+    <p>I hvert oppdrag velger du hvilke krefter som skal virke, hvor og i hvilken rekkefølge. Gjør du feil, ser du hva som skjer, og kan spole tilbake.</p>
+    <div class="howto"><span>Dra med musa for å snu landskapet</span><span>Rull for å zoome</span><span>Velg en kraft nederst på skjermen</span></div>
+    <div class="actions" style="justify-content:flex-start"><button class="btn primary" id="btn-start">Start oppdrag 1</button></div>
+    <div class="mgrid" id="mgrid"></div>
+  </div>
+</div>
+
+<!-- mission intro -->
+<div class="overlay" id="mintro">
+  <div class="card">
+    <div class="eyebrow" id="mi-eyebrow"></div>
+    <h2 id="mi-title"></h2>
+    <p id="mi-hook" style="color:var(--sun);display:none"></p>
+    <p id="mi-text"></p>
+    <p id="mi-goal" style="color:var(--ink)"></p>
+    <div class="actions"><button class="btn primary" id="mi-go">Begynn</button></div>
+  </div>
+</div>
+
+<!-- success -->
+<div class="overlay" id="success">
+  <div class="card">
+    <div class="eyebrow" style="color:var(--good)">Oppdrag fullført</div>
+    <h2 id="su-title"></h2>
+    <p id="su-text"></p>
+    <label for="su-note">Forklar med egne ord hva som skjedde og hvorfor (frivillig, bare du ser det)</label>
+    <textarea id="su-note" placeholder="Skriv her hvis du vil"></textarea>
+    <div class="actions"><button class="btn" id="su-stay">Bli og se på landskapet</button><button class="btn primary" id="su-next">Neste oppdrag</button></div>
+  </div>
+</div>
+
+<!-- feltbok -->
+<aside id="feltbok" aria-label="Feltbok">
+  <div class="fb-head">
+    <div><div class="eyebrow">Landskapsverkstedet</div><h2>Feltbok</h2><div class="printnote" id="printnote"></div></div>
+    <button class="close" id="fb-close" aria-label="Lukk feltboka"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <div class="fb-body" id="fb-body"></div>
+  <div class="fb-foot"><span style="font-size:13px;color:var(--ink-3)">Notatene lagres i denne nettleseren.</span><button class="btn primary" id="fb-print">Lagre som PDF</button></div>
+</aside>
+
+<div id="fade" style="position:fixed;inset:0;background:#141b26;opacity:0;pointer-events:none;transition:opacity .6s;z-index:15"></div>
+<div id="toosmall"><div><h2>Skjermen er for liten</h2><p>Landskapsverkstedet er laget for PC. Åpne siden på en datamaskin, eller gjør vinduet større.</p></div></div>
+<div id="nogl"><div><h2>3D-grafikk virker ikke her</h2><p>Nettleseren eller maskinen støtter ikke WebGL, som spillet trenger. Prøv en annen nettleser, for eksempel Chrome, Edge eller Firefox.</p></div></div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+/* =========================================================
+   Konstanter og støy
+   ========================================================= */
+const S=5, HS=2.4, BOTTOM=-0.12, SEA=0.2;
+let N=200;                 // terrengoppløsning (senkes på svake maskiner)
+const NI=150;              // isens oppløsning
+const MW=7, MD=3.5, MH=1.6, MN=180, MNZ=90;   // kontinentkartet
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)), lerp=(a,b,t)=>a+(b-a)*t;
+const ss=(e0,e1,v)=>{const t=clamp((v-e0)/(e1-e0),0,1);return t*t*(3-2*t);};
+function hash(x,y){const s=Math.sin(x*127.1+y*311.7)*43758.5453;return s-Math.floor(s);}
+function vnoise(x,y){const xi=Math.floor(x),yi=Math.floor(y),xf=x-xi,yf=y-yi;
+  const u=xf*xf*(3-2*xf),v=yf*yf*(3-2*yf);
+  const a=hash(xi,yi),b=hash(xi+1,yi),c=hash(xi,yi+1),d=hash(xi+1,yi+1);
+  return (a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v)*2-1;}
+function fbm(x,y,o=5){let s=0,a=.5,f=1;for(let i=0;i<o;i++){s+=a*vnoise(x*f,y*f);f*=2.03;a*=.5;}return s;}
+function ridged(x,y,o=4){let s=0,a=.5,f=1;for(let i=0;i<o;i++){s+=a*Math.pow(1-Math.abs(vnoise(x*f+7,y*f+3)),2);f*=2.1;a*=.5;}return s;}
+
+/* Terrengblokka: u = 0 ved kysten i vest (fremre venstre side), 1 innerst. v = -1..1 på tvers. */
+const toWorld=(u,v,h)=>new THREE.Vector3(v*S,h*HS,S*(1-2*u));
+const fromWorld=(p)=>({u:(1-p.z/S)/2, v:p.x/S});
+/* Kontinentkartet: x = -1 (vest) .. 1 (øst), z = -1 .. 1 */
+const mapWorld=(x,z,h)=>new THREE.Vector3(x*MW,h*MH,z*MD);
+
+/* statiske felt */
+function plateauN(u,v){const x=u*2-1,z=v;return 0.6+0.12*fbm(x*1.1+3,z*1.1,4)+0.34*(ridged(x*1.1,z*1.1)-0.42);}
+function lowN(u,v){return 0.27+0.018*fbm(u*5+9,v*5,3);}
+function calN(u,v){return 0.32+0.85*Math.max(0,ridged(u*2.4+4,v*2.4+1,5)-0.2);}
+function detailN(u,v){return 0.012*fbm(u*14+2,v*14,3);}
+function gullyN(u,v){return ridged(u*16+1,v*5,3)-0.45;}
+
+/* =========================================================
+   Tilstand
+   ========================================================= */
+const BASE={uplift:0,tw:1,cal:0,zone:0,zv0:-0.05,zv1:0.12,pv0:-0.05,pv1:0.12,Dr:0,Di:0,m:0,sill:0,delta:0,iceAmt:0,iceFront:1.3,iceReach:1.3,p:0,orog:0,open:1,snow:0,snowLoc:0,su:0.5,sv:0,gm:0,gs:0,ice6:0,iceV:0,ca0:0,ca1:0,ca2:0,vfS:0};
+const FLAGS={hasZone:false,pathOn:false,river:false,foundVest:false,land:'fjord',cq:[],mlMarked:false,oldSea:false,oldSeaPt:null,placed:{},terms:{}};
+let st={...BASE,...FLAGS};
+const NUM=Object.keys(BASE);
+let mapMode=false;
+
+const zoneAt=(u,s=st)=>lerp(s.zv0,s.zv1,u)+0.03*Math.sin(u*9);
+const pathAt=(u,s=st)=>lerp(s.pv0,s.pv1,u)+0.035*Math.sin(u*7+1);
+const reachW=(u,s=st)=>ss(s.iceReach-0.08,s.iceReach+0.08,u);
+
+function surf(u,v,P,L,K,s=st){
+  const Pt=lerp(L+0.3*u,P,s.tw);                 // tw=1: høyest nær kysten i vest. tw=0: høyest langt inne
+  let base=lerp(L,Pt,s.uplift)+s.cal*K;
+  const c=lerp(1,ss(0.03,0.24,u),s.open);
+  let h=lerp(0.1,base,c);
+  if(s.zone>0){const dz=v-zoneAt(u,s);h-=s.zone*(1-s.cal)*(0.25+0.75*s.uplift)*0.05*Math.exp(-((dz/0.055)**2))*c;}
+  return h;
+}
+function refAt(u,s=st){const vc=pathAt(u,s);return surf(u,vc,plateauN(u,vc),lowN(u,vc),calN(u,vc),s);}
+function valley(h,u,v,ref,G,s=st){
+  if(s.Dr<=0&&s.Di<=0) return h;
+  const vc=pathAt(u,s), r=reachW(u,s), mu=s.m*r;
+  const W=lerp(0.11,0.3,mu);
+  const t=Math.abs(v-vc)/W;
+  if(t>=1) return h;
+  const graded=SEA+0.012+0.33*Math.pow(u,1.3);
+  const fR=lerp(ref,Math.min(ref,graded),s.Dr);
+  const iceT=-0.1+0.42*Math.pow(u,1.3)+s.sill*0.24*Math.exp(-(((u-0.1)/0.055)**2));
+  const floor=lerp(fR,Math.min(fR,iceT),s.Di*r);
+  const sh=lerp(t,Math.pow(t,2.7),mu);
+  let hv=floor+(h-floor)*sh;
+  const wall=clamp((t-0.35)/0.25,0,1)*clamp((1.02-t)/0.15,0,1)*mu;
+  hv+=wall*0.06*G;
+  return Math.min(h,hv);
+}
+function deltaAt(h,u,v,s=st){
+  if(s.delta<=0) return h;
+  const r=Math.sqrt(((u-0.07)/0.09)**2+((v-s.pv0)/0.17)**2);
+  if(r>=1||u>0.16) return h;
+  const hd=SEA+0.008-0.03*r*r;
+  return hd>h? lerp(h,hd,s.delta):h;
+}
+function heightAt(u,v,s=st){
+  if(s.land==='alp') return alpH(u,v,alpBaseN(u,v),s)+detailN(u,v);
+  if(s.land==='vf') return vfH(u,v,vfBaseN(u,v),s)+detailN(u,v)*0.6;
+  let h=surf(u,v,plateauN(u,v),lowN(u,v),calN(u,v),s);
+  h=valley(h,u,v,refAt(u,s),gullyN(u,v),s);
+  h=deltaAt(h,u,v,s);
+  return h+detailN(u,v);
+}
+
+/* =========================================================
+   Landskap B: fjellet (botner, tind, hengende dal)
+   u: vest -> øst, v: sør -> nord
+   ========================================================= */
+const AC={u:0.45,v:0.42};                        // den høye toppen
+const vcM=u=>0.0+0.04*Math.sin(u*5+0.5);        // hoveddalen
+const usA=v=>0.42+0.035*Math.sin(v*4);          // sidedalen (fra sør)
+function alpBaseN(u,v){const r=Math.hypot(u-AC.u,v-AC.v);const peak=0.48*Math.pow(Math.max(0,1-r/0.4),1.3);
+  return ALP0+0.1*fbm(u*2.2+5,v*2.2+2,4)+ALPR*(ridged(u*2.6+2,v*2.6,5)-0.42)+peak;}
+let ALP0=0.66, ALPR=0.34;
+const fM0=u=>0.34+0.16*u;
+const wM=(s=st)=>lerp(0.15,0.27,s.gm);
+function fSAt(v,s=st){const us=usA(v),dv=Math.max(0,vcM(us)-v);return fM0(us)+0.3*Math.pow(dv,1.05)-0.05*s.gs;}
+const CQR=0.12;
+function cirqueCut(h,u,v,c,a){
+  if(a<=0) return h;
+  const du=u-c.u,dv=v-c.v,d=Math.hypot(du,dv); if(d>CQR) return h;
+  const al=du*c.du+dv*c.dv, ac=-du*c.dv+dv*c.du;
+  const hb=c.f+3.0*(ac*ac+(al<0?al*al*1.8:al*al*0.22));
+  const w=1-ss(CQR*0.62,CQR,d);
+  return h-a*w*Math.max(0,h-hb);
+}
+function alpH(u,v,A,s=st){
+  let h=A;
+  const vc=vcM(u),Wm=wM(s),tm=Math.abs(v-vc)/Wm;
+  const fM=fM0(u)-0.17*s.gm;
+  if(tm<1){const sh=lerp(tm,Math.pow(tm,2.6),s.gm);h=Math.min(h,fM+(h-fM)*sh);}
+  const us=usA(v),Ws=lerp(0.1,0.14,s.gs),ts=Math.abs(u-us)/Ws;
+  if(ts<1&&v<vc){const fS=fSAt(v,s);const sh=lerp(ts,Math.pow(ts,2.6),s.gs);h=Math.min(h,fS+(h-fS)*sh);}
+  const cq=s.cq||[];
+  for(let k=0;k<cq.length;k++){const a=s['ca'+k];if(a<=0)continue;
+    const dk=Math.hypot(u-cq[k].u,v-cq[k].v);if(dk>CQR)continue;
+    let dm=9;for(let j=0;j<cq.length;j++){if(j===k||s['ca'+j]<0.3)continue;dm=Math.min(dm,Math.hypot(u-cq[j].u,v-cq[j].v));}
+    h=cirqueCut(h,u,v,cq[k],a*ss(0,0.03,dm-dk));}
+  return h;
+}
+const nCirq=(s=st)=>[s.ca0,s.ca1,s.ca2].filter(a=>a>0.95).length;
+/* fossen: der sidedalen møter hoveddalen */
+function fallPos(s=st){const vj=vcM(0.42)-wM(s)*0.88;const u=usA(vj);return {u,v:vj};}
+
+/* =========================================================
+   Landskap C: Vestfold (Raet, marin grense, gammel havbunn)
+   ========================================================= */
+const ML=0.3;                                    // marin grense i blokk-enheter (rundt 150 m)
+function vfBaseN(u,v){return 0.2+VFA*ss(0.2,0.95,u)*(0.3+0.7*ridged(u*2.2+1,v*2.2+4,4))+0.035*fbm(u*5+3,v*5,3)+0.09*Math.max(0,fbm(u*3+8,v*3+1,3));}
+let VFA=0.85;
+const plainAt=(u,v)=>SEA+0.03+0.15*u+0.015*fbm(u*4+2,v*4,2);
+const raetU=v=>0.42+0.025*Math.sin(v*3.2);
+function raetAmt(s=st){return ss(0.12,0.22,s.vfS);}
+function vfH(u,v,F,s=st){
+  let h=Math.max(F,plainAt(u,v));
+  h=lerp(0.1,h,ss(0.015,0.09,u));
+  h+=raetAmt(s)*0.065*Math.exp(-(((u-raetU(v))/0.03)**2));
+  return h;
+}
+/* tidslinja i oppdrag 7: s = 0 (13 500 år siden) .. 1 (i dag) */
+function vfFront(s){return s<0.12?lerp(0.02,0.45,s/0.12):s<0.22?0.45:s<0.35?lerp(0.45,1.3,(s-0.22)/0.13):1.3;}
+const GSEA=0.6*ML;
+function rslAt(s){if(s<=0.35) return ML;const x=1-(s-0.35)/0.65;return Math.max(0,-GSEA*Math.pow(x,1.6)+(ML+GSEA)*Math.pow(x,2.2));}
+function seaGlobal(s){if(s<=0.35) return -GSEA-0.15*GSEA*(0.35-s)/0.35;const x=1-(s-0.35)/0.65;return -GSEA*Math.pow(x,1.6);}
+const YEARS=[[0,13500],[0.12,12800],[0.22,11700],[0.35,11000],[1,0]];
+function yearsAt(s){for(let i=1;i<YEARS.length;i++){if(s<=YEARS[i][0]){const a=YEARS[i-1],b=YEARS[i];return Math.round(lerp(a[1],b[1],(s-a[0])/(b[0]-a[0]))/100)*100;}}return 0;}
+const seaLevel=(s=st)=>s.land==='vf'?SEA+rslAt(s.vfS):SEA;
+
+/* Kontinentkartet */
+const xbAt=z=>0.12+0.05*fbm(z*4+3,1.7,3);
+const xlAt=z=>(st.p>=0?lerp(-0.5,0.12,st.p):lerp(-0.5,-0.9,-st.p))+0.05*fbm(z*4+9,4.1,3);
+function mapH(x,z){
+  const xb=xbAt(z), xl=xlAt(z);
+  const land=Math.max(ss(xb-0.025,xb+0.025,x),1-ss(xl-0.025,xl+0.025,x));
+  let h=lerp(-0.16+0.02*fbm(x*3,z*3,2),0.05+0.035*fbm(x*5+2,z*5,3),land);
+  if(st.orog>0){const d=(x-xb-0.05)/0.15;h+=st.orog*Math.exp(-d*d)*(0.32+0.6*ridged(x*7,z*7,4));}
+  return h;
+}
+
+/* =========================================================
+   Three.js-oppsett
+   ========================================================= */
+const host=document.getElementById('scene');
+let renderer;
+try{ renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true}); }
+catch(e){document.getElementById('nogl').style.display='flex';throw e;}
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.05;
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+host.appendChild(renderer.domElement);
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(32,innerWidth/innerHeight,0.1,120);
+const controls=new OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true; controls.enablePan=false;
+controls.maxPolarAngle=1.32; controls.minDistance=10; controls.maxDistance=32;
+function blockCamera(){fillL.intensity=st.land==='alp'?1.5:0.7;if(st.land==='alp')camera.position.set(15.6,11.0,-12.4);else camera.position.set(13.6,11.6,14.8);controls.target.set(0,-1.5,0);controls.update();}
+function mapCamera(){camera.position.set(0.4,13.2,15.2);controls.target.set(0.4,-1.2,0.2);controls.update();}
+
+scene.add(new THREE.HemisphereLight(0xa9bcd6,0x3b3026,0.95));
+const sun=new THREE.DirectionalLight(0xffd0a6,2.7);
+sun.position.set(-6,3.4,9.5).multiplyScalar(1.6); sun.castShadow=true;
+sun.shadow.mapSize.set(2048,2048);
+Object.assign(sun.shadow.camera,{left:-11,right:11,top:11,bottom:-11,near:1,far:40});
+sun.shadow.bias=-0.0004; sun.shadow.normalBias=0.03;
+scene.add(sun);
+const fillL=new THREE.DirectionalLight(0x9fb6d6,0.7); fillL.position.set(10,5,-3); scene.add(fillL);
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(60,60),new THREE.ShadowMaterial({opacity:0.16}));
+ground.rotation.x=-Math.PI/2; ground.position.y=BOTTOM*HS-0.6; ground.receiveShadow=true; scene.add(ground);
+
+const blockG=new THREE.Group(), mapG=new THREE.Group(); scene.add(blockG); scene.add(mapG);
+
+const C={grass:'#6f8c4c',forest:'#38553a',heath:'#6f7556',rock:'#8e8b87',rockD:'#5f5c59',snow:'#f1eee6',sand:'#c2b089',
+  seabed:'#1d2a2e',shallow:'#b7cdb8',scree:'#a8a39b',tarn:'#4a7d93',river:'#5b9bb3',zone:'#8c6a52',deltaG:'#8aa060',low:'#7d9452',ocean:'#22343c'};
+for(const k in C) C[k]=new THREE.Color(C[k]);
+const tmpC=new THREE.Color();
+
+/* --- terreng --- */
+let geo,terrain,cache,Hgrid;
+function buildTerrain(){
+  if(terrain){blockG.remove(terrain);geo.dispose();}
+  geo=new THREE.PlaneGeometry(2*S,2*S,N,N); geo.rotateX(-Math.PI/2);
+  const pos=geo.attributes.position, n=pos.count;
+  cache={A:new Float32Array(n),F:new Float32Array(n),U:new Float32Array(n),V:new Float32Array(n),P:new Float32Array(n),L:new Float32Array(n),K:new Float32Array(n),D:new Float32Array(n),G:new Float32Array(n),CN:new Float32Array(n),T:new Float32Array(n)};
+  for(let i=0;i<n;i++){const {u,v}=fromWorld({x:pos.getX(i),z:pos.getZ(i)});
+    cache.U[i]=u;cache.V[i]=v;cache.P[i]=plateauN(u,v);cache.L[i]=lowN(u,v);cache.K[i]=calN(u,v);cache.D[i]=detailN(u,v);cache.G[i]=gullyN(u,v);
+    cache.CN[i]=fbm(v*9,u*9,3);cache.T[i]=fbm(v*3+11,u*3,3);cache.A[i]=alpBaseN(u,v);cache.F[i]=vfBaseN(u,v);}
+  Hgrid=new Float32Array(n);
+  geo.setAttribute('color',new THREE.BufferAttribute(new Float32Array(n*3),3));
+  terrain=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({vertexColors:true,roughness:0.93,metalness:0}));
+  terrain.castShadow=terrain.receiveShadow=true; blockG.add(terrain);
+}
+function updateTerrain(){
+  if(st.land!=='fjord') return updateTerrainOther();
+  const pos=geo.attributes.position, col=geo.attributes.color.array, n=pos.count, row=N+1;
+  for(let iz=0;iz<=N;iz++){
+    const u=cache.U[iz*row];
+    const ref=(st.Dr>0||st.Di>0)?refAt(u):0;
+    for(let ix=0;ix<=N;ix++){const i=iz*row+ix,v=cache.V[i];
+      let h=surf(u,v,cache.P[i],cache.L[i],cache.K[i]);
+      h=valley(h,u,v,ref,cache.G[i]);
+      h=deltaAt(h,u,v);
+      h+=cache.D[i];
+      Hgrid[i]=h; pos.setY(i,h*HS);}
+  }
+  pos.needsUpdate=true; geo.computeVertexNormals();
+  const nrm=geo.attributes.normal, lowland=(1-st.uplift)*(1-st.cal);
+  for(let i=0;i<n;i++){
+    const h=Hgrid[i],ny=nrm.getY(i),u=cache.U[i],v=cache.V[i],cn=cache.CN[i],c=tmpC;
+    c.copy(C.forest).lerp(C.heath,ss(0.3,0.5,h+cn*0.06));
+    c.lerp(C.low,lowland*ss(SEA+0.02,SEA+0.06,h)*0.7);
+    c.lerp(C.grass,ss(0.93,0.99,ny)*(1-ss(0.3,0.4,h))*0.8);
+    c.lerp(C.rock,ss(0.82,0.5,ny+cn*0.08));
+    c.lerp(C.rockD,ss(0.55,0.3,ny)*0.6);
+    c.lerp(C.snow,ss(0.8,0.86,h+cn*0.04)*ss(0.55,0.85,ny));
+    if(st.Dr>0||st.Di>0){const vc=pathAt(u),mu=st.m*reachW(u),W=lerp(0.11,0.3,mu),t=Math.abs(v-vc)/W;
+      c.lerp(C.scree,clamp(1-Math.abs(t-0.42)/0.1,0,1)*ss(0.5,0.75,ny)*(h>SEA+0.02?0.7:0)*mu);
+      if(st.Dr>0.3&&Math.abs(v-vc+0.012*Math.sin(u*40))<0.011&&h>SEA+0.004&&u>0.02) c.lerp(C.river,0.9);}
+    if(st.snow>0){const line=lerp(0.98,0.5,st.snow);c.lerp(C.snow,ss(line,line+0.06,h+cn*0.05)*ss(0.45,0.8,ny)*Math.min(1,st.snow*1.4));}
+    if(st.snowLoc>0){const d=Math.hypot(u-st.su,(v-st.sv)*0.9);c.lerp(C.snow,st.snowLoc*(1-ss(0.05,0.14,d+cn*0.02))*ss(0.3,0.7,ny));}
+    if(st.zone>0){const dz=Math.abs(v-zoneAt(u));c.lerp(C.zone,st.zone*(1-st.cal)*0.75*(1-ss(0.025,0.07,dz))*ss(0.05,0.15,u)*(1-ss(0.3,0.6,st.Dr)));}
+    if(st.delta>0.05&&u<0.17){const r=Math.sqrt(((u-0.07)/0.09)**2+((v-st.pv0)/0.17)**2);if(r<1&&h>SEA) c.lerp(C.deltaG,st.delta*0.6*(1-r));}
+    if(h>0.5&&ny>0.994&&cache.T[i]>0.47&&st.cal<0.1) c.copy(C.tarn);
+    c.lerp(C.sand,1-ss(0.0,0.025,Math.abs(h-SEA-0.008)));
+    if(h<SEA-0.004){const d=clamp((SEA-h)/0.28,0,1);c.copy(C.shallow).lerp(C.seabed,d);}
+    const k=1+cn*0.07; col[i*3]=c.r*k;col[i*3+1]=c.g*k;col[i*3+2]=c.b*k;
+  }
+  geo.attributes.color.needsUpdate=true;
+}
+
+const FIELDS=['#b9a75c','#8fab4f','#c9b873','#7e9a46','#a7b45e'].map(c=>new THREE.Color(c));
+const cClay=new THREE.Color('#a48d68'), cRaet=new THREE.Color('#8b8467'), cML=new THREE.Color('#f2b27a'), cForest2=new THREE.Color('#34502f');
+function updateTerrainOther(){
+  const pos=geo.attributes.position, col=geo.attributes.color.array, n=pos.count, alp=st.land==='alp';
+  for(let i=0;i<n;i++){const u=cache.U[i],v=cache.V[i];
+    const h=alp?alpH(u,v,cache.A[i])+cache.D[i]:vfH(u,v,cache.F[i])+cache.D[i]*0.6;
+    Hgrid[i]=h; pos.setY(i,h*HS);}
+  pos.needsUpdate=true; geo.computeVertexNormals();
+  const nrm=geo.attributes.normal, sea=seaLevel();
+  for(let i=0;i<n;i++){
+    const h=Hgrid[i],ny=nrm.getY(i),u=cache.U[i],v=cache.V[i],cn=cache.CN[i],c=tmpC;
+    if(alp){
+      c.copy(C.forest).lerp(C.heath,ss(0.4,0.58,h+cn*0.06));
+      c.lerp(C.grass,ss(0.93,0.99,ny)*(1-ss(0.3,0.42,h))*0.7);
+      c.lerp(C.rock,Math.max(ss(0.86,0.6,ny+cn*0.08),ss(0.66,0.8,h+cn*0.06)*0.85));
+      c.lerp(C.rockD,ss(0.6,0.3,ny)*0.65);
+      c.lerp(C.snow,ss(1.0,1.08,h+cn*0.05)*ss(0.45,0.8,ny));
+      if(st.snow>0){const line=lerp(1.1,0.55,st.snow);c.lerp(C.snow,ss(line,line+0.06,h+cn*0.05)*ss(0.45,0.8,ny)*Math.min(1,st.snow*1.4));}
+      if(st.snowLoc>0){const d=Math.hypot(u-st.su,v-st.sv);c.lerp(C.snow,st.snowLoc*(1-ss(0.05,0.13,d+cn*0.02))*ss(0.3,0.7,ny));}
+      const ice=st.ice6+st.iceV;
+      const vc=vcM(u); if(Math.abs(v-vc+0.01*Math.sin(u*30))<0.01&&ice<0.5) c.lerp(C.river,0.85);
+      const us=usA(v); if(v<vc-wM()*0.9&&Math.abs(u-us+0.008*Math.sin(v*30))<0.008&&ice<0.5) c.lerp(C.river,0.8);
+      (st.cq||[]).forEach((q,k)=>{const a=st['ca'+k];if(a<0.9||ice>0.3)return;const d=Math.hypot(u-q.u,v-q.v);if(d<CQR*0.32&&h<q.f+0.03) c.copy(C.tarn);});
+    }else{
+      if(h<sea-0.003){const d=clamp((sea-h)/0.3,0,1);c.copy(C.shallow).lerp(C.seabed,d);}
+      else if(h<SEA+ML){
+        const since=clamp((sea>SEA? (SEA+ML-sea):ML)/ML,0,1);
+        const emerged=clamp((sea-h)*-8,0,1);
+        if(st.vfS>0.97){const ru=u*15+0.4*Math.sin(v*5),rv=v*7+0.3*Math.sin(u*9),ia=Math.floor(ru),ib=Math.floor(rv+0.5*Math.sin(ia*1.7));
+          const hsh=Math.abs(Math.sin(ia*12.9898+ib*78.233)*43758.5)%1;c.copy(FIELDS[Math.floor(hsh*5)]);c.lerp(C.grass,0.1+cn*0.15);
+          const fa=ru-ia,fb=(rv+0.5*Math.sin(ia*1.7))-ib;if(fa<0.07||fb<0.035) c.lerp(cForest2,0.55);}
+        else{c.copy(cClay).lerp(C.low,ss(0.05,0.5,since)*0.7);}
+        c.lerp(C.rock,ss(0.8,0.55,ny)*0.7);
+        c.lerp(C.sand,1-ss(0.0,0.02,Math.abs(h-sea-0.006)));
+      }else{
+        c.copy(cForest2).lerp(C.forest,0.4+cn*0.4);c.lerp(C.rock,ss(0.8,0.5,ny+cn*0.1)*0.8);
+      }
+      const ra=raetAmt();if(ra>0.05){const d=Math.abs(u-raetU(v));if(d<0.045&&h>=sea-0.003){c.lerp(cRaet,ra*(1-d/0.045)*0.8);if(st.vfS>0.97)c.lerp(cForest2,(1-d/0.045)*0.55);}}
+      if(st.mlMarked&&Math.abs(h-(SEA+ML))<0.009) c.lerp(cML,0.9);
+      if(st.vfS<0.36){const fr=vfFront(st.vfS);if(u>fr-0.01) c.lerp(C.snow,0.5);}
+    }
+    const k=1+cn*0.07; col[i*3]=c.r*k;col[i*3+1]=c.g*k;col[i*3+2]=c.b*k;
+  }
+  geo.attributes.color.needsUpdate=true;
+}
+
+/* --- sider (gneis) --- */
+const gneiss=['#8a7f7a','#a09088','#6c6562','#ad9588','#7b7370','#958a84'].map(s=>new THREE.Color(s));
+const crushed=new THREE.Color('#4a423d');
+function sideColor(a,b,y,edgeU,edgeV){
+  const Y=y/HS, w1=fbm(a*2.2+5+b,Y*3,3), w2=fbm(a*6,Y*6+b*4,2);
+  const k=Y*8+2.4*w1+1.3*Math.sin(a*3.5+b*2.5+w1*2.5);
+  const i=Math.floor(k), f=k-i, L=gneiss.length;
+  const cc=gneiss[((i%L)+L)%L].clone().lerp(gneiss[(((i+1)%L)+L)%L],Math.max(0,f-0.75)*4);
+  cc.multiplyScalar(0.86+0.14*clamp(Y-BOTTOM,0,1)+0.08*w2);
+  if(st.land==='fjord'&&st.zone>0.3){const d=Math.abs(edgeV-zoneAt(edgeU));if(d<0.045&&(edgeU<0.01||edgeU>0.99)) cc.lerp(crushed,(1-d/0.045)*0.75*st.zone);}
+  return cc;
+}
+const VS=30; const sides=[];
+function buildSides(){
+  for(const m of sides){blockG.remove(m);m.geometry.dispose();} sides.length=0;
+  for(let e=0;e<4;e++){
+    const g=new THREE.BufferGeometry(), cnt=(N+1)*(VS+1);
+    g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(cnt*3),3));
+    g.setAttribute('color',new THREE.BufferAttribute(new Float32Array(cnt*3),3));
+    const idx=[];for(let i=0;i<N;i++)for(let j=0;j<VS;j++){const a=i*(VS+1)+j,b=a+VS+1;idx.push(a,b,a+1,b,b+1,a+1);}
+    g.setIndex(idx);
+    const m=new THREE.Mesh(g,new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,side:THREE.DoubleSide}));
+    m.castShadow=m.receiveShadow=true; blockG.add(m); sides.push(m);
+  }
+}
+function edgeIndex(e,i){const row=N+1; if(e===0) return N*row+i; if(e===2) return (N-i); if(e===1) return (N-i)*row+N; return i*row; }
+function updateSides(){
+  const pos=geo.attributes.position;
+  for(let e=0;e<4;e++){
+    const g=sides[e].geometry, P=g.attributes.position.array, Cc=g.attributes.color.array;
+    for(let i=0;i<=N;i++){
+      const gi=edgeIndex(e,i), x=pos.getX(gi), z=pos.getZ(gi), top=pos.getY(gi), u=cache.U[gi], v=cache.V[gi];
+      for(let j=0;j<=VS;j++){const k=(i*(VS+1)+j)*3, y=lerp(BOTTOM*HS,top,j/VS);
+        P[k]=x;P[k+1]=y;P[k+2]=z;
+        const cc=(e===0||e===2)? sideColor(v,u,y,u,v) : sideColor(u,v,y,u,v);
+        if(st.land==='vf'&&top/HS<SEA+ML+0.01&&y>top-0.11*HS&&top/HS>0.12) cc.lerp(cClay,0.85*ss(top-0.11*HS,top-0.07*HS,y));
+        Cc[k]=cc.r;Cc[k+1]=cc.g;Cc[k+2]=cc.b;}
+    }
+    g.attributes.position.needsUpdate=true; g.attributes.color.needsUpdate=true; g.computeVertexNormals(); g.computeBoundingSphere();
+  }
+}
+const base=new THREE.Mesh(new THREE.PlaneGeometry(2*S,2*S),new THREE.MeshStandardMaterial({color:0x2a2522}));
+base.rotation.x=Math.PI/2; base.position.y=BOTTOM*HS; blockG.add(base);
+
+/* --- vann --- */
+const waterMat=new THREE.MeshStandardMaterial({color:0x3a8fab,roughness:0.08,metalness:0.05,transparent:true,opacity:0.55,depthWrite:false});
+const water=new THREE.Mesh(new THREE.PlaneGeometry(2*S,2*S),waterMat);
+water.rotation.x=-Math.PI/2; water.position.y=SEA*HS; water.renderOrder=2; blockG.add(water);
+const wsides=[];
+for(let e=0;e<4;e++){const m=new THREE.Mesh(new THREE.BufferGeometry(),new THREE.MeshStandardMaterial({color:0x2f7790,roughness:0.2,transparent:true,opacity:0.6,depthWrite:false,side:THREE.DoubleSide}));m.renderOrder=3;blockG.add(m);wsides.push(m);}
+function updateWaterSides(){
+  const pos=geo.attributes.position, SEA=seaLevel();
+  water.position.y=SEA*HS; water.visible=st.land!=='alp'; wsides.forEach(m=>m.visible=st.land!=='alp');
+  for(let e=0;e<4;e++){
+    const verts=[],idx=[];let k=0;
+    for(let i=0;i<N;i++){
+      const a=edgeIndex(e,i),b=edgeIndex(e,i+1);
+      if(Hgrid[a]>=SEA&&Hgrid[b]>=SEA) continue;
+      const o=1.002;
+      for(const gi of [a,b]){const x=pos.getX(gi)*o,z=pos.getZ(gi)*o;verts.push(x,Math.min(Hgrid[gi],SEA)*HS,z,x,SEA*HS,z);}
+      idx.push(k,k+2,k+1,k+2,k+3,k+1);k+=4;
+    }
+    const g=wsides[e].geometry; g.setAttribute('position',new THREE.Float32BufferAttribute(verts,3)); g.setIndex(idx); g.computeVertexNormals();
+  }
+}
+
+/* --- is --- */
+const ig=new THREE.PlaneGeometry(2*S,2*S,NI,NI); ig.rotateX(-Math.PI/2);
+const iceIdx=ig.index.array.slice();
+ig.setAttribute('color',new THREE.BufferAttribute(new Float32Array(ig.attributes.position.count*3),3));
+const ice=new THREE.Mesh(ig,new THREE.MeshStandardMaterial({vertexColors:true,roughness:0.38,metalness:0,emissive:0x123448,emissiveIntensity:0.3}));
+ice.castShadow=true; ice.receiveShadow=false; blockG.add(ice);
+const iceIn=new Uint8Array(ig.attributes.position.count);
+const cIce=new THREE.Color('#a8d2e6'), cIceD=new THREE.Color('#6fa6c2');
+function iceTopAt(u,t){const r=(refAt(u-0.05)+refAt(u-0.025)+refAt(u)+refAt(u+0.025)+refAt(u+0.05))/5;return r-0.035-0.08*(1-ss(st.iceFront,st.iceFront+0.22,u))-0.03*t*t;}
+function updateIce(){
+  if(st.land!=='fjord') return updateIceOther();
+  ice.visible=st.iceAmt>0.005; if(!ice.visible) return;
+  const p=ig.attributes.position, col=ig.attributes.color.array, row=NI+1;
+  for(let iz=0;iz<=NI;iz++){
+    const z=p.getZ(iz*row), u=(1-z/S)/2, vc=pathAt(u), mu=st.m*reachW(u), W=lerp(0.11,0.3,mu)*1.02;
+    const front=st.iceFront, taper=ss(front,front+0.22,u), top0=iceTopAt(u,0);
+    for(let ix=0;ix<=NI;ix++){const i=iz*row+ix, v=p.getX(i)/S;
+      const t=Math.abs(v-vc)/W, g=heightAt(u,v), top=top0-0.03*t*t;
+      const inside=t<1&&u>front&&top>g+0.004;
+      iceIn[i]=inside?1:0;
+      p.setY(i,(inside?lerp(g,top,st.iceAmt):g-0.03)*HS);
+      const stripe=0.5+0.5*Math.sin(t*9+fbm(u*4,v*4,2)*2), crev=ss(0.6,0.85,fbm(u*26,v*10,2))*(1-taper);
+      tmpC.copy(cIce).lerp(cIceD,stripe*0.12+crev*0.55+t*t*0.15);
+      col[i*3]=tmpC.r;col[i*3+1]=tmpC.g;col[i*3+2]=tmpC.b;}
+  }
+  const keep=[];for(let k=0;k<iceIdx.length;k+=3){if(iceIn[iceIdx[k]]&&iceIn[iceIdx[k+1]]&&iceIn[iceIdx[k+2]])keep.push(iceIdx[k],iceIdx[k+1],iceIdx[k+2]);}
+  ig.setIndex(keep); p.needsUpdate=true; ig.attributes.color.needsUpdate=true; ig.computeVertexNormals(); ig.computeBoundingSphere();
+}
+
+function updateIceOther(){
+  const alp=st.land==='alp';
+  const amt=alp?Math.max(st.ice6,st.iceV):(st.vfS<0.35?1:0);
+  ice.visible=amt>0.005; if(!ice.visible) return;
+  const p=ig.attributes.position, col=ig.attributes.color.array, row=NI+1, fr=vfFront(st.vfS), cq=st.cq||[];
+  const s0={...st,ca0:0,ca1:0,ca2:0};
+  for(let iz=0;iz<=NI;iz++){
+    const z=p.getZ(iz*row), u=(1-z/S)/2;
+    let rim=0; if(alp){const vc=vcM(u),Wm=wM();rim=(alpBaseN(u,vc-Wm*1.05)+alpBaseN(u,vc+Wm*1.05))/2;}
+    for(let ix=0;ix<=NI;ix++){const i=iz*row+ix, v=p.getX(i)/S, g=heightAt(u,v);
+      let top=-9;
+      if(alp){
+        const vc=vcM(u),tm=Math.abs(v-vc)/wM();
+        if(st.iceV>0&&tm<0.98) top=Math.max(top,Math.min(rim-0.07,fM0(u)+0.26)-0.04*tm*tm);
+        const us=usA(v),ts=Math.abs(u-us)/lerp(0.1,0.14,st.gs);
+        if(st.iceV>0&&ts<0.95&&v<vc) top=Math.max(top,fSAt(v)+0.085-0.03*ts*ts);
+        if(st.ice6>0.01&&cq.some(c=>Math.hypot(u-c.u,v-c.v)<CQR)){const g0=alpH(u,v,alpBaseN(u,v),s0)+detailN(u,v),dd=g0-g;if(dd>0.015) top=Math.max(top,g+Math.min(0.09,dd*0.75)*st.ice6/Math.max(st.ice6,st.iceV,0.001));}
+      }else{
+        if(u>fr) top=lerp(g+0.01,0.95,ss(fr,fr+0.09,u));
+      }
+      const inside=top>g+0.004;
+      iceIn[i]=inside?1:0;
+      p.setY(i,(inside?lerp(g,top,alp?Math.max(st.ice6,st.iceV):1):g-0.03)*HS);
+      const crev=ss(0.6,0.85,fbm(u*26,v*10,2));
+      tmpC.copy(cIce).lerp(cIceD,0.1+crev*0.4);
+      col[i*3]=tmpC.r;col[i*3+1]=tmpC.g;col[i*3+2]=tmpC.b;}
+  }
+  const keep=[];for(let k=0;k<iceIdx.length;k+=3){if(iceIn[iceIdx[k]]&&iceIn[iceIdx[k+1]]&&iceIn[iceIdx[k+2]])keep.push(iceIdx[k],iceIdx[k+1],iceIdx[k+2]);}
+  ig.setIndex(keep); p.needsUpdate=true; ig.attributes.color.needsUpdate=true; ig.computeVertexNormals(); ig.computeBoundingSphere();
+}
+
+/* --- fossen --- */
+const fallGeo=new THREE.BufferGeometry();
+const fallMat=new THREE.MeshBasicMaterial({color:0xf4fbff,transparent:true,opacity:0.85,side:THREE.DoubleSide,depthWrite:false});
+const fall=new THREE.Mesh(fallGeo,fallMat); fall.renderOrder=4; blockG.add(fall);
+function updateFall(){
+  const on=st.land==='alp'&&st.gm>0.95&&st.iceV<0.05&&st.ice6<0.05; fall.visible=on; if(!on) return;
+  const f=fallPos(), w=0.016, topH=heightAt(f.u,f.v-0.02)+0.004, botH=fM0(f.u)-0.17+0.006, vb=vcM(f.u)-wM()*0.62;
+  const P=[toWorld(f.u-w,f.v-0.01,topH),toWorld(f.u+w,f.v-0.01,topH),toWorld(f.u-w*1.6,vb,botH),toWorld(f.u+w*1.6,vb,botH)];
+  fallGeo.setAttribute('position',new THREE.Float32BufferAttribute(P.flatMap(p=>[p.x,p.y+0.01,p.z]),3)); fallGeo.setIndex([0,2,1,1,2,3]); fallGeo.computeBoundingSphere();
+}
+
+/* --- kontinentkartet --- */
+const mg=new THREE.PlaneGeometry(2*MW,2*MD,MN,MNZ); mg.rotateX(-Math.PI/2);
+mg.setAttribute('color',new THREE.BufferAttribute(new Float32Array(mg.attributes.position.count*3),3));
+const mapMesh=new THREE.Mesh(mg,new THREE.MeshStandardMaterial({vertexColors:true,roughness:0.95}));
+mapMesh.castShadow=mapMesh.receiveShadow=true; mapG.add(mapMesh);
+const mapWater=new THREE.Mesh(new THREE.PlaneGeometry(2*MW,2*MD),new THREE.MeshStandardMaterial({color:0x2f7f9c,roughness:0.1,transparent:true,opacity:0.62,depthWrite:false}));
+mapWater.rotation.x=-Math.PI/2; mapWater.position.y=0.001; mapWater.renderOrder=2; mapG.add(mapWater);
+const MBOT=-0.45;
+const mapSides=[];
+for(let e=0;e<4;e++){const m=new THREE.Mesh(new THREE.BufferGeometry(),new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,side:THREE.DoubleSide}));mapG.add(m);mapSides.push(m);}
+const mapBase=new THREE.Mesh(new THREE.PlaneGeometry(2*MW,2*MD),new THREE.MeshStandardMaterial({color:0x2a2522}));
+mapBase.rotation.x=Math.PI/2; mapBase.position.y=MBOT*MH; mapG.add(mapBase);
+const cLau=new THREE.Color('#9a8a78'), cBal=new THREE.Color('#a3887f'), cMant=new THREE.Color('#5a3a32'), cOc=new THREE.Color('#3b4a52');
+function updateMap(){
+  const p=mg.attributes.position, col=mg.attributes.color.array, n=p.count;
+  for(let i=0;i<n;i++){const x=p.getX(i)/MW,z=p.getZ(i)/MD;p.setY(i,mapH(x,z)*MH);}
+  p.needsUpdate=true; mg.computeVertexNormals();
+  const nrm=mg.attributes.normal;
+  for(let i=0;i<n;i++){const h=p.getY(i)/MH,ny=nrm.getY(i),x=p.getX(i)/MW,z=p.getZ(i)/MD,cn=fbm(x*9,z*9,2);
+    const c=tmpC;
+    if(h<-0.01){c.copy(C.ocean);}
+    else{c.copy(C.low).lerp(C.forest,0.4+cn*0.3);c.lerp(C.heath,ss(0.12,0.3,h));c.lerp(C.rock,ss(0.3,0.5,h)+ss(0.85,0.55,ny)*0.6);c.lerp(C.snow,ss(0.5,0.62,h+cn*0.05));c.lerp(C.sand,1-ss(0,0.02,h));}
+    col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b;}
+  mg.attributes.color.needsUpdate=true;
+  // sider: skorpe for Laurentia/Baltika, havbunn i mellom
+  const xb0=xbAt(0), xl0=xlAt(0);
+  for(let e=0;e<4;e++){
+    const verts=[],cols=[],idx=[];const M=(e%2===0)?MN:MNZ;
+    for(let i=0;i<=M;i++){
+      let x,z; if(e===0){x=-1+2*i/M;z=1}else if(e===2){x=1-2*i/M;z=-1}else if(e===1){x=1;z=1-2*i/M}else{x=-1;z=-1+2*i/M}
+      const h=mapH(x,z), xb=xbAt(z), xl=xlAt(z);
+      const topC=(x>xb-0.01)?cBal:(x<xl+0.01)?cLau:cOc;
+      verts.push(x*MW,h*MH,z*MD, x*MW,MBOT*MH,z*MD);
+      cols.push(topC.r,topC.g,topC.b,cMant.r,cMant.g,cMant.b);
+      if(i<M){const a=i*2;idx.push(a,a+2,a+1,a+2,a+3,a+1);}
+    }
+    const g=mapSides[e].geometry;g.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));g.setAttribute('color',new THREE.Float32BufferAttribute(cols,3));g.setIndex(idx);g.computeVertexNormals();
+  }
+}
+/* firkant som viser hvor Vestlandet er */
+const vestBox=new THREE.LineLoop(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0xf2b27a,depthTest:false}));
+vestBox.renderOrder=10; mapG.add(vestBox);
+const VEST={x:0.24,z:0.05,w:0.09,d:0.22};
+function updateVestBox(){
+  vestBox.visible=st.foundVest; if(!st.foundVest) return;
+  const pts=[],K=24,{x,z,w,d}=VEST;
+  const edge=(x0,z0,x1,z1)=>{for(let k=0;k<K;k++){const t=k/K,xx=lerp(x0,x1,t),zz=lerp(z0,z1,t);pts.push(mapWorld(xx,zz,Math.max(0,mapH(xx,zz))+0.04));}};
+  edge(x-w,z-d,x+w,z-d);edge(x+w,z-d,x+w,z+d);edge(x+w,z+d,x-w,z+d);edge(x-w,z+d,x-w,z-d);
+  vestBox.geometry.dispose(); vestBox.geometry=new THREE.BufferGeometry().setFromPoints(pts);
+}
+
+function refreshAll(){
+  if(mapMode){updateMap();updateVestBox();drawCrust();}
+  else{updateTerrain();updateSides();updateWaterSides();updateIce();updateFall();drawProfile();}
+  updateChecks(false);
+}
+
+/* =========================================================
+   Profiler
+   ========================================================= */
+function profSvg(pts,icePts,ymin,ymax,mode){
+  const M=pts.length-1,Wd=260,Hd=96;
+  const X=i=>i/M*Wd, Y=v=>Hd-(clamp(v,ymin,ymax)-ymin)/(ymax-ymin)*Hd;
+  const line=pts.map((h,i)=>(i?'L':'M')+X(i).toFixed(1)+' '+Y(h).toFixed(1)).join(' ');
+  const sea=Y(SEA), noSea=mode==='side';
+  let out=noSea?'':`<rect x="0" y="${sea}" width="${Wd}" height="${Hd-sea}" fill="#3a8fab" opacity=".35"/>`;
+  out+=`<path d="${line} L${Wd} ${Hd} L0 ${Hd}Z" fill="#6c6562"/>`;
+  const poly=[];icePts.forEach((h,i)=>{if(h!=null)poly.push([X(i),Y(h),Y(pts[i])]);});
+  if(poly.length>1) out+=`<path d="M${poly.map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' L')} L${poly.slice().reverse().map(p=>p[0].toFixed(1)+' '+p[2].toFixed(1)).join(' L')}Z" fill="#a8d2e6" opacity=".95"/>`;
+  out+=`<path d="${line}" fill="none" stroke="#d9cdbf" stroke-width="1.5"/>`;
+  if(!noSea){out+=`<line x1="0" x2="${Wd}" y1="${sea}" y2="${sea}" stroke="#bfe3f0" stroke-width="1" stroke-dasharray="3 3"/>`;
+  out+=`<text x="4" y="${sea-4}" font-size="10" fill="#bfe3f0" stroke="#1c2129" stroke-width="3" paint-order="stroke">havnivå</text>`;}
+  if(mode==='side'&&fall.visible&&cur!==8){const fv=fallPos().v,v0=-0.95,v1=vcM(0.42)+0.3,i=Math.round((fv-v0)/(v1-v0)*M);
+    out+=`<text x="${X(i)-6}" y="${Y(pts[Math.max(0,i-8)])-8}" font-size="10" fill="#bfe3f0" stroke="#1c2129" stroke-width="3" paint-order="stroke" text-anchor="end">foss</text><path d="M${X(i)} ${Y(pts[Math.max(0,i-2)])} L${X(i)+3} ${Y(pts[Math.min(M,i+6)])}" stroke="#f4fbff" stroke-width="2"/>`;}
+  if(mode==='lengde'&&st.sill>0.5&&cur!==8){let bi=0,bh=-9;for(let i=Math.round(M*0.04);i<Math.round(M*0.2);i++){if(pts[i]>bh){bh=pts[i];bi=i;}}
+    out+=`<circle cx="${X(bi)}" cy="${Y(bh)}" r="3.5" fill="#f2b27a"/><text x="${X(bi)+8}" y="${Y(bh)+18}" font-size="10" fill="#f2b27a" stroke="#1c2129" stroke-width="3" paint-order="stroke">terskel</text>`;}
+  return out;
+}
+function raceSvg(){
+  const Wd=260,Hd=96,K=120,ymin=-0.56,ymax=0.07,X=s=>s*Wd,Y=v=>Hd-(v-ymin)/(ymax-ymin)*Hd;
+  const A=[],Bp=[];for(let i=0;i<=K;i++){const t=i/K,a=seaGlobal(t);A.push([X(t),Y(a)]);Bp.push([X(t),Y(a-rslAt(t))]);}
+  const path=P=>P.map((q,i)=>(i?'L':'M')+q[0].toFixed(1)+' '+q[1].toFixed(1)).join(' ');
+  const tx=(x,y,t,c,a='start')=>`<text x="${x}" y="${y}" font-size="10" fill="${c}" stroke="#1c2129" stroke-width="3" paint-order="stroke" text-anchor="${a}">${t}</text>`;
+  let o=`<rect x="0" y="0" width="${X(0.35)}" height="${Hd}" fill="#f1eee6" opacity=".06"/>`;
+  o+=`<path d="${path(A)} L${Bp.slice().reverse().map(q=>q[0].toFixed(1)+' '+q[1].toFixed(1)).join(' L')}Z" fill="#3a8fab" opacity=".4"/>`;
+  o+=`<line x1="0" x2="${Wd}" y1="${Y(0)}" y2="${Y(0)}" stroke="#8a9099" stroke-dasharray="3 3"/>`+tx(Wd-4,Y(0)-4,'nivået i dag','#aab0b8','end');
+  o+=`<path d="${path(A)}" fill="none" stroke="#bfe3f0" stroke-width="2"/><path d="${path(Bp)}" fill="none" stroke="#e0c9a6" stroke-width="2"/>`;
+  o+=tx(X(0.37),Y(seaGlobal(0.37))-6,'havet','#bfe3f0')+tx(X(0.37),Y(seaGlobal(0.37)-rslAt(0.37))+14,'landet','#e0c9a6');
+  o+=tx(X(0.175),Hd-6,'is over landet','#d8dde3','middle');
+  const xs=X(st.vfS);o+=`<line x1="${xs}" x2="${xs}" y1="0" y2="${Hd}" stroke="#f2b27a" stroke-width="2"/>`;
+  if(st.vfS>0.35&&st.vfS<0.99){const a=seaGlobal(st.vfS),b=a-rslAt(st.vfS);o+=`<circle cx="${xs}" cy="${Y(a)}" r="3" fill="#bfe3f0"/><circle cx="${xs}" cy="${Y(b)}" r="3" fill="#e0c9a6"/>`;}
+  return o;
+}
+function drawProfile(){
+  let mode=MISSIONS[cur]?.profile||'tverr'; const M=110;
+  if(mode==='byland') mode=({fjord:'lengde',alp:'side',vf:'race'})[st.land];
+  if(mode==='race'){document.getElementById('prof').innerHTML=raceSvg();document.getElementById('prof-title').textContent='Kappløpet mellom havet og landet';
+    document.getElementById('prof-legend').innerHTML='<span>13 500 år siden</span><span>Mørk blå: hav over dagens land</span><span>I dag</span>';return;}
+  let pts=[],icePts=[],ymin,ymax,title,legend;
+  if(mode==='tverr'){
+    const u=0.55; ymin=0.05;ymax=1.0;
+    const hasV=(st.Dr>0||st.Di>0), vc=hasV?pathAt(u):(st.hasZone?zoneAt(u):0);
+    for(let i=0;i<=M;i++){const v=clamp(vc-0.6+1.2*i/M,-1,1);pts.push(heightAt(u,v));}
+    if(st.iceAmt>0.01&&u>st.iceFront){const mu=st.m*reachW(u),W=lerp(0.11,0.3,mu)*1.02;
+      for(let i=0;i<=M;i++){const v=clamp(vc-0.6+1.2*i/M,-1,1),t=Math.abs(v-vc)/W;const top=iceTopAt(u,t);icePts.push(t<1&&top>pts[i]?lerp(pts[i],top,st.iceAmt):null);}}
+    title=hasV?'Tverrprofil gjennom dalen':'Tverrprofil gjennom landskapet';
+    legend=hasV?['Dalside','Høyden er overdrevet','Dalside']:['Sør','Høyden er overdrevet','Nord'];
+  }else if(mode==='side'){
+    ymin=0.12;ymax=1.2; const fv=fallPos().v, v0=-0.95, v1=vcM(0.42)+0.3;
+    for(let i=0;i<=M;i++){const v=lerp(v0,v1,i/M),u=usA(Math.min(v,fv));pts.push(heightAt(u,v));
+      let top=-9;
+      if(st.iceV>0.01){const vc=vcM(u),tm=Math.abs(v-vc)/wM();
+        if(tm<0.98){const rim=(alpBaseN(u,vc-wM()*1.05)+alpBaseN(u,vc+wM()*1.05))/2;top=Math.min(rim-0.07,fM0(u)+0.26)-0.04*tm*tm;}
+        else if(v<vc) top=fSAt(v)+0.085;}
+      icePts.push(top>pts[i]?lerp(pts[i],top,st.iceV):null);}
+    title='Profil langs sidedalen og inn i hoveddalen'; legend=['Sidedalen','Høyden er overdrevet','Hoveddalen'];
+  }else if(mode==='kyst'){
+    ymin=0.0;ymax=1.25;
+    for(let i=0;i<=M;i++){const u=i/M;pts.push(heightAt(u,0.5));}
+    title='Profil fra kysten og innover'; legend=['Kysten','Høyden er overdrevet','Innover'];
+  }else{
+    ymin=-0.14;ymax=0.45;
+    for(let i=0;i<=M;i++){const u=i/M;pts.push(heightAt(u,pathAt(u)));}
+    if(st.iceAmt>0.01){for(let i=0;i<=M;i++){const u=i/M;if(u<=st.iceFront){icePts.push(null);continue;}const top=iceTopAt(u,0);icePts.push(top>pts[i]?lerp(pts[i],top,st.iceAmt):null);}}
+    title='Lengdeprofil langs dalen'; legend=['Kysten','Høyden er overdrevet','Innerst'];
+  }
+  document.getElementById('prof').innerHTML=profSvg(pts,icePts,ymin,ymax,mode);
+  document.getElementById('prof-title').textContent=title;
+  document.getElementById('prof-legend').innerHTML=legend.map(t=>`<span>${t}</span>`).join('');
+}
+/* Snitt gjennom jordskorpa (skisse) i oppdrag 1 */
+function drawCrust(){
+  const Wd=260,Hd=96,X=x=>(x+1)/2*Wd;
+  const xl=X(xlAt(0)), xb=X(xbAt(0)), o=st.orog, pc=ss(0.55,1,st.p);
+  const top=34, bot=64;
+  let s=`<rect x="0" y="0" width="${Wd}" height="${Hd}" fill="none"/>`;
+  s+=`<rect x="0" y="${top+6}" width="${Wd}" height="${Hd-top-6}" fill="#5a3a32"/>`;
+  s+=`<rect x="0" y="${top-2}" width="${Wd}" height="10" fill="#3a8fab" opacity=".45"/>`;
+  s+=`<rect x="${Math.min(xl,xb)}" y="${top+8}" width="${Math.max(0,xb-xl)}" height="6" fill="#2b3439"/>`;
+  // Laurentia
+  s+=`<path d="M0 ${top} L${xl} ${top} L${xl+4} ${top+14} L${xl-2} ${bot} L0 ${bot}Z" fill="#9a8a78"/>`;
+  // Baltika, med kanten som presses ned under Laurentia
+  const dip=pc*24, under=pc*44;
+  s+=`<path d="M${xb} ${top} L${Wd} ${top} L${Wd} ${bot} L${xb+8} ${bot} L${xb-under+6} ${bot+dip} L${xb-under-6} ${bot+dip-12} L${xb-6} ${top+12}Z" fill="#b58f84" stroke="#e0b8aa" stroke-width="1"/>`;
+  if(pc>0.5){s+=`<path d="M${xb-8} ${bot+6} l-16 10" stroke="#f2b27a" stroke-width="2" fill="none"/><path d="M${xb-28} ${bot+18} l6 -1 l-3 -5z" fill="#f2b27a"/>`;}
+  // fjellkjede
+  if(o>0.01){const h=24*o;s+=`<path d="M${xb-28} ${top} L${xb-16} ${top-h*0.5} L${xb-8} ${top-h*0.8} L${xb} ${top-h} L${xb+10} ${top-h*0.7} L${xb+22} ${top-h*0.85} L${xb+34} ${top-h*0.4} L${xb+48} ${top}Z" fill="#bdb3a8"/>`;
+    s+=`<path d="M${xb-2} ${top-h} L${xb+4} ${top-h*0.75} L${xb+10} ${top-h*0.7}" fill="none" stroke="#f1eee6" stroke-width="2"/>`;}
+  const tx=(x,y,t,c='#f3efe7')=>`<text x="${x}" y="${y}" font-size="10" fill="${c}" stroke="#1c2129" stroke-width="3" paint-order="stroke" text-anchor="middle">${t}</text>`;
+  s+=tx(Math.max(28,xl/2),bot-8,'Laurentia'); s+=tx(Math.min(Wd-30,(xb+Wd)/2+10),bot-8,'Baltika');
+  if(pc>0.5) s+=tx(xb-58,bot+30,'presses ned','#f2b27a');
+  if(xb-xl>30) s+=tx((xl+xb)/2,top-6,'hav','#bfe3f0');
+  s+=tx(pc>0.5?Wd-40:Wd/2,Hd-5,'mantel','#d9b3a6');
+  document.getElementById('prof').innerHTML=s;
+  document.getElementById('prof-title').textContent='Snitt gjennom jordskorpa (skisse)';
+  document.getElementById('prof-legend').innerHTML='<span>Vest</span><span>Ikke i målestokk</span><span>Øst</span>';
+}
+
+/* =========================================================
+   Etiketter
+   ========================================================= */
+const B=()=>!mapMode, Mm=()=>mapMode, Bf=()=>!mapMode&&st.land==='fjord', Ba=()=>!mapMode&&st.land==='alp', Bv=()=>!mapMode&&st.land==='vf';
+/* hjelpere for fjellet: retning fra toppen, egger mellom botner */
+const bearingOf=(u,v)=>{let b=Math.atan2(u-AC.u,v-AC.v)*180/Math.PI;return (b+360)%360;};
+function eggPts(s=st){
+  const cq=(s.cq||[]).map((c,k)=>({c,k,b:bearingOf(c.u,c.v),r:Math.hypot(c.u-AC.u,c.v-AC.v)})).filter(o=>s['ca'+o.k]>0.9).sort((a,b)=>a.b-b.b);
+  const out=[];
+  for(let i=0;i<cq.length;i++)for(let j=i+1;j<cq.length;j++){let d=cq[j].b-cq[i].b;if(d>180)continue;if(d<100){const mb=(cq[i].b+d/2)*Math.PI/180,r=(cq[i].r+cq[j].r)/2*0.8;out.push({u:AC.u+Math.sin(mb)*r,v:AC.v+Math.cos(mb)*r});}}
+  return out;
+}
+let mlCache=null;
+function mlPos(){if(mlCache)return mlCache;const v=-0.2;let u=0;for(;u<1;u+=0.005){if(heightAt(u,v)>=SEA+ML)break;}return mlCache={u,v};}
+const hideRef=()=>cur===8;
+const LABELS=[
+  {t:'Havet',pos:()=>toWorld(0.02,-0.72,SEA),on:()=>Bf()&&st.open>0.6&&cur!==1},
+  {t:'Atlanterhavet<small>åpnet seg omtrent der kollisjonssonen gikk</small>',pos:()=>toWorld(0.03,0.15,SEA),on:()=>Bf()&&st.open>0.6&&cur===1},
+  {t:'Mot vest: Laurentia<small>i dag Grønland</small>',hot:true,pos:()=>toWorld(0.0,0.25,heightAt(0.0,0.25)),on:()=>Bf()&&st.open<0.4},
+  {t:'Den kaledonske fjellkjeden<small>slik den kan ha sett ut</small>',pos:()=>toWorld(0.6,0.1,heightAt(0.6,0.1)),on:()=>Bf()&&st.cal>0.9},
+  {t:'Svakhetssone<small>dannet da jordskorpa ble strukket</small>',pos:()=>toWorld(0.62,zoneAt(0.62),heightAt(0.62,zoneAt(0.62))),on:()=>Bf()&&st.zone>0.6&&st.cal<0.1&&st.Dr<0.05},
+  {t:'V-dal',pos:()=>toWorld(0.55,pathAt(0.55),heightAt(0.55,pathAt(0.55))),on:()=>Bf()&&st.Dr>0.9&&st.m<0.1},
+  {t:'Elva graver lite her',pos:()=>toWorld(0.55,pathAt(0.55),heightAt(0.55,pathAt(0.55))),on:()=>Bf()&&st.Dr>0.1&&st.Dr<0.5&&!st.pathOn},
+  {t:'Delta',pos:()=>toWorld(0.07,st.pv0,SEA),on:()=>Bf()&&st.delta>0.9},
+  {t:'Snø som blir liggende<small>år etter år</small>',pos:()=>toWorld(0.86,0.55,heightAt(0.86,0.55)),on:()=>Bf()&&st.snow>0.6&&st.iceAmt<0.5&&cur===3},
+  {t:'Isbre<small>glir ned dalen mot havet i vest</small>',pos:()=>toWorld(0.72,pathAt(0.72),refAt(0.72)-0.02),on:()=>Bf()&&st.iceAmt>0.9&&st.iceFront<0.6},
+  {t:'Elvedal (V-form)',pos:()=>toWorld(0.2,pathAt(0.2),heightAt(0.2,pathAt(0.2))),on:()=>Bf()&&st.iceAmt>0.9&&st.iceReach>0.2&&st.Dr>0.9},
+  {t:'U-dal',pos:()=>toWorld(0.6,pathAt(0.6)+0.12,heightAt(0.6,pathAt(0.6)+0.12)),on:()=>Bf()&&st.m>0.9&&st.iceAmt<0.1&&st.Di<0.9},
+  {t:'Fjord',pos:()=>toWorld(0.4,pathAt(0.4),SEA),on:()=>Bf()&&st.Di>0.95&&st.iceAmt<0.1},
+  {t:'Terskel',pos:()=>toWorld(0.1,pathAt(0.1),SEA),on:()=>Bf()&&st.sill>0.9&&st.iceAmt<0.1},
+  {t:'Hoveddalen',pos:()=>toWorld(0.86,vcM(0.86),heightAt(0.86,vcM(0.86))),on:()=>Ba()&&cur===5&&st.gm<0.5},
+  {t:'Sidedalen',pos:()=>toWorld(usA(-0.62),-0.62,heightAt(usA(-0.62),-0.62)),on:()=>Ba()&&cur===5&&st.gm<0.5},
+  {t:'Botn',pos:()=>{const c=st.cq[0];return toWorld(c.u,c.v,heightAt(c.u,c.v));},on:()=>Ba()&&st.cq[0]&&st.ca0>0.9&&st.ice6<0.5},
+  {t:'Botn',pos:()=>{const c=st.cq[1];return toWorld(c.u,c.v,heightAt(c.u,c.v));},on:()=>Ba()&&st.cq[1]&&st.ca1>0.9&&st.ice6<0.5},
+  {t:'Botn',pos:()=>{const c=st.cq[2];return toWorld(c.u,c.v,heightAt(c.u,c.v));},on:()=>Ba()&&st.cq[2]&&st.ca2>0.9&&st.ice6<0.5},
+  {t:'Botnbre',pos:()=>{const c=st.cq[0];return toWorld(c.u,c.v,c.f+0.08);},on:()=>Ba()&&st.cq[0]&&st.ice6>0.9&&st.iceV<0.5&&cur===5},
+  {t:'Egg',pos:()=>{const e=eggPts()[0];return toWorld(e.u,e.v,heightAt(e.u,e.v));},on:()=>Ba()&&eggPts().length>0},
+  {t:'Tind',hot:true,pos:()=>toWorld(AC.u,AC.v,heightAt(AC.u,AC.v)),on:()=>Ba()&&nCirq()>=3},
+  {t:'Tykk isbre i hoveddalen',pos:()=>toWorld(0.8,vcM(0.8),fM0(0.8)+0.22),on:()=>Ba()&&st.iceV>0.6},
+  {t:'Tynnere isbre i sidedalen',pos:()=>{const v=-0.55;return toWorld(usA(v),v,fSAt(v)+0.09);},on:()=>Ba()&&st.iceV>0.6},
+  {t:'Hengende dal',pos:()=>{const f=fallPos(),v=f.v-0.18;return toWorld(usA(v),v,heightAt(usA(v),v));},on:()=>Ba()&&fall.visible},
+  {t:'Foss',pos:()=>{const f=fallPos();return toWorld(f.u,f.v-0.02,heightAt(f.u,f.v-0.02));},on:()=>Ba()&&fall.visible},
+  {t:'Innlandsisen',pos:()=>toWorld(Math.min(0.92,vfFront(st.vfS)+0.2),0.1,0.95),on:()=>Bv()&&st.vfS<0.34},
+  {t:'Raet<small>morenerygg fra iskanten</small>',pos:()=>{const v=-0.45;return toWorld(raetU(v),v,heightAt(raetU(v),v));},on:()=>Bv()&&raetAmt()>0.9&&cur===6},
+  {t:'Havet',pos:()=>toWorld(0.05,-0.75,seaLevel()),on:()=>Bv()&&!hideRef()},
+  {t:'Marin grense<small>havets høyeste nivå</small>',hot:true,pos:()=>{const m=mlPos();return toWorld(m.u,m.v,SEA+ML);},on:()=>Bv()&&st.mlMarked&&cur===6},
+  {t:'Gammel havbunn',hot:true,pos:()=>{const q=st.oldSeaPt;return toWorld(q.u,q.v,heightAt(q.u,q.v));},on:()=>Bv()&&st.oldSea&&cur===6},
+  {t:'Laurentia<small>i dag Grønland og Nord-Amerika</small>',pos:()=>mapWorld(-0.7,0.82,0.08),on:Mm},
+  {t:'Baltika<small>i dag blant annet Norge og Sverige</small>',pos:()=>mapWorld(0.72,0.82,0.08),on:Mm},
+  {t:'Iapetushavet',pos:()=>mapWorld((xlAt(0.3)+xbAt(0.3))/2,0.3,0),on:()=>Mm()&&st.p<0.85},
+  {t:'Kollisjonssone',pos:()=>mapWorld(xbAt(-0.75)+0.04,-0.75,Math.max(0,mapH(xbAt(-0.75)+0.04,-0.75))),on:()=>Mm()&&st.orog>0.9},
+  {t:'Vestlandet',hot:true,pos:()=>mapWorld(VEST.x,VEST.z-VEST.d,Math.max(0,mapH(VEST.x,VEST.z-VEST.d))+0.05),on:()=>Mm()&&st.foundVest},
+];
+const labelsEl=document.getElementById('labels');
+LABELS.forEach(L=>{L.el=document.createElement('div');L.el.className='label hidden'+(L.hot?' hot':'');L.el.innerHTML=L.t;labelsEl.appendChild(L.el);});
+const _v=new THREE.Vector3();
+const marker=document.getElementById('marker'); let markerPt=null;
+function setMarker(p){markerPt=p;marker.style.display=p?'block':'none';}
+let pins=[];
+function addPin(t,land,u,v){const el=document.createElement('div');el.className='label pin';el.textContent=t;labelsEl.appendChild(el);pins.push({t,land,u,v,el});}
+function clearPins(){pins.forEach(p=>p.el.remove());pins=[];}
+function placeLabels(){
+  for(const P of pins){const on=!mapMode&&P.land===st.land;P.el.classList.toggle('hidden',!on);if(!on)continue;
+    _v.copy(toWorld(P.u,P.v,Math.max(heightAt(P.u,P.v),seaLevel())));_v.y+=0.06;_v.project(camera);
+    P.el.style.left=((_v.x+1)/2*innerWidth)+'px';P.el.style.top=((1-_v.y)/2*innerHeight-10)+'px';}
+  for(const L of LABELS){
+    const on=!(cur===8&&!mapMode)&&L.on(); L.el.classList.toggle('hidden',!on); if(!on) continue;
+    _v.copy(L.pos()); _v.y+=0.06; _v.project(camera);
+    L.el.style.left=((_v.x+1)/2*innerWidth)+'px'; L.el.style.top=((1-_v.y)/2*innerHeight-10)+'px';
+  }
+  if(markerPt){_v.copy(markerPt.map?mapWorld(markerPt.x,markerPt.z,Math.max(0,mapH(markerPt.x,markerPt.z))):toWorld(markerPt.u,markerPt.v,heightAt(markerPt.u,markerPt.v))).project(camera);
+    marker.style.left=((_v.x+1)/2*innerWidth)+'px';marker.style.top=((1-_v.y)/2*innerHeight)+'px';}
+}
+
+/* =========================================================
+   Oppdrag
+   ========================================================= */
+const MISSIONS=[
+ {title:'Kollisjonen',era:3,eraEnd:9,now:['For rundt 400 mill. år siden','kontinentene nærmer seg'],nowEnd:['For rundt 400 mill. år siden','den kaledonske fjellkjeden'],profile:'crust',
+  intro:'For rundt 400 millioner år siden lå det et hav, Iapetushavet, mellom to kontinenter. I vest lå Laurentia, som i dag er Grønland og Nord-Amerika. I øst lå Baltika, kontinentet Norge og Sverige ligger på. Kontinentene ligger på plater som beveger seg. Kartet er en skisse: kontinentene hadde andre former og lå andre steder enn i dag.',
+  goal:'Få kontinentene til å kollidere. Finn så ut hvor Vestlandet lå i det nye fjellområdet.',
+  checks:[['Havet mellom kontinentene er lukket',s=>s.p>0.99],['Fjellkjeden er presset opp',s=>s.orog>0.99],['Vestlandet er funnet',s=>s.foundVest]],
+  learn:'Da Laurentia og Baltika kolliderte, ble havet mellom dem lukket. Kanten av Baltika ble presset ned under Laurentia, og berget ble foldet, varmet opp og skjøvet sammen til en fjellkjede som kan ha vært omtrent like høy som Himalaya. Den kalles den kaledonske fjellkjeden, og Vestlandet lå midt i den. Mye senere, for rundt 55 millioner år siden, begynte platene å bevege seg fra hverandre igjen, og Atlanterhavet åpnet seg omtrent langs den gamle kollisjonssonen. Derfor ligger Grønland og Norge på hver sin side av havet i dag.'},
+ {title:'Nedsliting, havet og hevingen',era:14,eraEnd:30,now:['Hundrevis av mill. år','fjellkjeden slites ned'],nowEnd:['Før istidene','landet er hevet'],profile:'kyst',
+  intro:'Nå har vi zoomet inn på Vestlandet. Etter kollisjonen lå det midt i en enorm fjellkjede, og Laurentia, som i dag er Grønland, lå rett vest for. Det fantes ikke noe hav her. Men ingen fjellkjede står for alltid, og platene ble ikke liggende i ro.',
+  goal:'Slit ned den gamle fjellkjeden. Få så Atlanterhavet til å åpne seg i vest. Løft til slutt landet slik at det blir høyest i vest, med fjell som står høyt og bratt ut mot havet.',
+  checks:[['Fjellkjeden er slitt ned',s=>s.cal<0.01],['Atlanterhavet har åpnet seg i vest',s=>s.open>0.99],['Landet er hevet, høyest i vest',s=>s.uplift>0.99&&s.tw>0.99&&s.cal<0.01&&s.open>0.99]],
+  learn:'Da kollisjonen stoppet, ble den kaledonske fjellkjeden for tung til å bli stående. Jordskorpa ble strukket, og det dannet seg store skjærsoner og forkastninger, ofte på tvers av den gamle kollisjonssonen. Hardangerfjorden følger for eksempel en slik sone. Samtidig ble fjellkjeden slitt kraftig ned av vær og vann over hundrevis av millioner år. For rundt 55 millioner år siden begynte platene å bevege seg fra hverandre, og Atlanterhavet åpnet seg mellom Grønland og Norge, omtrent der kontinentene en gang hadde kollidert. Slik ble Vestlandet kyst. Vestlandet er i dag høyt nær kysten og faller bratt mot havet, mens landet heller slakere mot øst. Geologene er uenige om hvor mye av høyden som kommer fra en ny heving de siste titalls millioner årene, og hvor mye som er rester av den gamle fjellkjeden. Det de er enige om, er at svakhetssonene ligger igjen i berget, og at elver og is senere gravde der berget var svakest.'},
+ {title:'Elvene graver',era:38,eraEnd:46,now:['Millioner av år','elver graver'],nowEnd:['Millioner av år','elva har gravd dalen'],profile:'tverr',
+  intro:'Fra de høye fjellene renner regn og smeltevann ned mot havet i vest. Fallet er stort, og vannet bryter ned berget og frakter det bort. Rennende vann er en av de ytre kreftene.',
+  goal:'Slipp løs rennende vann høyt oppe i fjellet, og få elva til å grave en V-formet dal ned til havet. Der elva møter havet, skal det bygges et delta.',
+  checks:[['V-formet dal',s=>s.Dr>0.95&&s.m<0.05],['Dalen følger svakhetssonen',s=>s.pathOn&&s.Dr>0.95],['Delta der elva møter havet',s=>s.delta>0.95&&s.iceAmt<0.05]],
+  learn:'Rennende vann graver mest der berget er svakest, og derfor følger elver ofte svakhetssoner. Elva graver seg ned i bunnen av dalen, mens dalsidene raser ut og sklir ned mot elva. Det gir en V-formet dal. På Vestlandet er fallet stort og avstanden til havet kort, så elvene blir korte og bratte. Der elva renner ut i havet, mister vannet farten og legger fra seg sand og grus. Slik bygges et delta.'},
+ {title:'Isen strømmer mot havet',era:60,eraEnd:68,now:['For 2,6 mill. år siden','istidene begynner'],nowEnd:['Istidene','isen fyller dalen'],profile:'tverr',
+  intro:'For rundt 2,6 millioner år siden begynte en lang rekke istider. Klimaet ble kaldere. Høyt til fjells smeltet ikke all snøen om sommeren, så den ble liggende og ble tykkere år for år. Etter hvert ble den nederste snøen presset sammen til is, og isen begynte å gli nedover, ut mot havet i vest, gjennom de dalene elvene hadde gravd.',
+  goal:'Velg hvor snøen skal bli liggende fra år til år. Følg med på hvordan snøen blir til is, og hvordan isen glir ned dalen mot havet og gjør den om til en U-formet dal.',
+  checks:[['Snøen blir liggende i fjellet',s=>s.snow>0.95],['En isbre glir ned dalen',s=>s.iceAmt>0.9&&s.iceFront<0.4],['U-formet dal',s=>s.m>0.95],['Dalbunnen er gravd dypere',s=>s.Di>=0.45]],
+  learn:'En isbre dannes der det faller mer snø om vinteren enn det som smelter om sommeren. Snøen blir liggende og hoper seg opp år etter år, og vekten presser den nederste snøen sammen til is. Når isen er tykk nok, begynner den å gli nedover, og den følger de gamle elvedalene. Stein som er frosset fast i isen, sliper både bunnen og sidene av dalen. Dalen blir bredere og dypere, og tverrprofilet blir U-formet. På Vestlandet var fallet ned mot havet bratt, og det kom mye nedbør. Isen strømmet derfor raskt gjennom de trange dalene og gravde kraftig. Det er en viktig grunn til at de dype fjordene ligger nettopp her.'},
+ {title:'Fjorden',era:72,eraEnd:82,now:['Siste istider','isen graver dypere'],nowEnd:['Etter siste istid','havet fyller fjorden'],profile:'lengde',
+  intro:'Det kom mange istider etter hverandre, med varmere perioder imellom. Hver gang fylte isen de samme dalene og gravde videre. Under de største istidene kunne isen bli over tusen meter tykk.',
+  goal:'Grav dalen under havnivå, med en terskel ute ved munningen. Avslutt så istida, og la havet fylle dalen.',
+  checks:[['Dalbunnen under havnivå',s=>s.Di>0.95],['Terskel ved munningen',s=>s.sill>0.95],['Havet fyller dalen',s=>s.Di>0.95&&s.iceAmt<0.05]],
+  learn:'En tykk isbre kan grave seg langt under havnivå, fordi isen er så tung. Det kan ikke en elv: der elva møter havet, mister vannet farten og slutter å grave. Ute ved munningen ble isen tynnere og spredte seg utover, og der gravde den mindre. Mange steder la isen også igjen morene der. Derfor er fjorder ofte grunnest ytterst. Denne ryggen kalles en terskel. Da isen smeltet, rant havet inn i den dype dalen, og fjorden var ferdig.'},
+ {title:'Fjellet og de små breene',era:66,eraEnd:82,now:['Istidene','høyt til fjells'],nowEnd:['Etter siste istid','botner, tinder og fosser'],profile:'side',
+  intro:'Nå zoomer vi inn på et høyfjellslandskap, slik det ser ut innerst i mange fjorder. Her er det en hoveddal og en mindre sidedal, og en høy fjelltopp. Under istidene lå det ikke bare store isbreer i dalene. Oppe i fjellsidene lå det også små, lokale breer, og de formet fjellet på en helt annen måte.',
+  goal:'Finn fjellsider der snøen kan bli liggende, og la tre små breer grave seg inn i fjellet rundt toppen. Fyll så hoveddalen og sidedalen med is, og la isen smelte.',
+  checks:[['Tre botner rundt toppen',s=>nCirq(s)>=3],['Isbreer i hoveddalen og sidedalen',s=>s.gm>0.95],['Hengende dal med foss',s=>s.gm>0.95&&s.iceV<0.05&&s.ice6<0.05]],
+  learn:'En botn er en skålformet fordypning i en fjellside. Den er gravd ut av en liten, lokal bre. I Norge vender de fleste botnene mot nord og øst. Der får snøen minst sol om sommeren, og vestavinden blåser snø over toppen og legger den igjen på østsida. Når flere botner graver seg inn i det samme fjellet fra hver sin kant, blir det igjen smale, skarpe rygger mellom dem. De kalles egger, og der eggene møtes, står det igjen en spiss tind. I bunnen av en botn ligger det ofte et lite vann. Isbreen i hoveddalen var mye tykkere enn isbreen i sidedalen, og den gravde mye dypere. Da isen smeltet, ble sidedalen hengende høyt oppe i dalsida. Elva fra sidedalen faller derfor ned i hoveddalen som en foss.'},
+ {title:'Isen smelter og landet hever seg',land:'vf',era:84,eraEnd:96,now:['For 13 500 år siden','iskanten trekker seg tilbake'],nowEnd:['I dag','gammel havbunn er blitt åker'],profile:'race',
+  hook:'Vestfold er et av de minste fylkene i Norge. Likevel kommer omtrent hver fjerde grønnsak som dyrkes i Norge, herfra. Hvorfor er det så god jord akkurat her?',
+  intro:'Nå flytter vi til Vestfold, for rundt 13 500 år siden. Under siste istid lå innlandsisen over hele Norge, mange steder flere kilometer tykk. Isen var så tung at den presset jordskorpa ned. Nå er klimaet blitt varmere, og iskanten trekker seg innover i landet. Havet følger etter isen og flommer inn over landet som er presset ned.',
+  goal:'Spol tiden fram med glidebryteren. Merk hvor høyt havet sto da isen forsvant. Følg kappløpet mellom havet og landet helt fram til i dag, og finn et sted der det er gammel havbunn.',
+  checks:[['Iskanten står stille og bygger Raet',s=>s.vfS>=0.22],['Isen har smeltet bort',s=>s.vfS>=0.35],['Havets høyeste nivå er merket',s=>s.mlMarked],['Spolt fram til i dag',s=>s.vfS>=0.995],['Gammel havbunn er funnet',s=>s.oldSea]],
+  learn:'Innlandsisen var så tung at den presset jordskorpa ned, mest der isen var tykkest. Da isen smeltet, flommet havet inn over det nedpressede landet. Det høyeste nivået havet nådde etter istida, kalles den marine grensa. I Vestfold ligger den mange steder rundt 150 meter over dagens hav. Da isen var borte, begynte landet å heve seg. Samtidig steg havet, fordi smeltevannet fra isen rant ut i verdenshavene. Det ble et kappløp, og landet vant: Først hevet det seg raskt, så stadig saktere, og det hever seg fortsatt litt i dag. Det som en gang var havbunn, ble tørt land. Leire og sand som ble lagt på havbunnen, er i dag noe av den beste jordbruksjorda i Norge. Over den marine grensa er det mest morene og bart fjell, og der vokser det skog. I en kald periode for omtrent 12 800 til 11 700 år siden ble iskanten stående lenge på samme sted. Der la isen igjen en lang rygg av stein, grus og sand. Den kalles Raet og går gjennom Vestfold.'},
+ {title:'Folk tar landskapet i bruk',land:'fjord',era:97,eraEnd:98,now:['I dag','tre landskap'],nowEnd:['I dag','tre landskap'],profile:'byland',
+  hook:'Landskapet bestemmer hvor folk kan bo, og hva de kan leve av.',
+  intro:'Nå har du bygd tre landskap: fjorden, fjellet og Vestfold. Bytt mellom dem med fanene. I hvert landskap skal du plassere to ting som folk bygger eller bruker. Velg en ting, og klikk der du mener den passer best.',
+  goal:'Plasser gård og havn ved fjorden, kraftverk og hus i fjellet, og åker og skog i Vestfold.',
+  checks:[['Fjorden: gård og havn',s=>s.placed.gard&&s.placed.havn],['Fjellet: kraftverk og hus',s=>s.placed.kraft&&s.placed.hus],['Vestfold: åker og skog',s=>s.placed.aker&&s.placed.skog]],
+  learn:'Landskapet er formet av krefter som har virket i millioner av år, og det bestemmer fortsatt hvordan vi bruker det. Ved fjordene ligger gårdene på de flate stedene nede ved sjøen, ofte på deltaer og terrasser der elvene har lagt fra seg løsmasser. Fjordene er dype helt inn til land, og innenfor terskelen ligger de i le for havet. Derfor er de gode havner. I fjellet gir den store høydeforskjellen mellom hengende daler og hoveddalen mye fallhøyde, og det kan brukes til å lage strøm. Hus bygges helst på dalbunnen og ikke rett under bratte fjellsider, der det kan gå ras og skred. I Vestfold ligger den beste jorda under den marine grensa, på gammel havbunn. Der er det åkre, mens det vokser skog på den skrinne jorda over.'},
+ {title:'Les landskapet',land:'fjord',era:98,eraEnd:100,now:['I dag','les landskapet'],nowEnd:['I dag','du kan lese landskapet'],profile:'byland',
+  intro:'Nå er det du som setter navn på landskapsformene. Bytt mellom de tre landskapene med fanene. Dra et begrep dit det hører hjemme, eller klikk på begrepet og så i landskapet.',
+  goal:'Sett alle begrepene på riktig sted i de tre landskapene.',
+  checks:[['Fjorden: fire begreper',s=>TERMS.fjord.every(t=>s.terms['fjord:'+t.t])],['Fjellet: fem begreper',s=>TERMS.alp.every(t=>s.terms['alp:'+t.t])],['Vestfold: tre begreper',s=>TERMS.vf.every(t=>s.terms['vf:'+t.t])]],
+  learn:'Du kan nå lese tre ulike landskap og forklare hvordan de ble til. Fjorden er en dal som isen har gravd under havnivå, med en terskel ytterst og fjellplatåer på sidene. I fjellet har små breer gravd botner, og mellom dem står egger og tinder igjen. Der den tynne isen i sidedalen møtte den tykke isen i hoveddalen, ble det en hengende dal med en foss. I Vestfold forteller Raet hvor iskanten sto, og den marine grensa viser hvor høyt havet nådde. Under den ligger gammel havbunn som i dag er god jordbruksjord. Neste gang du er ute, kan du prøve å lese landskapet rundt deg på samme måte.'},
+];
+MISSIONS[0].hook='Hvert år kommer turister fra hele verden for å se fjordene på Vestlandet. I 2005 kom Geirangerfjorden og Nærøyfjorden på UNESCOs verdensarvliste, som noen av de beste eksemplene på fjordlandskap i verden. Hvorfor ser Vestlandet slik ut?';
+const PARTS=[[0,'Del 1 · Hvorfor ser Vestlandet slik ut?'],[6,'Del 2 · Hvorfor ser Vestfold slik ut?'],[7,'Del 3 · Folk og landskap']];
+const P_ZONE={cal:0,uplift:1,tw:1,zone:1,hasZone:true};
+const P_RIVER={...P_ZONE,pathOn:true,river:true,Dr:1,delta:1};
+const P_ICE={...P_RIVER,delta:0,iceAmt:1,iceFront:0.35,iceReach:0.35,m:1,Di:0.5,snow:1};
+const P_FJORD={...P_ICE,Di:1,sill:1,iceAmt:0,iceFront:1.3,iceReach:-0.05,snow:0};
+/* ferdige botner til fanene i oppdrag 8 og 9 */
+function mkCirque(bdeg,r){const b=bdeg*Math.PI/180,du=Math.sin(b),dv=Math.cos(b),u=AC.u+du*r,v=AC.v+dv*r;return {u,v,du,dv,f:alpBaseN(u,v)-0.16};}
+const ALP_CQ=[mkCirque(0,0.16),mkCirque(52,0.16),mkCirque(104,0.16)];
+const P_ALP0={land:'alp'};
+const P_ALPF={land:'alp',cq:ALP_CQ,ca0:1,ca1:1,ca2:1,gm:1,gs:1};
+const P_VF0={land:'vf',vfS:0};
+const P_VFF={land:'vf',vfS:1,mlMarked:true};
+const LANDP={fjord:P_FJORD,alp:P_ALPF,vf:P_VFF};
+const PRESET=[{p:0,orog:0,foundVest:false},{cal:1,uplift:0,open:0},P_ZONE,P_RIVER,P_ICE,P_ALP0,P_VF0,P_FJORD,P_FJORD];
+const fresh=()=>({cq:[],placed:{},terms:{},oldSeaPt:null});
+
+let cur=0, history=[], busy=false, mode=null, missionDone=false;
+const KEY='landskapsverkstedet-v2';
+let progress={done:[],notes:{}};
+try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s)progress=s;}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(progress));}catch(e){}}
+
+const $=id=>document.getElementById(id);
+function buildMenu(){
+  const g=$('mgrid'); g.innerHTML='';
+  MISSIONS.forEach((m,i)=>{const ph=PARTS.find(p=>p[0]===i);if(ph){const h=document.createElement('div');h.className='phead';h.textContent=ph[1];g.appendChild(h);}
+    const b=document.createElement('button');b.className='mcard'+(progress.done.includes(i)?' done':'');b.disabled=!!m.soon;
+    b.innerHTML=`<small>Oppdrag ${i+1}</small><b>${m.title}</b><span></span>`;
+    b.querySelector('span').textContent=m.soon?'Kommer senere · '+m.sub:m.goal.split('. ')[0].replace(/\.$/,'')+'.';
+    b.onclick=()=>{$('intro').classList.remove('show');startMission(i,true);};g.appendChild(b);});
+}
+function setScene(map){
+  mapMode=map; mapG.visible=map; blockG.visible=!map;
+  document.querySelector('.tools').classList.toggle('hide',map);
+  if(map) mapCamera(); else blockCamera();
+  ground.visible=!map; document.getElementById('profile').classList.toggle('wide',map); frame();
+  controls.enabled=!map;
+}
+function startMission(i,usePreset){
+  cur=i; missionDone=false; history=[]; setMode(null); hideFeedback(); setMarker(null); clearPins(); mlCache=null;
+  if(usePreset||i>=5) st={...BASE,...FLAGS,...fresh(),...PRESET[i]};
+  setScene(i===0);
+  document.querySelector('.tools').classList.toggle('hide',i===0||i>=6);
+  $('ctrl7').classList.toggle('show',i===6); $('ctrl89').classList.toggle('show',i>=7);
+  $('btn-rew').style.visibility=i>=6?'hidden':'';
+  if(i===6){$('vfslider').value=0;updateYear();}
+  if(i>=7){tab89='fjord';sel89=null;buildCtrl89();}
+  const m=MISSIONS[i];
+  $('m-eyebrow').textContent=`Oppdrag ${i+1} av ${MISSIONS.length}`;
+  $('m-title').textContent=m.title; $('m-goal').textContent=m.goal;
+  $('m-checks').innerHTML=m.checks.map(c=>`<li><span class="dot"></span>${c[0]}</li>`).join('');
+  setTimeline(m.era,m.now);
+  refreshAll(); updateRew();
+  if(i===0) setMode('plates','Dra med musa for å flytte Laurentia mot øst eller mot vest');
+  if(i===1) hint('Velg en kraft nederst. Hvilken kraft sliter ned fjell?');
+  if(i===5) hint('Velg en kraft nederst. Hvilken kraft lager botner?');
+  if(i===6) hint('Dra i glidebryteren for å spole tiden fram');
+  $('mi-hook').textContent=m.hook||''; $('mi-hook').style.display=m.hook?'':'none';
+  $('mi-eyebrow').textContent=`Oppdrag ${i+1} av ${MISSIONS.length}`;
+  $('mi-title').textContent=m.title; $('mi-text').textContent=m.intro; $('mi-goal').textContent='Mål: '+m.goal;
+  $('mintro').classList.add('show'); setTimeout(()=>$('mi-go').focus(),50);
+}
+function setTimeline(p,now){$('tl-knob').style.left=p+'%';$('tl-fill').style.width=p+'%';if(now)$('tl-now').innerHTML=`<b>${now[0]}</b>${now[1]}`;}
+function updateChecks(allowWin=true){
+  const m=MISSIONS[cur]; if(!m||m.soon) return;
+  const lis=$('m-checks').children; let all=true;
+  m.checks.forEach((c,k)=>{const ok=c[1](st);lis[k]?.classList.toggle('done',ok);if(!ok)all=false;});
+  if(all&&allowWin&&!missionDone){missionDone=true;setMode(null);setTimeout(win,2800);}
+}
+function win(){
+  const m=MISSIONS[cur];
+  if(!progress.done.includes(cur)) progress.done.push(cur); save(); renderFeltbok();
+  setTimeline(m.eraEnd,m.nowEnd);
+  $('su-title').textContent=m.title; $('su-text').textContent=m.learn; $('su-note').value=progress.notes[cur]||'';
+  const nxt=MISSIONS[cur+1]; $('su-next').style.display=(nxt&&!nxt.soon)?'':'none';
+  $('su-stay').textContent=(nxt&&!nxt.soon)?'Bli og se':'Lukk';
+  hideFeedback();
+  $('success').classList.add('show');
+}
+$('su-note').addEventListener('input',e=>{progress.notes[cur]=e.target.value;save();renderFeltbok();});
+$('su-stay').onclick=()=>{$('success').classList.remove('show'); if(!(MISSIONS[cur+1]&&!MISSIONS[cur+1].soon)) showFeedback('info','Du har fullført alle oppdragene','Du kan bytte mellom landskapene og se på dem. Åpne feltboka hvis du vil lese alt du har lært, skrive med egne ord eller lagre den som PDF.');};
+function zoomToBlock(after){
+  const fromP=camera.position.clone(), fromT=controls.target.clone();
+  const tgt=mapWorld(VEST.x,VEST.z,0.35), toP=tgt.clone().add(new THREE.Vector3(0.6,2.2,2.6)), t0=performance.now(), ms=1900;
+  setMode(null); hideFeedback();
+  (function step(now){const k=clamp((now-t0)/ms,0,1),e=k*k*(3-2*k);
+    camera.position.lerpVectors(fromP,toP,e); controls.target.lerpVectors(fromT,tgt,e); controls.update();
+    if(k>0.65) $('fade').style.opacity=1;
+    if(k<1) requestAnimationFrame(step); else setTimeout(()=>{after(); setTimeout(()=>{$('fade').style.opacity=0;},120);},650);
+  })(performance.now());
+}
+$('su-next').onclick=()=>{$('success').classList.remove('show'); if(cur===0) zoomToBlock(()=>startMission(1,true)); else startMission(cur+1,false);};
+$('mi-go').onclick=()=>{$('mintro').classList.remove('show');};
+$('btn-start').onclick=()=>{$('intro').classList.remove('show');startMission(0,true);};
+$('btn-menu').onclick=()=>{buildMenu();$('btn-start').textContent='Fortsett';$('btn-start').onclick=()=>$('intro').classList.remove('show');$('intro').classList.add('show');};
+
+/* =========================================================
+   Tilbakemelding, hint, modus
+   ========================================================= */
+function showFeedback(kind,title,text,rewind=false,choices=null){
+  const f=$('feedback'); f.className='feedback glass pe show '+kind;
+  $('fb-ic').textContent=kind==='good'?'✓':kind==='bad'?'!':'i';
+  $('fb-title').textContent=title; $('fb-text').textContent=text;
+  const a=$('fb-actions'); a.innerHTML='';
+  if(choices){for(const ch of choices){const b=document.createElement('button');b.className='btn';b.textContent=ch.label;b.onclick=ch.fn;a.appendChild(b);}return;}
+  if(rewind){const b=document.createElement('button');b.className='btn primary';b.textContent='Spol tilbake';b.onclick=undo;a.appendChild(b);}
+  const c=document.createElement('button');c.className='btn';c.textContent='Lukk';c.onclick=hideFeedback;a.appendChild(c);
+}
+function hideFeedback(){$('feedback').classList.remove('show');}
+function hint(text){const h=$('hint');if(!text){h.classList.remove('show');return;}$('hint-text').textContent=text;h.classList.add('show');}
+function setMode(m,text){
+  mode=m; host.classList.toggle('placing',['river','ice','uplift','findVest','cirque','oldsea','place8','term9'].includes(m)); host.classList.toggle('drawing',m==='plates');
+  hint(text||null);
+  document.querySelectorAll('.tool').forEach(b=>b.classList.toggle('on',!!m&&b.dataset.tool===({river:'vann',ice:'is',uplift:'loft',cirque:'is'})[m]));
+}
+
+/* =========================================================
+   Animasjon av tilstand
+   ========================================================= */
+function tween(target,ms,done){
+  const from={...st}; Object.assign(st,Object.fromEntries(Object.entries(target).filter(([k])=>!NUM.includes(k))));
+  const t0=performance.now();
+  (function step(now){
+    const k=clamp((now-t0)/ms,0,1), e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+    for(const key of NUM) if(key in target) st[key]=lerp(from[key],target[key],e);
+    refreshAll();
+    if(k<1) requestAnimationFrame(step); else done&&done();
+  })(performance.now());
+}
+function finishRun(after){
+  const m=MISSIONS[cur];
+  busy=false;setToolsEnabled(true);setTimeline(lerp(m.era,m.eraEnd,clamp(history.length/3,0,0.85)),null);updateChecks(true);after&&after();
+}
+function run(target,ms=2400,after){
+  history.push({...st}); updateRew(); busy=true; setToolsEnabled(false);
+  tween(target,ms,()=>finishRun(after));
+}
+/* flere steg etter hverandre, med en forklarende tekst øverst for hvert steg. Ett steg i spolingen. */
+function runSeq(steps,after,keep=true){
+  if(keep){history.push({...st}); updateRew();}
+  busy=true; setToolsEnabled(false);
+  let i=0;
+  const next=()=>{
+    if(i>=steps.length){ setTimeout(()=>hint(null),1800); if(keep) finishRun(after); else {busy=false;setToolsEnabled(true);after&&after();} return; }
+    const sp=steps[i++]; if(sp.caption) hint(sp.caption);
+    setTimeout(()=>tween(sp.target,sp.ms,next), sp.pause||0);
+  };
+  next();
+}
+function undo(){
+  if(busy||!history.length) return;
+  const prev=history.pop(); const from={...st}; hideFeedback(); setMarker(null); missionDone=false;
+  Object.assign(st,Object.fromEntries(Object.entries(prev).filter(([k])=>!NUM.includes(k))));
+  busy=true; setToolsEnabled(false); const t0=performance.now(), ms=1100;
+  (function step(now){const k=clamp((now-t0)/ms,0,1),e=1-Math.pow(1-k,3);
+    for(const key of NUM) st[key]=lerp(from[key],prev[key],e);
+    refreshAll(); if(k<1) requestAnimationFrame(step); else {busy=false;setToolsEnabled(true);updateRew();updateChecks(false);
+      if(cur===0){ if(!st.orog) setMode('plates','Dra med musa for å flytte Laurentia mot øst eller mot vest'); else if(!st.foundVest) setMode('findVest','Klikk på kartet der Vestlandet lå'); }}})(performance.now());
+}
+function updateRew(){$('btn-rew').disabled=!history.length;}
+function setToolsEnabled(on){document.querySelectorAll('.tool').forEach(b=>b.disabled=!on);$('btn-rew').disabled=!on||!history.length;}
+$('btn-rew').onclick=undo;
+
+/* =========================================================
+   Verktøy (oppdrag 2–5)
+   ========================================================= */
+document.querySelectorAll('.tool').forEach(b=>b.onclick=()=>{if(busy)return;hideFeedback();useTool(b.dataset.tool);});
+
+function useTool(t){
+  setMode(null); setMarker(null);
+  if(missionDone){showFeedback('info','Oppdraget er fullført','Gå videre til neste oppdrag, eller spol tilbake for å prøve noe annet.');return;}
+  const c=cur;
+  if(c===5) return useTool6(t);
+  if(t==='loft'){
+    if(c===1){
+      if(st.cal>0.5) return showFeedback('bad','Først må fjellkjeden slites ned','Den gamle fjellkjeden står fortsatt. Først må den slites ned, og det gjør vær og rennende vann over hundrevis av millioner år. Prøv Rennende vann.');
+      if(st.open<0.99) return showFeedback('bad','Ikke ennå','Landet ble hevet etter at Atlanterhavet åpnet seg og Vestlandet ble kyst. Hva må skje med platene først?');
+      if(st.uplift>0.99) return showFeedback('bad','Spol tilbake først','Landet er allerede hevet. Spol tilbake hvis du vil prøve et annet sted.',true);
+      return setMode('uplift','Klikk der landet skal heves mest');
+    }
+    return showFeedback('info','Hevingen har allerede skjedd','Nå er det vann og is som former landskapet videre.');
+  }
+  if(t==='vann'){
+    if(c===1){
+      if(st.cal>0.5){ run({cal:0,zone:1,hasZone:true},3600);
+        return showFeedback('good','Fjellkjeden slites ned','Da kollisjonen stoppet, var fjellkjeden for høy og tung til å bli stående. Jordskorpa ble strukket, og berget sprakk opp langs store skjærsoner og forkastninger. Samtidig brøt vær og vann ned berget, og over hundrevis av millioner år ble fjellkjeden slitt ned til et lavt landskap. Se den rødbrune stripa: Det er en svakhetssone fra denne tiden.'); }
+      if(st.open<0.99) return showFeedback('info','Fjellkjeden er slitt ned','Landskapet er lavt og flatt, og Laurentia ligger fortsatt rett vest for. Hva skjer med platene videre?');
+      if(st.uplift<0.99) return showFeedback('info','Fjellkjeden er slitt ned','Landskapet er lavt og flatt. Hva må skje for at det skal bli høye fjell her igjen?');
+      return showFeedback('info','Ikke i dette oppdraget','Landet er hevet. I neste oppdrag får elvene grave.');
+    }
+    if(c===2){ if(st.Dr>0.95&&st.pathOn) return showFeedback('info','Elva har gjort jobben','Se på sjekklisten til venstre.');
+      if(st.Dr>0.05) return showFeedback('bad','Spol tilbake først','Elva har allerede valgt et løp. Spol tilbake for å prøve et annet sted.',true);
+      return setMode('river','Klikk i landskapet der elva skal begynne, høyt oppe i fjellet');}
+    if(c===3) return showFeedback('bad','Elva graver bare i bunnen','Mer rennende vann gjør dalen dypere, men ikke bredere. Den forblir V-formet. Det er isen som sliper på hele dalen samtidig, både bunnen og sidene.');
+    if(c===4) return showFeedback('bad','En elv kan ikke grave under havnivå','Der elva møter havet, mister vannet farten, og gravingen stopper. Det som kan grave seg ned under havnivå, er tykk is.');
+  }
+  if(t==='is'){
+    if(c===1) return showFeedback('bad','For tidlig for is','Istidene begynte for rundt 2,6 millioner år siden, mye senere enn dette. Det som sliter ned den gamle fjellkjeden, er vær og rennende vann.');
+    if(c===2) return showFeedback('bad','Klimaet er for varmt','I denne perioden er det rennende vann som former landskapet. Istidene kommer senere.');
+    if(c===3){ if(st.iceAmt>0.9) return showFeedback('info','Isbreen er på plass','Se på sjekklisten til venstre.');
+      if(st.snow>0.5) return showFeedback('info','Snøen ligger allerede','Spol tilbake hvis du vil prøve et annet sted.');
+      return setMode('ice','Klikk der du tror snøen kan bli liggende fra år til år');}
+    if(c===4){
+      if(st.Di>0.95&&st.iceAmt>0.9) return showFeedback('info','Isen har gravd så dypt den kan','Dalen er gravd under havnivå. Hva må skje for at havet skal komme inn?');
+      if(st.Di>0.95){ run({iceAmt:1,iceFront:0.07}); return showFeedback('info','En ny istid','Isen fyller dalen igjen. Den har allerede gravd dalen under havnivå. Hva må skje for at havet skal komme inn?'); }
+      run({iceAmt:1,iceFront:0.07,iceReach:-0.05,Di:1,sill:1,m:1,delta:0},3200);
+      return showFeedback('good','En ny og større istid','Isen blir tykkere og strømmer helt ut til kysten. Den graver dalen dypere, også under havnivå. Ute ved munningen blir isen tynnere og graver mindre. Se på lengdeprofilet.');
+    }
+  }
+  if(t==='plate'){
+    if(c===1){
+      if(st.cal>0.5) return showFeedback('bad','Ikke ennå','Platene lå i ro lenge etter kollisjonen. I mellomtiden ble fjellkjeden slitt ned. Begynn med det.');
+      if(st.open>0.99) return showFeedback('info','Havet har åpnet seg','Platene fortsetter å gli fra hverandre, noen centimeter i året. Nå er det tid for hevingen.');
+      return showFeedback('info','Hvordan skal platene bevege seg?','For rundt 55 millioner år siden begynte platene å bevege seg igjen. Hvilken vei?',false,[
+        {label:'Mot hverandre',fn:()=>showFeedback('bad','Kollisjonen er over','Platene presses ikke sammen her lenger. Hvis de gjorde det, ville det blitt en ny fjellkjede. Prøv den andre retningen.')},
+        {label:'Fra hverandre',fn:()=>{run({open:1},3600);showFeedback('good','Atlanterhavet åpner seg','Laurentia og Baltika glir fra hverandre, og havet strømmer inn mellom dem. Grønland blir liggende på den andre siden av havet, og Vestlandet blir kyst. Det skjer omtrent der kontinentene en gang kolliderte.');}}]);
+    }
+    return showFeedback('info','Platene glir fortsatt fra hverandre','Atlanterhavet blir noen centimeter bredere hvert år, men det endrer ikke landskapet merkbart i dette oppdraget.');
+  }
+  if(t==='smelt'){
+    if(st.iceAmt<0.05) return showFeedback('info','Ingen is å smelte',c<3?(c===1&&st.cal>0.5?'Det er ingen isbreer ennå. Det som sliter ned den gamle fjellkjeden, er vær og rennende vann.':'Det er ingen isbreer i landskapet ennå.'):'Isen er allerede borte.');
+    if(c===3) return showFeedback('bad','Ikke ennå','I dette oppdraget skal isen grave. La den bli liggende.');
+    if(c===4){
+      const deep=st.Di>0.95;
+      run({iceAmt:0,iceFront:1.3,snow:0},2600);
+      if(deep) return showFeedback('good','Isen smelter','Breen trekker seg tilbake innover i dalen, og havet strømmer inn. Der isen har gravd under havnivå, blir det fjord.');
+      return showFeedback('bad','Dalen er ikke dyp nok','Isen smeltet, men den har bare gravd under havnivå et kort stykke. Det trengs flere istider for at havet skal fylle dalen. Spol tilbake og la isen grave mer først.',true);
+    }
+  }
+}
+
+/* --- peker --- */
+const ray=new THREE.Raycaster(), ndc=new THREE.Vector2(), plane0=new THREE.Plane(new THREE.Vector3(0,1,0),0), hitP=new THREE.Vector3();
+function setRay(ev){const r=renderer.domElement.getBoundingClientRect();ndc.set(((ev.clientX-r.left)/r.width)*2-1,-((ev.clientY-r.top)/r.height)*2+1);ray.setFromCamera(ndc,camera);}
+function pick(ev){setRay(ev);const hit=ray.intersectObject(terrain,false)[0];return hit?fromWorld(hit.point):null;}
+/* treffer vannflata først hvis den ligger foran terrenget */
+function pickS(ev){setRay(ev);const hit=ray.intersectObjects(water.visible?[terrain,water]:[terrain],false)[0];return hit?fromWorld(hit.point):null;}
+function pickMap(ev){setRay(ev);const hit=ray.intersectObject(mapMesh,false)[0];return hit?{x:hit.point.x/MW,z:hit.point.z/MD}:null;}
+function planeX(ev){setRay(ev);return ray.ray.intersectPlane(plane0,hitP)?hitP.x/MW:null;}
+let downAt=null, drag=null;
+renderer.domElement.addEventListener('pointerdown',ev=>{
+  downAt={x:ev.clientX,y:ev.clientY};
+  if(mapMode&&mode==='plates'&&!busy){const x=planeX(ev);if(x!=null){drag={x0:x,p0:st.p};renderer.domElement.setPointerCapture(ev.pointerId);hideFeedback();}}
+});
+renderer.domElement.addEventListener('pointermove',ev=>{
+  if(drag){const x=planeX(ev);if(x==null)return;st.p=clamp(drag.p0+(x-drag.x0)/0.62,-1,1);refreshAll();}
+});
+renderer.domElement.addEventListener('pointerup',ev=>{
+  const moved=downAt?Math.hypot(ev.clientX-downAt.x,ev.clientY-downAt.y):0;
+  if(drag){drag=null;releasePlates();return;}
+  if(moved>=6) return;
+  if(mapMode&&mode==='findVest'){const p=pickMap(ev);if(p)findVest(p);return;}
+  if(['river','ice','uplift'].includes(mode)){const p=pick(ev);if(p)place(mode,p);return;}
+  if(mode==='cirque'){const p=pick(ev);if(p)placeCirque(p);return;}
+  if(mode==='oldsea'){const p=pickS(ev);if(p)findOldSea(p);return;}
+  if(mode==='place8'){const p=pickS(ev);if(p)place8(p);return;}
+  if(mode==='term9'){const p=pickS(ev);if(p)placeTerm(sel89,p);return;}
+  if(cur>=6&&!mapMode){ if(cur===6) return; showFeedback('info',cur===7?'Velg en ting først':'Velg et begrep først',cur===7?'Velg en av tingene nederst, og klikk så i landskapet.':'Dra et av begrepene nederst inn i landskapet, eller klikk på begrepet og så i landskapet.');return;}
+  if(!mapMode&&!mode&&!busy&&!missionDone&&pick(ev)) showFeedback('info','Velg en kraft først','Velg en av kreftene nederst på skjermen. Noen av dem ber deg etterpå klikke i landskapet.');
+});
+function releasePlates(){
+  if(st.p>0.88){
+    setMode(null);
+    run({p:1,orog:1},3200,()=>setMode('findVest','Klikk på kartet der Vestlandet lå'));
+    return showFeedback('good','Kontinentene kolliderer','Havet mellom dem lukkes. Kanten av Baltika presses ned under Laurentia, og berget foldes og skyves sammen til en stor fjellkjede. Se snittet nede til høyre.');
+  }
+  if(st.p<-0.3) return showFeedback('info','Havet blir bredere','Når platene beveger seg fra hverandre, blir havet mellom dem bredere. Slik er det faktisk i dag: Atlanterhavet blir noen centimeter bredere hvert år. Men for 400 millioner år siden beveget platene seg mot hverandre.');
+  if(st.p>0.2) return showFeedback('info','Nesten','Dra Laurentia helt inn til Baltika.');
+}
+function findVest(p){
+  const xb=xbAt(p.z);
+  setMarker({map:true,x:p.x,z:p.z}); setTimeout(()=>setMarker(null),2200);
+  if(p.x<xb-0.03) return showFeedback('bad','Det er Laurentia','Denne delen ble senere Grønland og Nord-Amerika. Norge ligger på det andre kontinentet.');
+  if(p.x>xb+0.35) return showFeedback('bad','For langt øst','Denne delen av Baltika ble senere Sverige og Finland. Vestlandet lå helt ytterst mot vest på Baltika, midt i fjellkjeden.');
+  setMode(null);
+  run({foundVest:true},400);
+  showFeedback('good','Der lå Vestlandet','Helt ytterst mot vest på Baltika, like ved kollisjonssonen. Her ble berget presset dypt ned, varmet opp og foldet. Det er dette harde, foldede berget fjellene på Vestlandet er bygd av i dag.');
+}
+function place(kind,p){
+  setMode(null);
+  if(kind==='uplift'){
+    setMarker(p); setTimeout(()=>setMarker(null),2600);
+    if(p.u<0.6){ run({uplift:1,tw:1},3400);
+      return showFeedback('good','Landet heves mest i vest','Nær kysten blir det høyt, og fjellene faller bratt ned mot havet. Innover blir det høyfjell og vidder som heller slakere mot øst. Se profilet nede til høyre.'); }
+    run({uplift:1,tw:0},3400);
+    return showFeedback('bad','Høyest langt inne i landet','Nå heller landet slakt ned mot kysten. Det ligner mer på Østlandet. På Vestlandet står fjellene høyt helt ut mot havet og faller bratt. Spol tilbake og prøv nærmere kysten.',true);
+  }
+  if(kind==='river'){
+    if(p.u<0.4) return showFeedback('bad','For nær kysten','Velg et sted høyere opp og lenger inn i landet, så elva får et langt løp ned mot havet.');
+    setMarker(p);
+    if(Math.abs(p.v-zoneAt(p.u))<0.15){ st.pv0=st.zv0; st.pv1=st.zv1; run({Dr:1,delta:1,pathOn:true,river:true},3200);
+      return showFeedback('good','Elva finner svakhetssonen','Vannet renner dit det er lettest, og i den oppsprukne sonen graver elva raskt. Dalen blir dyp og V-formet, og ved kysten bygges et delta.'); }
+    st.pv0=p.v; st.pv1=p.v; run({Dr:0.35,delta:0.35,pathOn:false,river:true},3200);
+    return showFeedback('bad','Elva graver lite','Her renner elva over hard, hel gneis, og den graver svært sakte. Elver graver raskest der berget er oppsprukket. Spol tilbake og prøv et annet sted.',true);
+  }
+  if(kind==='ice'){
+    const h=heightAt(p.u,p.v);
+    setMarker(p); setTimeout(()=>setMarker(null),2500);
+    if(p.u<0.55||h<0.42){
+      runSeq([
+        {target:{snowLoc:1,su:p.u,sv:p.v},ms:1400,caption:'Om vinteren legger snøen seg her'},
+        {target:{snowLoc:0},ms:1600,pause:500,caption:'Om sommeren smelter den igjen'}],
+        ()=>showFeedback('bad','Snøen smeltet','Her er det for lavt og for nær kysten. Snøen som faller om vinteren, smelter om sommeren, og da blir det aldri noen is. En isbre dannes bare der det faller mer snø om vinteren enn det som smelter om sommeren, høyt til fjells. Prøv høyere og lenger inn i landet.'),false);
+      return;
+    }
+    hideFeedback();
+    runSeq([
+      {target:{snow:1,su:p.u,sv:p.v},ms:3000,caption:'1 av 3: Snøen blir liggende vinter etter vinter, og snøgrensa siger nedover'},
+      {target:{iceAmt:1,iceFront:0.72,delta:0},ms:2600,pause:400,caption:'2 av 3: Snøen hoper seg opp og presses sammen til is øverst i dalen'},
+      {target:{iceFront:0.35,iceReach:0.35,m:1,Di:0.5},ms:4200,pause:400,caption:'3 av 3: Isen glir ned dalen mot havet og sliper den bredere og dypere'}],
+      ()=>showFeedback('good','En isbre er dannet','Høyt til fjells ble snøen liggende og ble til is, og isen gled ned den gamle elvedalen mot havet i vest. Stein som er frosset fast i isen, sliper bunnen og sidene. Se hvordan tverrprofilet har gått fra V til U.'));
+  }
+}
+
+
+/* =========================================================
+   Oppdrag 6: fjellet og de små breene
+   ========================================================= */
+const compass=b=>['nord','nordøst','øst','sørøst','sør','sørvest','vest','nordvest'][Math.round(b/45)%8];
+function useTool6(t){
+  if(t==='is'){
+    if(nCirq()<3) return setMode('cirque','Klikk i en fjellside rundt den høyeste toppen der snøen kan bli liggende');
+    if(st.gm<0.95){
+      hideFeedback();
+      return runSeq([
+        {target:{snow:0.55},ms:2600,caption:'1 av 3: Klimaet blir kaldere, og snøen blir liggende langt nedover fjellsidene'},
+        {target:{iceV:1},ms:2600,pause:300,caption:'2 av 3: Isbreer fyller både hoveddalen og sidedalen'},
+        {target:{gm:1,gs:1},ms:4200,pause:300,caption:'3 av 3: Den tykke breen i hoveddalen graver mye dypere enn den tynne breen i sidedalen'}],
+        ()=>showFeedback('good','Isbreer i begge dalene','Hoveddalen samler is fra et stort område, så breen der blir tykk og tung. Breen i sidedalen er tynnere. Begge dalene blir U-formet, men hoveddalen blir gravd mye dypere. Se profilet nede til høyre. Hva tror du skjer når isen smelter?'));
+    }
+    return showFeedback('info','Isen ligger allerede her','Breene har gjort jobben sin. Prøv Isen smelter.');
+  }
+  if(t==='smelt'){
+    if(nCirq()<3) return showFeedback('bad','Ikke ennå','Først må de små breene få grave seg inn i fjellet. Velg Isbre og finn fjellsider der snøen kan bli liggende.');
+    if(st.gm<0.95) return showFeedback('bad','Ikke ennå','Breene i fjellsidene har gravd botner. Men hva med de store dalene? Velg Isbre en gang til.');
+    if(st.iceV<0.05&&st.ice6<0.05) return showFeedback('info','Isen er borte','Snu landskapet og se på formene isen har etterlatt seg.');
+    return run({ice6:0,iceV:0,snow:0},3600,()=>showFeedback('good','En hengende dal','Isen er borte. Hoveddalen ble gravd mye dypere enn sidedalen, så nå henger sidedalen høyt oppe i dalsida. Elva fra sidedalen faller ned i hoveddalen som en foss. I botnene ligger det små vann, og rundt toppen står det igjen skarpe egger og en spiss tind.'));
+  }
+  if(t==='vann') return showFeedback('info','Elvene var her først','Elvene gravde dalene lenge før istidene. Men botner, egger og tinder er det isen som har laget. Prøv Isbre.');
+  if(t==='loft') return showFeedback('info','Landet er allerede hevet','Fjellet står høyt. Nå er det isen som former det. Prøv Isbre.');
+  return showFeedback('info','Ikke her','I dette oppdraget er det isen som former fjellet.');
+}
+function placeCirque(p){
+  const r=Math.hypot(p.u-AC.u,p.v-AC.v);
+  if(r<0.06||r>0.34) return showFeedback('info','Klikk i fjellsida','Klikk i en av fjellsidene rundt den høyeste toppen. Der kan en liten bre grave seg inn i fjellet.');
+  const b=bearingOf(p.u,p.v);
+  const near=st.cq.some((c,k)=>{if(st['ca'+k]<0.5)return false;const d=Math.abs(((bearingOf(c.u,c.v)-b)+540)%360-180);return d<35;});
+  if(near) return showFeedback('info','Det ligger allerede en botn her','Finn en annen del av fjellet rundt toppen, litt lenger unna den første botnen.');
+  setMode(null); setMarker(p); setTimeout(()=>setMarker(null),2500);
+  const ok=(b>=330||b<=120);
+  if(!ok){
+    runSeq([
+      {target:{snowLoc:1,su:p.u,sv:p.v,snow:0},ms:1400,caption:'Om vinteren legger snøen seg her'},
+      {target:{snowLoc:0},ms:1600,pause:500,caption:'Om sommeren smelter den igjen'}],
+      ()=>{showFeedback('bad','Snøen smeltet','Denne fjellsida vender mot '+compass(b)+'. Her står sola på om sommeren, og vestavinden blåser snøen bort fra denne sida og legger den på den andre sida av toppen. Da blir det ingen bre. Prøv en fjellside som ligger mer i skyggen og i le for vinden.');setMode('cirque','Klikk i en annen fjellside');},false);
+    return;
+  }
+  const rr=clamp(r,0.14,0.18), bb=b*Math.PI/180, du=Math.sin(bb), dv=Math.cos(bb), u=AC.u+du*rr, v=AC.v+dv*rr;
+  const c={u,v,du,dv,f:alpBaseN(u,v)-0.16}, k=st.cq.length, cq=[...st.cq,c];
+  hideFeedback();
+  runSeq([
+    {target:{snowLoc:1,su:u,sv:v,cq},ms:1500,caption:'Snøen blir liggende sommer etter sommer og blir til is'},
+    {target:{['ca'+k]:1,ice6:1,snowLoc:0},ms:3200,pause:300,caption:'Den lille breen graver seg inn i fjellsida og lager en skål'}],
+    ()=>{const n=nCirq();
+      if(n===1) showFeedback('good','En botn','Fjellsida vender mot '+compass(b)+'. Her får snøen lite sol, og vinden legger igjen ekstra snø i le av toppen. En liten bre har gravd ut en skål i fjellsida. Den kalles en botn. Finn to fjellsider til der snøen kan bli liggende.');
+      else if(n===2) showFeedback('good','To botner','Mellom de to botnene står det igjen en smal, skarp rygg. Den kalles en egg. Finn én fjellside til.');
+      else showFeedback('good','En tind','Tre botner har gravd seg inn i fjellet fra hver sin kant. Igjen står en spiss topp med skarpe egger rundt. Den kalles en tind. Velg Isbre igjen for å fylle de store dalene med is.');
+      if(n<3) setMode('cirque','Klikk i en annen fjellside rundt toppen');});
+}
+
+/* =========================================================
+   Oppdrag 7: Vestfold, isen smelter og landet hever seg
+   ========================================================= */
+function updateYear(){
+  const s=st.vfS, y=yearsAt(s);
+  $('vfyear').textContent=s>=0.995?'I dag':y.toLocaleString('nb-NO')+' år siden';
+}
+function phaseHint(s){
+  if(s<0.12) return 'Iskanten trekker seg innover, og havet følger etter inn over det nedpressede landet';
+  if(s<0.22) return 'Kaldere igjen: Iskanten står stille i lang tid og skyver opp en rygg av stein, grus og sand';
+  if(s<0.35) return 'Klimaet blir varmere, og isen smelter raskt bort';
+  if(s<0.995) return 'Landet hever seg, og havet trekker seg tilbake. Se kappløpet nede til høyre';
+  return 'I dag. Landet hever seg fortsatt litt, et par millimeter i året';
+}
+$('vfslider').addEventListener('input',e=>{
+  if(cur!==6) return; hideFeedback(); if(mode==='oldsea') setMode(null);
+  st.vfS=e.target.value/1000; updateYear(); setTimeline(lerp(84,96,st.vfS),[$('vfyear').textContent,st.vfS<0.12?'iskanten trekker seg tilbake':st.vfS<0.22?'iskanten står stille':st.vfS<0.35?'isen smelter bort':st.vfS<0.995?'landet hever seg':'gammel havbunn er blitt åker']);
+  refreshAll(); hint(phaseHint(st.vfS)); updateChecks(true);
+});
+$('btn-mark').onclick=()=>{
+  if(missionDone) return;
+  const s=st.vfS;
+  if(st.mlMarked) return showFeedback('info','Allerede merket','Den oransje streken viser hvor høyt havet nådde.');
+  if(s<0.2) return showFeedback('bad','Ikke ennå','Isen dekker fortsatt store deler av landet, og havet kommer ikke inn over landet som ligger under isen. Spol videre til isen har smeltet.');
+  if(s>0.45) return showFeedback('bad','For sent','Havet har allerede trukket seg tilbake, fordi landet har hevet seg. Havets høyeste nivå var like etter at isen forsvant. Spol tilbake dit.');
+  st.mlMarked=true; mlCache=null; refreshAll(); updateChecks(true);
+  showFeedback('good','Den marine grensa','Like etter at isen forsvant, sto havet høyest i forhold til landet. Dette nivået kalles den marine grensa, og i Vestfold ligger den mange steder rundt 150 meter over dagens hav. Alt under streken har en gang vært havbunn. Spol videre og se hva som skjer.');
+};
+$('btn-oldsea').onclick=()=>{
+  if(missionDone) return;
+  if(st.vfS<0.995) return showFeedback('info','Spol fram til i dag først','Gammel havbunn er havbunn som har blitt tørt land. Spol helt fram til i dag.');
+  if(!st.mlMarked) return showFeedback('info','Merk havets høyeste nivå først','Spol tilbake til like etter at isen forsvant, og merk hvor høyt havet sto.');
+  hideFeedback(); setMode('oldsea','Klikk på et sted som var havbunn like etter istida, men som er tørt land i dag');
+};
+function findOldSea(p){
+  const h=heightAt(p.u,p.v); setMarker(p); setTimeout(()=>setMarker(null),2500);
+  if(h<SEA+0.004) return showFeedback('bad','Det er hav her ennå','Dette stedet ligger fortsatt under havet. Finn et sted som var havbunn, men som er tørt land i dag.');
+  if(h>SEA+ML+0.008) return showFeedback('bad','Over den marine grensa','Havet nådde aldri så høyt, så her har det aldri vært havbunn. Her ligger det morene og bart fjell, og jorda er skrinn og steinete. Derfor er det mest skog her. Prøv nedenfor den oransje streken.');
+  setMode(null); st.oldSea=true; st.oldSeaPt={u:p.u,v:p.v}; refreshAll(); updateChecks(true);
+  showFeedback('good','Gammel havbunn','For rundt 11 000 år siden lå dette stedet under havet. Leire og sand fra smeltevannet sank til bunns og ble liggende. Da landet hevet seg, ble havbunnen tørt land, og den finkornede jorda holder godt på vann og næring. Sammen med et mildt klima og mange soltimer gjør det Vestfold til et av de beste stedene i Norge for å dyrke grønnsaker.');
+}
+
+/* =========================================================
+   Oppdrag 8 og 9: tre landskap
+   ========================================================= */
+let tab89='fjord', sel89=null;
+const LANDNAME={fjord:'Fjorden',alp:'Fjellet',vf:'Vestfold'}, LANDTO={fjord:'fjorden',alp:'fjellet',vf:'Vestfold'};
+function slope(u,v){const e=0.012;return Math.hypot(heightAt(u+e,v)-heightAt(u-e,v),heightAt(u,v+e)-heightAt(u,v-e))/(2*e);}
+const ITEMS={
+ fjord:[{k:'gard',t:'Gård',f:(u,v,h,sl)=>{
+    if(h<SEA+0.002) return [false,'Det er vann her','En gård trenger flat, tørr jord å dyrke på.'];
+    if(sl>0.9) return [false,'For bratt','Her er fjellsida for bratt til å dyrke og bygge. Finn et flatere sted nede ved fjorden.'];
+    if(h>SEA+0.25) return [false,'For høyt og kaldt','Her oppe er sommeren kort og kald, og jorda er tynn. Før i tida hadde mange gårder setrer her oppe om sommeren, der dyra kunne beite. Men selve gården lå nede ved fjorden.'];
+    return [true,'En god gårdsplass','Gårdene ved fjordene ligger på de flate stedene nede ved sjøen. Ofte er det et delta eller en terrasse der elva har lagt fra seg sand og grus. Her er det lunt, og det er kort vei til fjorden.'];}},
+  {k:'havn',t:'Havn',f:(u,v,h,sl)=>{
+    if(h>SEA+0.01) return [false,'Det er på land','En havn må ligge ved vannet.'];
+    if(u<0.13) return [false,'For værutsatt','Her ute er det åpent hav med store bølger. Innenfor terskelen ligger fjorden i le. Prøv lenger inn.'];
+    const land=[[0.04,0],[-0.04,0],[0,0.05],[0,-0.05],[0,0.08],[0,-0.08]].some(([a,b])=>heightAt(u+a,v+b)>SEA);
+    if(!land) return [false,'Langt fra land','Det er dypt nok, men langt fra land. Legg havna inntil land, så båtene kan legge til.'];
+    return [true,'En god havn','Fjorden er dyp helt inn til land, så store båter kan legge til. Den ligger i le for vind og bølger fra havet. Langs fjordene var båten lenge den viktigste måten å reise og frakte varer på.'];}}],
+ alp:[{k:'kraft',t:'Kraftverk',f:(u,v,h,sl)=>{
+    const f=fallPos(); const d=Math.hypot(u-f.u,v-f.v);
+    if(d<0.09) return [true,'Stor fallhøyde','Vannet fra den hengende dalen faller langt ned i hoveddalen. Jo større fallhøyde, jo mer strøm kan vannet gi. Ofte demmer man opp vann høyt oppe og leder det gjennom tunneler ned til et kraftverk nede i dalen.'];
+    if(Math.abs(v-vcM(u))<wM()*0.5) return [false,'Lite fall her','Elva i hoveddalen renner slakt. Et kraftverk trenger vann som faller langt. Hvor i landskapet faller vannet brattest?'];
+    return [false,'Ikke helt','Et kraftverk trenger mye vann som faller langt. Hvor i landskapet faller vannet brattest?'];}},
+  {k:'hus',t:'Hus',f:(u,v,h,sl)=>{
+    if(sl>0.7) return [false,'Fare for ras og skred','I bratte fjellsider kan det gå steinsprang, snøskred og jordskred. Finn et flatt sted nede i dalen.'];
+    if(Math.abs(v-vcM(u))<wM()*0.55&&h<fM0(u)-0.17+0.12) return [true,'Trygt i dalbunnen','Den flate dalbunnen er det beste stedet å bo. Her er det jord å dyrke, vei gjennom dalen og elva i nærheten. Husene ligger litt unna de bratteste dalsidene, der det kan gå ras.'];
+    return [false,'For høyt og værhardt','Her oppe er det kaldt og langt til alt. Finn et flatt sted nede i hoveddalen.'];}}],
+ vf:[{k:'aker',t:'Åker',f:(u,v,h,sl)=>{
+    if(h<SEA+0.002) return [false,'Det er hav her','En åker må ligge på tørt land.'];
+    if(h>SEA+ML+0.006) return [false,'Over den marine grensa','Her har det aldri vært havbunn. Jorda er tynn og full av stein fra morenen, og mange steder er det bart fjell. Finn et sted under den oransje streken.'];
+    return [true,'God jord','Dette er gammel havbunn. Leira og sanden er næringsrik og lett å dyrke. Mange soltimer og et mildt klima gjør at Vestfold dyrker mye grønnsaker.'];}},
+  {k:'skog',t:'Skog',f:(u,v,h,sl)=>{
+    if(h<SEA+0.002) return [false,'Det er hav her','Skog må stå på land.'];
+    if(h<SEA+ML-0.006) return [false,'For god jord til skog','Her ligger den gode jorda fra den gamle havbunnen. Det kunne vokst skog her, men jorda er for verdifull. Her dyrker folk korn og grønnsaker.'];
+    return [true,'Skog på skrinn jord','Over den marine grensa er jorda tynn og steinete. Den passer dårlig til åker, men skogen klarer seg fint. Derfor er det skog i åsene og åkre nede på den gamle havbunnen.'];}}],
+};
+const TERMS={
+ fjord:[{t:'Fjord',d:'En fjord er en dal som isen har gravd ut under havnivå, og som havet har fylt.',hit:(u,v,h)=>h<SEA&&u>0.15&&Math.abs(v-pathAt(u))<0.17},
+  {t:'Terskel',d:'En terskel er en grunn rygg ytterst i fjorden, der isen gravde mindre.',hit:(u,v,h)=>h<SEA+0.02&&u<0.2&&u>0.02&&Math.abs(v-pathAt(u))<0.2},
+  {t:'U-dal',d:'En U-dal er en dal som isen har gravd ut, med bred bunn og bratte sider. Den ligger over havnivå.',hit:(u,v,h)=>h>SEA+0.005&&Math.abs(v-pathAt(u))<0.2&&u>0.55},
+  {t:'Fjellplatå',d:'Et fjellplatå er et høyt og ganske flatt fjellområde.',hit:(u,v,h)=>h>0.62&&Math.abs(v-pathAt(u))>0.28}],
+ alp:[{t:'Botn',d:'En botn er en skålformet fordypning i en fjellside, gravd ut av en liten bre.',hit:(u,v,h)=>st.cq.some(c=>Math.hypot(u-c.u,v-c.v)<CQR*0.55)},
+  {t:'Tind',d:'En tind er en spiss fjelltopp som står igjen når flere botner har gravd seg inn i fjellet.',hit:(u,v,h)=>Math.hypot(u-AC.u,v-AC.v)<0.07},
+  {t:'Egg',d:'En egg er en smal, skarp fjellrygg mellom to botner.',hit:(u,v,h)=>eggPts().some(e=>Math.hypot(u-e.u,v-e.v)<0.06)},
+  {t:'Hengende dal',d:'En hengende dal er en sidedal som ender høyt oppe i dalsida til en dypere hoveddal.',hit:(u,v,h)=>{const f=fallPos();return v<f.v-0.03&&v>f.v-0.4&&Math.abs(u-usA(v))<0.1;}},
+  {t:'Foss',d:'En foss er et sted der elva faller bratt ned.',hit:(u,v,h)=>{const f=fallPos();return Math.hypot(u-f.u,v-f.v)<0.06;}}],
+ vf:[{t:'Raet',d:'Raet er en lang rygg av stein, grus og sand som isen la igjen der iskanten sto stille lenge.',hit:(u,v,h)=>Math.abs(u-raetU(v))<0.045&&h>SEA},
+  {t:'Marin grense',d:'Den marine grensa er det høyeste nivået havet nådde etter istida.',hit:(u,v,h)=>Math.abs(h-(SEA+ML))<0.03},
+  {t:'Gammel havbunn',d:'Gammel havbunn er land som lå under havet etter istida, men som har hevet seg.',hit:(u,v,h)=>h>SEA+0.004&&h<SEA+ML-0.03&&Math.abs(u-raetU(v))>0.045}],
+};
+function buildCtrl89(){
+  const tabs=$('tabs89'); tabs.innerHTML='';
+  for(const l of ['fjord','alp','vf']){
+    const list=cur===7?ITEMS[l].map(x=>st.placed[x.k]):TERMS[l].map(x=>st.terms[l+':'+x.t]);
+    const n=list.filter(Boolean).length;
+    const b=document.createElement('button'); b.className='tab'+(l===tab89?' on':''); b.textContent=`${LANDNAME[l]} ${n}/${list.length}`;
+    b.onclick=()=>switchLand(l); tabs.appendChild(b);
+  }
+  const ch=$('chips89'); ch.innerHTML='';
+  const arr=cur===7?ITEMS[tab89].map(x=>({id:x.k,t:x.t,done:!!st.placed[x.k]})):TERMS[tab89].map(x=>({id:x.t,t:x.t,done:!!st.terms[tab89+':'+x.t]}));
+  for(const x of arr){
+    const c=document.createElement('div'); c.className='chip'+(x.done?' done':'')+(sel89===x.id?' on':''); c.textContent=x.t; c.dataset.id=x.id;
+    if(!x.done) chipEvents(c,x.id);
+    ch.appendChild(c);
+  }
+}
+function switchLand(l){
+  if(l===tab89) return;
+  tab89=l; sel89=null; setMode(null); hideFeedback(); mlCache=null;
+  const keep={placed:st.placed,terms:st.terms};
+  st={...BASE,...FLAGS,...fresh(),...LANDP[l],...keep}; if(l==='alp') st.cq=ALP_CQ;
+  blockCamera(); refreshAll(); buildCtrl89();
+}
+let ghost=null;
+function chipEvents(c,id){
+  let down=null,dragging=false;
+  c.addEventListener('pointerdown',ev=>{down={x:ev.clientX,y:ev.clientY};dragging=false;c.setPointerCapture(ev.pointerId);ev.preventDefault();});
+  c.addEventListener('pointermove',ev=>{if(!down)return;
+    if(!dragging&&Math.hypot(ev.clientX-down.x,ev.clientY-down.y)>6&&cur===8){dragging=true;ghost=document.createElement('div');ghost.className='ghost';ghost.textContent=c.textContent;document.body.appendChild(ghost);hideFeedback();}
+    if(dragging){ghost.style.left=ev.clientX+'px';ghost.style.top=ev.clientY+'px';}});
+  c.addEventListener('pointerup',ev=>{if(!down)return;down=null;
+    if(dragging){dragging=false;ghost.remove();ghost=null;const p=pickS(ev);if(p)placeTerm(id,p);else showFeedback('info','Slipp i landskapet','Dra begrepet inn i landskapet og slipp det der det hører hjemme.');return;}
+    if(missionDone) return;
+    sel89=sel89===id?null:id; buildCtrl89();
+    if(!sel89) return setMode(null);
+    if(cur===7) setMode('place8','Klikk der du vil plassere: '+c.textContent.toLowerCase());
+    else setMode('term9','Klikk der dette hører hjemme: '+c.textContent);});
+}
+function place8(p){
+  const it=ITEMS[tab89].find(x=>x.k===sel89); if(!it) return;
+  const h=heightAt(p.u,p.v), [ok,title,text]=it.f(p.u,p.v,h,slope(p.u,p.v));
+  setMarker(p); setTimeout(()=>setMarker(null),1800);
+  if(!ok) return showFeedback('bad',title,text);
+  setMode(null); st.placed[it.k]=true; addPin(it.t,tab89,p.u,p.v); sel89=null; buildCtrl89();
+  updateChecks(true);
+  const left=ITEMS[tab89].filter(x=>!st.placed[x.k]).length, nxt=['fjord','alp','vf'].find(l=>ITEMS[l].some(x=>!st.placed[x.k]));
+  if(!left&&nxt&&!missionDone) showFeedback('good',title,text+' ',false,[{label:'Gå til '+LANDTO[nxt],fn:()=>switchLand(nxt)},{label:'Lukk',fn:hideFeedback}]);
+  else showFeedback('good',title,text);
+}
+function placeTerm(id,p){
+  const tm=TERMS[tab89].find(x=>x.t===id); if(!tm) return;
+  const h=heightAt(p.u,p.v);
+  setMarker(p); setTimeout(()=>setMarker(null),1800);
+  if(!tm.hit(p.u,p.v,h)){
+    const other=TERMS[tab89].find(x=>x!==tm&&x.hit(p.u,p.v,h));
+    return showFeedback('bad','Ikke helt',(other?`Det du pekte på, er nærmere ${other.t.toLowerCase()==='raet'?'Raet':'en '+other.t.toLowerCase()}. `:'')+tm.d+' Prøv igjen.');
+  }
+  setMode(null); st.terms[tab89+':'+id]=true; addPin(id,tab89,p.u,p.v); sel89=null; buildCtrl89();
+  hideFeedback(); updateChecks(true);
+  const left=TERMS[tab89].filter(x=>!st.terms[tab89+':'+x.t]).length;
+  if(!left&&!missionDone){const nxt=['fjord','alp','vf'].find(l=>TERMS[l].some(x=>!st.terms[l+':'+x.t]));
+    if(nxt) showFeedback('good',LANDNAME[tab89]+' er ferdig','Alle begrepene er på plass her. Gå videre til '+LANDTO[nxt]+'.',false,[{label:'Gå til '+LANDTO[nxt],fn:()=>switchLand(nxt)}]);}
+}
+
+/* =========================================================
+   Feltbok
+   ========================================================= */
+const esc=t=>t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function renderFeltbok(){
+  const b=$('fb-body'); const done=progress.done.filter(i=>MISSIONS[i]&&!MISSIONS[i].soon).sort((a,c)=>a-c);
+  $('fb-count').textContent=done.length;
+  if(!done.length){b.innerHTML='<div class="fb-empty">Feltboka fylles ut etter hvert som du fullfører oppdrag.</div>';return;}
+  b.innerHTML=done.map(i=>`<div class="entry"><div class="eyebrow">Oppdrag ${i+1}</div><h3>${MISSIONS[i].title}</h3><p>${MISSIONS[i].learn}</p><textarea data-i="${i}" placeholder="Med egne ord (frivillig)">${esc(progress.notes[i]||'')}</textarea>${progress.notes[i]?`<div class="pnote"><b>Med egne ord:</b> ${esc(progress.notes[i])}</div>`:''}</div>`).join('');
+  b.querySelectorAll('textarea').forEach(t=>t.addEventListener('input',e=>{progress.notes[e.target.dataset.i]=e.target.value;save();}));
+}
+$('btn-feltbok').onclick=()=>{renderFeltbok();$('feltbok').classList.add('open');};
+$('fb-close').onclick=()=>$('feltbok').classList.remove('open');
+$('fb-print').onclick=()=>{renderFeltbok();$('printnote').textContent='Skrevet ut '+new Date().toLocaleDateString('nb-NO');window.print();};
+
+/* =========================================================
+   Kamera, ytelse, sløyfe
+   ========================================================= */
+function frame(){camera.aspect=innerWidth/innerHeight;camera.setViewOffset(innerWidth,innerHeight,-innerWidth*(mapMode?0.02:0.09),innerHeight*(mapMode?0.06:0.03),innerWidth,innerHeight);camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);}
+frame(); addEventListener('resize',frame);
+buildTerrain(); buildSides();
+st={...BASE,...FLAGS,...P_FJORD}; cur=4;           // bakgrunn bak startskjermen: en ferdig fjord
+setScene(false); refreshAll(); buildMenu(); renderFeltbok();
+let frames=0,t0=performance.now(),degraded=false;
+(function loop(now){
+  controls.update(); renderer.render(scene,camera); placeLabels();
+  frames++;
+  if(!degraded&&frames===90){const fps=90000/(now-t0);if(fps<24){degraded=true;renderer.setPixelRatio(1);N=120;buildTerrain();buildSides();refreshAll();}}
+  requestAnimationFrame(loop);
+})(performance.now());
+
+/* testkrok */
+window.__game={get st(){return st;},screenOf:(u,v)=>{const p=toWorld(u,v,heightAt(u,v)).project(camera);return {x:(p.x+1)/2*innerWidth,y:(1-p.y)/2*innerHeight};},
+  mapScreen:(x,z)=>{const p=mapWorld(x,z,Math.max(0,mapH(x,z))).project(camera);return {x:(p.x+1)/2*innerWidth,y:(1-p.y)/2*innerHeight};},xbAt,get cur(){return cur;},startMission,refresh:refreshAll,heightAt,fallPos,AC,eggPts,TERMS,ITEMS,switchLand,setSt:o=>{Object.assign(st,o);blockCamera();refreshAll();},P_ALPF,get mode(){return mode;},pickXY:(x,y)=>pickS({clientX:x,clientY:y})};
+</script>
+
+</body>
+</html>

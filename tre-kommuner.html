@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tre kommuner – hvem skal ha ansvaret?</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; background: #f3efe6; color: #22303a; overflow: hidden; }
+  button { font-family: inherit; }
+  .app { display: grid; grid-template-rows: 48px 1fr 270px; height: 100vh; min-height: 640px; }
+
+  .topbar { display: flex; align-items: center; gap: 14px; padding: 0 24px; background: #22303a; color: #f3efe6; font-size: 15px; }
+  .topbar .title { font-weight: 700; letter-spacing: .6px; margin-right: 8px; }
+  .pill { background: rgba(255,255,255,.12); padding: 4px 12px; border-radius: 99px; white-space: nowrap; }
+  .topbar .right { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+  .dot { width: 13px; height: 13px; border-radius: 50%; background: #e7b84a; display: inline-block; }
+  .dot.used { background: rgba(255,255,255,.2); }
+
+  .scene { position: relative; overflow: hidden; background: #dfe8ea; display: flex; align-items: flex-end; justify-content: center; }
+  .stage { position: relative; width: 100%; max-width: calc((100vh - 318px) * 1366 / 450); aspect-ratio: 1366 / 450; }
+  .stage svg.bg { width: 100%; height: 100%; display: block; }
+  .fylkebanner { position: absolute; left: 24px; top: 14px; z-index: 5; font-size: 13px; background: rgba(255,253,247,.9); padding: 4px 10px; border-radius: 6px; }
+  .fylkebanner b { font-size: 15px; }
+
+  .tag { position: absolute; background: #fffdf7; border: 2px solid #22303a; border-radius: 8px; padding: .38em .77em; font-size: .8125em; line-height: 1.35; box-shadow: 3px 3px 0 #22303a; z-index: 3; white-space: nowrap; }
+  .tag b { font-size: 1.23em; display: block; }
+  .tag .ks { color: #5b6a73; }
+
+  .env { position: absolute; width: 2.5em; height: 1.75em; font-size: inherit; z-index: 4; cursor: pointer; border: none; padding: 0; background: none; transform: translate(-50%, -50%); }
+  .env svg { width: 100%; height: 100%; display: block; }
+  .env.has { animation: bob 1.5s ease-in-out infinite; }
+  .env.none { display: none; }
+  .env .n { position: absolute; top: -.75em; right: -.75em; background: #c0392b; color: #fff; font-size: .75em; font-weight: 700; min-width: 1.65em; height: 1.65em; border-radius: .83em; display: grid; place-items: center; }
+  @keyframes bob { 50% { transform: translate(-50%, calc(-50% - 6px)); } }
+
+  .mark { font-size: .72em; position: absolute; transform: translate(-50%, -100%); display: flex; flex-direction: column; align-items: center; z-index: 2; pointer-events: none; animation: pop .35s ease-out both; }
+  .mark .sign { background: #fffdf7; border: 2px solid #2f6b4f; border-radius: 5px; padding: .17em .5em; font-size: 1em; font-weight: 600; max-width: 8.6em; text-align: center; line-height: 1.2; color: #1f4a36; display: flex; align-items: center; gap: 4px; }
+  .mark .post { width: 2px; height: 1em; background: #4a3b2a; }
+  .mark.bad .sign { border-color: #c0392b; color: #8e2a1f; background: #fdf1ee; }
+  .mark .ppl { display: flex; gap: 2px; margin-top: 2px; }
+  .mark .ppl i { width: .5em; height: .75em; background: #8e2a1f; border-radius: 3px 3px 1px 1px; display: block; }
+  @keyframes pop { from { opacity: 0; transform: translate(-50%, -80%) scale(.6); } to { opacity: 1; transform: translate(-50%, -100%) scale(1); } }
+
+  .bottom { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) 430px; gap: 12px; padding: 54px 16px 14px; background: #e9e2d3; border-top: 3px solid #22303a; position: relative; }
+  .tray { border: 2px dashed #8a7f6a; border-radius: 10px; padding: 8px 10px; background: rgba(255,255,255,.35); display: flex; gap: 8px; cursor: default; min-width: 0; transition: background .15s, transform .15s; }
+  .tray.armed { cursor: pointer; background: rgba(255,255,255,.75); border-style: solid; }
+  .tray.armed:hover { transform: translateY(-3px); background: #fffdf7; }
+  .tray svg { width: 64px; flex: 0 0 64px; height: 70px; }
+  .tray .body { min-width: 0; flex: 1; }
+  .tray h3 { margin: 0; font-size: 15px; line-height: 1.2; }
+  .tray .who { font-size: 12px; color: #5b6a73; margin: 2px 0 8px; line-height: 1.3; }
+  .tray.stat { border-color: #2c4f7c; } .tray.stat h3 { color: #2c4f7c; }
+  .tray.fylke { border-color: #6b4c8a; } .tray.fylke h3 { color: #6b4c8a; }
+  .tray.kommune { border-color: #2f6b4f; } .tray.kommune h3 { color: #2f6b4f; }
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  .chip { font-size: 12.5px; background: #fffdf7; border: 1.5px solid #22303a; border-radius: 6px; padding: 3px 7px; cursor: pointer; line-height: 1.25; }
+  .chip:hover { background: #fff3cf; }
+  .chip.ok { background: #e3f1e8; border-color: #2f6b4f; color: #1f4a36; cursor: default; }
+  .chip.ok::before { content: "✓ "; font-weight: 700; }
+  .chip.wrong { background: #fbe1dc; border-color: #c0392b; color: #8e2a1f; animation: shake .4s; }
+  .chip.wrong::before { content: "! "; font-weight: 700; }
+  .chip.old { background: transparent; border-color: #a99f8b; color: #6c6455; cursor: default; }
+  .chip.missed { background: #fff0c2; border-color: #b8860b; color: #6b4e07; cursor: default; }
+  @keyframes shake { 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
+
+  .hand { position: absolute; top: -84px; left: calc((100% - 446px) / 2); transform: translateX(-50%); display: flex; z-index: 6; }
+  .card { width: 146px; height: 98px; background: #fffdf7; border: 2px solid #22303a; border-radius: 10px; padding: 9px 10px; font-size: 15px; font-weight: 700; box-shadow: 3px 3px 0 #22303a; margin-left: 6px; position: relative; text-align: left; cursor: pointer; color: #22303a; transition: transform .15s; line-height: 1.2; }
+  .card:first-child { margin-left: 0; }
+  .card small { display: block; font-weight: 400; font-size: 12px; color: #5b6a73; margin-top: 5px; line-height: 1.3; }
+  .card:hover { transform: translateY(-8px) !important; z-index: 2; }
+  .card.sel { transform: translateY(-22px) !important; border-color: #d9961f; box-shadow: 3px 3px 0 #d9961f, 0 0 0 4px rgba(231,169,46,.3); z-index: 3; }
+
+  .panel { background: #fffdf7; border: 2px solid #22303a; border-radius: 6px; padding: 10px 14px 8px; position: relative; box-shadow: 4px 4px 0 rgba(34,48,58,.22); margin-top: 0; display: flex; flex-direction: column; min-height: 0; }
+  .panel .to { font-size: 12px; color: #5b6a73; margin-bottom: 4px; display: flex; justify-content: space-between; gap: 8px; }
+  .panel .txt { font-family: Georgia, "Times New Roman", serif; font-size: 14.5px; line-height: 1.42; flex: 1; overflow: auto; }
+  .panel .txt p { margin: 0 0 5px; }
+  .panel .sig { font-style: italic; }
+  .panel .nav { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #5b6a73; padding-top: 4px; }
+  .panel .nav button { border: 1.5px solid #22303a; background: #fffdf7; border-radius: 6px; padding: 2px 10px; cursor: pointer; font-size: 13px; }
+  .panel .nav button:disabled { opacity: .3; cursor: default; }
+  .stamp { position: absolute; right: 12px; top: 4px; border: 3px solid #c0392b; color: #c0392b; font-family: "Courier New", monospace; font-weight: 700; padding: 1px 8px; transform: rotate(-10deg); font-size: 13px; opacity: .8; pointer-events: none; }
+  .panel.memo .txt { font-family: inherit; font-size: 14px; }
+
+  .sendrow { position: absolute; right: 16px; top: 7px; width: 430px; display: flex; gap: 10px; align-items: center; justify-content: flex-end; z-index: 5; }
+  .hint { font-size: 12.5px; color: #5b6a73; flex: 1; text-align: right; line-height: 1.25; }
+  .hint.warn { color: #a3361f; font-weight: 600; }
+  button.primary { background: #22303a; color: #f3efe6; border: none; border-radius: 8px; padding: 10px 18px; font-size: 15px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+  button.primary:hover { background: #34495a; }
+
+  .overlay { position: fixed; inset: 0; background: rgba(34,48,58,.55); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 20px; }
+  .overlay.hidden { display: none; }
+  .modal { background: #fffdf7; border: 3px solid #22303a; border-radius: 12px; box-shadow: 6px 6px 0 #22303a; max-width: 860px; width: 100%; max-height: calc(100vh - 40px); overflow: auto; padding: 24px 30px; }
+  .modal h1 { margin: 0 0 6px; font-size: 28px; }
+  .modal h2 { margin: 0 0 8px; font-size: 22px; }
+  .modal p { line-height: 1.5; margin: 0 0 10px; font-size: 16px; }
+  .modal .kicker { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #6b4c8a; font-weight: 700; margin-bottom: 4px; }
+  .modal .actions { text-align: right; margin-top: 16px; position: sticky; bottom: -24px; background: #fffdf7; padding: 10px 0 12px; border-top: 1px solid #e2dccd; }
+  .three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 12px 0; }
+  .box { border: 2px solid #22303a; border-radius: 8px; padding: 10px 12px; font-size: 14px; line-height: 1.4; }
+  .box b { font-size: 16px; display: block; }
+  .box.stat { border-color: #2c4f7c; } .box.stat b { color: #2c4f7c; }
+  .box.fylke { border-color: #6b4c8a; } .box.fylke b { color: #6b4c8a; }
+  .box.kommune { border-color: #2f6b4f; } .box.kommune b { color: #2f6b4f; }
+  .box ul { margin: 6px 0 0; padding-left: 18px; }
+  .principle { background: #f1ead9; border-left: 5px solid #d9961f; padding: 10px 14px; margin: 10px 0 14px; font-size: 16px; line-height: 1.45; }
+  .res { display: grid; grid-template-columns: 170px 1fr; gap: 6px 14px; align-items: start; margin-top: 8px; }
+  .res .lv { font-size: 13px; font-weight: 700; padding: 3px 8px; border-radius: 6px; color: #fff; display: inline-block; margin-top: 2px; }
+  .lv.stat { background: #2c4f7c; } .lv.fylke { background: #6b4c8a; } .lv.kommune { background: #2f6b4f; }
+  .res .t b { display: block; font-size: 15px; }
+  .res .t span { font-size: 14px; line-height: 1.45; color: #34444f; }
+  .res .t em { font-style: normal; font-size: 12px; font-weight: 700; color: #b8860b; margin-left: 6px; }
+  .res .t em.first { color: #2f6b4f; }
+  .score { font-size: 44px; font-weight: 800; margin: 4px 0; }
+  .note { font-size: 14px; line-height: 1.5; color: #34444f; }
+  .note li { margin-bottom: 4px; }
+  .prtag { display: inline-block; font-family: "Segoe UI", system-ui, sans-serif; font-size: 11.5px; font-weight: 700; padding: 1px 7px; border-radius: 99px; color: #fff; white-space: nowrap; font-style: normal; }
+  .pr-stor { background: #8a4b2a; } .pr-hele { background: #2c4f7c; } .pr-naer { background: #2f6b4f; } .pr-tvers { background: #6b4c8a; } .pr-kontroll { background: #5b6a73; }
+  .probl { font-family: "Segoe UI", system-ui, sans-serif; font-size: 12px; color: #34444f; border-top: 1px dashed #a99f8b; padding-top: 4px; margin-top: 2px; }
+  .probl span:not(.prtag) { color: #5b6a73; }
+  .res .tags { margin: 2px 0 3px; font-size: 12px; color: #5b6a73; }
+  .res .t .prtag, .opt .prtag { color: #fff; font-size: 11.5px; line-height: 1.5; }
+  .fem { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin: 6px 0; }
+  .fem div { border: 1.5px solid #c9c0ac; border-radius: 8px; padding: 6px 8px; font-size: 13px; line-height: 1.35; }
+  .fem span:not(.prtag) { display: block; margin-top: 4px; color: #34444f; }
+  /* ---------- Valgkampen ---------- */
+  .vk { position: fixed; inset: 0; z-index: 60; background: #f3efe6; display: grid; grid-template-rows: 48px 1fr; }
+  .vk.hidden { display: none; }
+  .vk .topbar { background: #4a2f5e; }
+  .vk-main { display: grid; grid-template-columns: minmax(0, 1fr) 470px; min-height: 0; }
+  .vk-scene { position: relative; overflow: hidden; background: #3b3346; display: flex; align-items: center; justify-content: center; }
+  .vk-stage { position: relative; width: 100%; max-width: calc((100vh - 48px) * 900 / 640); aspect-ratio: 900 / 640; }
+  .vk-stage svg { width: 100%; height: 100%; display: block; }
+  .bubble { position: absolute; left: 6%; right: 6%; top: 5%; background: #fffdf7; border: 3px solid #22303a; border-radius: 14px; padding: 14px 18px; box-shadow: 5px 5px 0 rgba(0,0,0,.35); font-size: clamp(15px, 1.35vw, 19px); line-height: 1.45; }
+  .bubble .who { font-size: .78em; color: #6b4c8a; font-weight: 700; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .5px; }
+  .bubble::after { content: ""; position: absolute; bottom: -18px; left: var(--tail, 30%); border: 9px solid transparent; border-top: 12px solid #22303a; }
+  .react { position: absolute; left: 50%; bottom: 6%; transform: translateX(-50%); background: #fffdf7; border: 2px solid #22303a; border-radius: 99px; padding: 6px 16px; font-weight: 700; font-size: 15px; white-space: nowrap; animation: pop2 .4s ease-out both; }
+  .react.good { background: #e3f1e8; color: #1f4a36; } .react.bad { background: #fbe1dc; color: #8e2a1f; }
+  @keyframes pop2 { from { opacity: 0; transform: translateX(-50%) scale(.6); } to { opacity: 1; transform: translateX(-50%) scale(1); } }
+  .vk-panel { background: #fffdf7; border-left: 3px solid #22303a; padding: 16px 20px; overflow: auto; display: flex; flex-direction: column; gap: 10px; }
+  .vk-panel p { margin: 0; }
+  .vk-panel h3 { margin: 0; font-size: 15px; color: #4a2f5e; }
+  .vk-panel .step { font-size: 12px; color: #5b6a73; margin-top: -6px; }
+  .opts { display: grid; gap: 6px; }
+  .opts.three { grid-template-columns: repeat(3, 1fr); }
+  .opt { border: 2px solid #22303a; background: #fffdf7; border-radius: 8px; padding: 7px 10px; font-size: 14px; text-align: left; cursor: pointer; line-height: 1.25; color: #22303a; }
+  .opt:hover { background: #fff3cf; }
+  .opt b { display: block; font-size: 14px; }
+  .opt span { font-size: 12.5px; color: #5b6a73; }
+  .opt.on { background: #4a2f5e; color: #fff; border-color: #4a2f5e; }
+  .opt.on span { color: #e6dcef; }
+  .opt.lv-stat.on { background: #2c4f7c; border-color: #2c4f7c; }
+  .opt.lv-fylke.on { background: #6b4c8a; border-color: #6b4c8a; }
+  .opt.lv-kommune.on { background: #2f6b4f; border-color: #2f6b4f; }
+  .opts.three .opt { text-align: center; font-weight: 700; }
+  .vk-err { color: #a3361f; font-size: 13px; min-height: 18px; font-weight: 600; }
+  .verdict { font-size: 22px; font-weight: 800; margin: 0; }
+  .verdict.good { color: #2f6b4f; } .verdict.mid { color: #9a6b00; } .verdict.bad { color: #a3361f; }
+  .delta { font-size: 15px; font-weight: 700; }
+  .journo { background: #22303a; color: #f3efe6; border-radius: 8px; padding: 10px 12px; font-size: 14px; line-height: 1.45; }
+  .journo b { color: #e7b84a; }
+  .expl { font-size: 15px; line-height: 1.5; }
+  .facts { font-size: 13px; color: #34444f; line-height: 1.45; border-top: 1px dashed #a99f8b; padding-top: 8px; }
+  .vk-end { grid-column: 1 / -1; overflow: auto; padding: 24px; display: flex; justify-content: center; align-items: flex-start; }
+  .vk-end .modal { box-shadow: 6px 6px 0 #22303a; max-height: none; }
+  .vk-list { display: grid; grid-template-columns: 26px 1fr auto; gap: 4px 10px; font-size: 14px; margin: 10px 0; align-items: baseline; }
+  .vk-list .r { font-weight: 800; }
+  .vk-list .r.good { color: #2f6b4f; } .vk-list .r.bad { color: #a3361f; } .vk-list .r.mid { color: #9a6b00; }
+  button.secondary { background: #fffdf7; color: #22303a; border: 2px solid #22303a; border-radius: 8px; padding: 9px 16px; font-size: 15px; font-weight: 700; cursor: pointer; margin-right: 8px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <span class="title">TRE KOMMUNER</span>
+    <span class="pill" id="roundPill">Runde 1 av 3</span>
+    <span class="pill" id="yearPill">År 2027</span>
+    <span class="pill" id="donePill">Vedtatt: 0 av 15</span>
+    <span class="right">Høringsrunder igjen <span id="dots"></span></span>
+  </div>
+
+  <div class="scene">
+    <div class="stage" id="stage">
+      <svg class="bg" viewBox="0 0 1366 450" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+        <rect width="1366" height="450" fill="#dfe8ea"/>
+        <polygon points="0,230 90,150 170,200 260,110 360,190 450,140 560,90 640,170 720,120 820,180 900,100 1000,170 1100,130 1200,190 1300,140 1366,170 1366,260 0,260" fill="#9aa9ad"/>
+        <polygon points="240,128 260,110 282,130 270,128 260,138" fill="#fff"/>
+        <polygon points="540,104 560,90 578,106 566,104 558,112" fill="#fff"/>
+        <polygon points="880,116 900,100 920,118 908,116 900,124" fill="#fff"/>
+        <polygon points="1282,156 1300,140 1318,158 1306,156 1298,163" fill="#fff"/>
+        <polygon points="0,260 100,210 200,240 330,200 440,250 560,190 640,250 700,250 760,200 900,240 1000,210 1366,230 1366,300 0,300" fill="#7f9183"/>
+        <rect y="285" width="1366" height="165" fill="#5c8d9b"/>
+        <path d="M0 300 Q 200 292 420 305 T 860 300 T 1366 298" stroke="#7aa8b4" stroke-width="3" fill="none"/>
+        <path d="M0 400 Q 250 392 520 405 T 1100 398 T 1366 402" stroke="#7aa8b4" stroke-width="2" fill="none"/>
+        <!-- Elvdal -->
+        <polygon points="470,300 540,250 600,235 680,235 740,255 820,300" fill="#a9bb92"/>
+        <path d="M640 236 C 630 260, 660 275, 645 300" stroke="#5c8d9b" stroke-width="7" fill="none"/>
+        <rect x="560" y="268" width="22" height="16" fill="#b5473a"/><polygon points="558,268 571,258 584,268" fill="#6d2a22"/>
+        <rect x="590" y="276" width="20" height="14" fill="#f2ead8"/><polygon points="588,276 600,267 612,276" fill="#6d6d6d"/>
+        <rect x="612" y="252" width="10" height="20" fill="#f2ead8"/><polygon points="610,252 617,238 624,252" fill="#6d6d6d"/>
+        <rect x="680" y="264" width="22" height="16" fill="#d9a441"/><polygon points="678,264 691,255 704,264" fill="#7a5a1d"/>
+        <rect x="712" y="276" width="18" height="14" fill="#b5473a"/><polygon points="710,276 721,268 732,276" fill="#6d2a22"/>
+        <rect x="740" y="282" width="18" height="12" fill="#f2ead8"/><polygon points="738,282 749,275 760,282" fill="#6d6d6d"/>
+        <!-- Storvik -->
+        <polygon points="930,300 980,250 1366,240 1366,300" fill="#b9c3a4"/>
+        <g stroke="#22303a" stroke-width="1.2">
+          <rect x="990" y="236" width="40" height="60" fill="#e9e3d6"/>
+          <rect x="1036" y="214" width="34" height="82" fill="#d9d3c4"/>
+          <rect x="1076" y="248" width="46" height="48" fill="#b5473a"/>
+          <rect x="1128" y="198" width="38" height="98" fill="#e9e3d6"/>
+          <rect x="1172" y="232" width="62" height="64" fill="#f6f2e8"/>
+          <rect x="1240" y="220" width="40" height="76" fill="#d9a441"/>
+          <rect x="1286" y="244" width="50" height="52" fill="#e9e3d6"/>
+        </g>
+        <g fill="#5c7480">
+          <rect x="996" y="244" width="6" height="8"/><rect x="1010" y="244" width="6" height="8"/><rect x="1018" y="262" width="6" height="8"/><rect x="996" y="262" width="6" height="8"/><rect x="1010" y="280" width="6" height="8"/>
+          <rect x="1042" y="224" width="6" height="8"/><rect x="1056" y="224" width="6" height="8"/><rect x="1042" y="244" width="6" height="8"/><rect x="1056" y="264" width="6" height="8"/>
+          <rect x="1086" y="258" width="6" height="8"/><rect x="1104" y="258" width="6" height="8"/><rect x="1086" y="276" width="6" height="8"/>
+          <rect x="1134" y="208" width="6" height="8"/><rect x="1150" y="208" width="6" height="8"/><rect x="1134" y="228" width="6" height="8"/><rect x="1150" y="248" width="6" height="8"/><rect x="1134" y="268" width="6" height="8"/>
+          <rect x="1182" y="244" width="6" height="8"/><rect x="1200" y="244" width="6" height="8"/><rect x="1218" y="262" width="6" height="8"/>
+          <rect x="1246" y="230" width="6" height="8"/><rect x="1262" y="250" width="6" height="8"/><rect x="1294" y="254" width="6" height="8"/><rect x="1314" y="254" width="6" height="8"/>
+        </g>
+        <rect x="950" y="296" width="60" height="6" fill="#6d5a45"/>
+        <!-- Utskjær -->
+        <ellipse cx="230" cy="335" rx="160" ry="32" fill="#8f9e86"/>
+        <ellipse cx="220" cy="328" rx="120" ry="21" fill="#a9bb92"/>
+        <rect x="150" y="314" width="16" height="12" fill="#b5473a"/><polygon points="148,314 158,306 168,314" fill="#6d2a22"/>
+        <rect x="176" y="318" width="14" height="10" fill="#f2ead8"/><polygon points="174,318 183,311 192,318" fill="#6d6d6d"/>
+        <rect x="200" y="312" width="30" height="16" fill="#9c4a3a"/><polygon points="197,312 215,300 233,312" fill="#4a2a22"/>
+        <rect x="246" y="314" width="16" height="12" fill="#d9a441"/><polygon points="244,314 254,306 264,314" fill="#7a5a1d"/>
+        <rect x="270" y="320" width="14" height="10" fill="#b5473a"/><polygon points="268,320 277,313 286,320" fill="#6d2a22"/>
+        <rect x="330" y="333" width="44" height="5" fill="#6d5a45"/>
+        <!-- fylkesferje -->
+        <path d="M374 336 C 560 360, 820 340, 975 302" stroke="#6b4c8a" stroke-width="2.5" stroke-dasharray="8 6" fill="none"/>
+        <g transform="translate(560,348)">
+          <rect x="-26" y="-8" width="52" height="12" rx="3" fill="#fffdf7" stroke="#22303a" stroke-width="1.5"/>
+          <rect x="-12" y="-16" width="22" height="8" fill="#6b4c8a"/>
+        </g>
+        <text x="620" y="352" font-size="12" font-family="Segoe UI, sans-serif" fill="#fffdf7">fylkesferja</text>
+      </svg>
+
+      <div class="fylkebanner"><b>Nordland fylke</b> · én fylkeskommune for alle tre kommunene</div>
+      <div class="tag" style="left:5.9%; top:28%;"><b>Utskjær</b>230 innbyggere<br><span class="ks">Kommunestyre: 11</span></div>
+      <div class="tag" style="left:39.9%; top:20%;"><b>Elvdal</b>6 400 innbyggere<br><span class="ks">Kommunestyre: 19</span></div>
+      <div class="tag" style="left:78.7%; top:15%;"><b>Storvik</b>52 000 innbyggere<br><span class="ks">Kommunestyre: 39</span></div>
+
+      <button class="env none" id="env-utskjaer" style="left:18.3%; top:37%;" aria-label="Brev fra Utskjær"></button>
+      <button class="env none" id="env-elvdal" style="left:52%; top:30%;" aria-label="Brev fra Elvdal"></button>
+      <button class="env none" id="env-storvik" style="left:91%; top:25%;" aria-label="Brev fra Storvik"></button>
+      <div id="marks"></div>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <div class="hand" id="hand"></div>
+    <div class="sendrow"><span class="hint" id="hint"></span><button class="primary" id="send">Send på høring</button></div>
+
+    <div class="tray stat" data-level="stat">
+      <svg viewBox="0 0 64 70" aria-hidden="true">
+        <rect x="4" y="34" width="56" height="30" fill="#e6cfa3" stroke="#22303a" stroke-width="1.5"/>
+        <path d="M18 34 A14 14 0 0 1 46 34 Z" fill="#d8b77e" stroke="#22303a" stroke-width="1.5"/>
+        <rect x="26" y="44" width="12" height="20" fill="#7a5a3a"/>
+        <rect x="9" y="42" width="6" height="8" fill="#5c7480"/><rect x="49" y="42" width="6" height="8" fill="#5c7480"/>
+        <line x1="32" y1="20" x2="32" y2="4" stroke="#22303a" stroke-width="1.5"/>
+        <rect x="32" y="4" width="13" height="8" fill="#ba0c2f"/><rect x="35" y="4" width="2.5" height="8" fill="#fff"/><rect x="32" y="7" width="13" height="2.5" fill="#fff"/><rect x="35.6" y="4" width="1.3" height="8" fill="#00205b"/><rect x="32" y="7.6" width="13" height="1.3" fill="#00205b"/>
+      </svg>
+      <div class="body"><h3>Staten</h3><div class="who">Stortinget vedtar lover og budsjett. Regjeringen gjennomfører.</div><div class="chips" id="chips-stat"></div></div>
+    </div>
+    <div class="tray fylke" data-level="fylke">
+      <svg viewBox="0 0 64 70" aria-hidden="true">
+        <rect x="6" y="22" width="52" height="42" fill="#d7d3e3" stroke="#22303a" stroke-width="1.5"/>
+        <g fill="#5c7480"><rect x="11" y="28" width="8" height="7"/><rect x="23" y="28" width="8" height="7"/><rect x="35" y="28" width="8" height="7"/><rect x="47" y="28" width="6" height="7"/><rect x="11" y="40" width="8" height="7"/><rect x="23" y="40" width="8" height="7"/><rect x="35" y="40" width="8" height="7"/><rect x="47" y="40" width="6" height="7"/></g>
+        <rect x="26" y="52" width="12" height="12" fill="#6b4c8a"/>
+        <line x1="54" y1="22" x2="54" y2="6" stroke="#22303a" stroke-width="1.5"/><rect x="54" y="6" width="9" height="7" fill="#6b4c8a"/>
+      </svg>
+      <div class="body"><h3>Nordland fylkeskommune</h3><div class="who">Fylkestinget i Bodø vedtar.</div><div class="chips" id="chips-fylke"></div></div>
+    </div>
+    <div class="tray kommune" data-level="kommune">
+      <svg viewBox="0 0 64 70" aria-hidden="true">
+        <rect x="8" y="34" width="48" height="30" fill="#f2ead8" stroke="#22303a" stroke-width="1.5"/>
+        <polygon points="4,34 32,20 60,34" fill="#b5473a" stroke="#22303a" stroke-width="1.5"/>
+        <rect x="26" y="8" width="12" height="14" fill="#f2ead8" stroke="#22303a" stroke-width="1.5"/>
+        <circle cx="32" cy="14" r="3.5" fill="#fffdf7" stroke="#22303a"/>
+        <rect x="27" y="46" width="10" height="18" fill="#7a5a3a"/>
+        <rect x="12" y="42" width="8" height="8" fill="#5c7480"/><rect x="44" y="42" width="8" height="8" fill="#5c7480"/>
+      </svg>
+      <div class="body"><h3>Kommunen</h3><div class="who">Kommunestyret i hver kommune vedtar.</div><div class="chips" id="chips-kommune"></div></div>
+    </div>
+
+    <div class="panel" id="panel"></div>
+  </div>
+</div>
+
+
+<div class="vk hidden" id="vk">
+  <div class="topbar">
+    <span class="title">VALGKAMPEN</span>
+    <span class="pill" id="vkQ">Velger 1 av 10</span>
+    <span class="pill" id="vkScore">0 stemmer</span>
+    <span class="right" style="font-size:13px">Du trenger 30 000 stemmer for å komme inn på Stortinget</span>
+  </div>
+  <div class="vk-main" id="vkMain">
+    <div class="vk-scene"><div class="vk-stage" id="vkStage">
+      <svg viewBox="0 0 900 640" aria-hidden="true">
+        <rect width="900" height="640" fill="#3b3346"/>
+        <rect x="0" y="0" width="900" height="380" fill="#5a4a66"/>
+        <g fill="#6a587a"><rect x="40" y="30" width="16" height="350"/><rect x="844" y="30" width="16" height="350"/></g>
+        <rect x="250" y="210" width="400" height="44" fill="#e7b84a" stroke="#22303a" stroke-width="3"/>
+        <text x="450" y="239" font-family="Segoe UI, sans-serif" font-size="20" font-weight="700" text-anchor="middle" fill="#22303a">FOLKEMØTE · STORVIK KULTURHUS</text>
+        <rect x="0" y="360" width="900" height="34" fill="#7b5a3e"/>
+        <!-- podium og kandidat -->
+        <circle cx="450" cy="300" r="22" fill="#e0b48c" stroke="#22303a" stroke-width="2"/>
+        <path d="M418 360 Q 418 324 450 324 Q 482 324 482 360 Z" fill="#4a2f5e" stroke="#22303a" stroke-width="2"/>
+        <rect x="416" y="330" width="68" height="48" fill="#8a6a4a" stroke="#22303a" stroke-width="2"/>
+        <text x="450" y="360" font-family="Segoe UI, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#fffdf7">DEG</text>
+        <!-- journalist -->
+        <g transform="translate(770,300)">
+          <circle cx="0" cy="0" r="20" fill="#c99a74" stroke="#22303a" stroke-width="2"/>
+          <path d="M-28 60 Q -28 24 0 24 Q 28 24 28 60 Z" fill="#2c4f7c" stroke="#22303a" stroke-width="2"/>
+          <rect x="16" y="28" width="22" height="28" fill="#fffdf7" stroke="#22303a" stroke-width="1.5" transform="rotate(10 27 42)"/>
+          <text x="0" y="82" font-family="Segoe UI, sans-serif" font-size="12" text-anchor="middle" fill="#e6dcef">Storvik Avis</text>
+        </g>
+        <!-- publikum -->
+        <g id="crowd"></g>
+      </svg>
+      <div class="bubble" id="bubble"></div>
+      <div id="react"></div>
+    </div></div>
+    <div class="vk-panel" id="vkPanel"></div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
+
+<script>
+const K = {
+  utskjaer: { name: "Utskjær", slots: [[110,318],[225,312],[340,330],[165,262],[285,262]] },
+  elvdal:   { name: "Elvdal",  slots: [[520,288],[640,282],[760,292],[580,230],[700,230]] },
+  storvik:  { name: "Storvik", slots: [[1000,236],[1110,236],[1220,236],[1310,238],[1290,180]] }
+};
+const LV = {
+  stat:    { name: "Staten", short: "Staten", body: "Stortinget" },
+  fylke:   { name: "Nordland fylkeskommune", short: "Fylkeskommunen", body: "Fylkestinget" },
+  kommune: { name: "Kommunen", short: "Kommunen", body: "Kommunestyret" }
+};
+const PR = {
+  stor:     { t: "Størrelse", d: "Krever mange fagfolk eller mye penger" },
+  hele:     { t: "Hele landet", d: "Skal være likt for alle, uansett hvor de bor" },
+  naer:     { t: "Nærhet", d: "Må være nær folk og kjenne stedet" },
+  tvers:    { t: "På tvers", d: "Går over kommunegrensene i fylket" },
+  kontroll: { t: "Kontroll", d: "Noen utenfor kommunen må se på saken" }
+};
+// hvilken grunn hvert klagebrev handler om, og hvilke grunner som forklarer riktig nivå
+const LETTERP = {
+  sykehus: { kommune: "stor", fylke: "hele" }, grunnskole: { fylke: "naer", stat: "naer" },
+  vgs: { kommune: "tvers", stat: "naer" }, universitet: { kommune: "stor", fylke: "hele" },
+  sykehjem: { fylke: "naer", stat: "naer" }, politi: { kommune: "hele", fylke: "hele" },
+  trygd: { kommune: "hele", fylke: "hele" }, barnehage: { fylke: "naer", stat: "naer" },
+  byggesak: { fylke: "naer", stat: "naer" }, tannhelse: { kommune: "stor", stat: "naer" },
+  fylkesvei: { kommune: "tvers", stat: "naer" }, kollektiv: { kommune: "tvers", stat: "naer" },
+  vann: { fylke: "naer", stat: "naer" }, evei: { kommune: "hele", fylke: "hele" },
+  klage: { kommune: "kontroll", fylke: "kontroll" }
+};
+const WHY = {
+  sykehus: ["stor", "hele"], grunnskole: ["naer"], vgs: ["stor", "tvers"], universitet: ["stor", "hele"], sykehjem: ["naer"],
+  politi: ["hele"], trygd: ["hele"], barnehage: ["naer"], byggesak: ["naer"], tannhelse: ["stor", "naer"],
+  fylkesvei: ["tvers"], kollektiv: ["tvers"], vann: ["naer"], evei: ["hele"], klage: ["kontroll"]
+};
+const prTag = k => `<span class="prtag pr-${k}">${PR[k].t}</span>`;
+
+function addressee(level, from) {
+  if (level === "stat") return "Til Stortinget";
+  if (level === "fylke") return "Til fylkestinget i Nordland";
+  return "Til kommunestyret i " + K[from].name;
+}
+
+const ROUNDS = [
+  { title: "Runde 1", intro: "Fem oppgaver. Bestem hvem som skal ha ansvaret for hver av dem. Husk at reformen skal fungere i alle tre kommunene, også på Utskjær.",
+    principleTitle: "Størrelse og nærhet",
+    principle: "Se på merkene på klagebrevene. To grunner gikk igjen. <b>Størrelse:</b> noen oppgaver krever så mange fagfolk eller så mye penger at en liten kommune aldri klarer dem. <b>Nærhet:</b> det som handler om folks hverdag, bør bestemmes av noen som kjenner stedet. Videregående skole viste en tredje grunn: <b>på tvers</b>, fordi elevene reiser over kommunegrensene." },
+  { title: "Runde 2", intro: "Fem nye oppgaver. Noen av dem handler om rettigheter. Spør deg selv: Skal dette være likt for alle i hele landet, eller er det best at noen som kjenner stedet bestemmer?",
+    principleTitle: "Hele landet og nærhet",
+    principle: "En ny grunn: <b>hele landet</b>. Det som skal være likt for alle, uansett hvor de bor, som lover, politi og pensjon, har staten. Det som krever kunnskap om stedet, som barnehager og byggesaker, har kommunen fordi det handler om <b>nærhet</b>." },
+  { title: "Runde 3", intro: "De siste fem. Se på ferja og veiene. Noe av dette går på tvers av kommunegrensene, og noe går på tvers av hele landet.",
+    principleTitle: "På tvers og kontroll",
+    principle: "Veier, busser og ferjer mellom kommunene går <b>på tvers</b>. De trenger noen som står over kommunene, men under staten: fylkeskommunen. Det som binder sammen <b>hele landet</b>, som E6, har staten. Og den siste grunnen: <b>kontroll</b>. Når du er uenig med kommunen, må noen utenfor kommunen se på saken. Det er statsforvalteren, som er staten i fylket." }
+];
+
+const TASKS = [
+  // ---------- RUNDE 1 ----------
+  { id: "sykehus", r: 0, name: "Sykehus", hint: "Operasjoner, spesialister, akuttmottak", level: "stat",
+    reason: "Sykehus krever spesialister og dyrt utstyr, og alle skal ha samme rett til behandling uansett hvor de bor. Staten eier sykehusene gjennom helseforetak. Fram til 2002 var det fylkeskommunene som hadde dem.",
+    ok: [["storvik", "Sykehus"], ["utskjaer", "Ambulansebåt"]],
+    wrong: {
+      kommune: { from: "utskjaer", sender: "Ragnhild, Utskjær", text: ["Vi er 230 mennesker på en øy. Nå skal vi plutselig drive sykehus selv. Vi har én sykepleier, og hun er 61.", "Dere er elleve stykker i kommunestyret. Hvem av dere skal operere?"],
+        marks: [["utskjaer", "bad", "Sykehus i naustet"], ["elvdal", "build", "Halvferdig sykehus"], ["storvik", "ok", "Sykehus"]] },
+      fylke: { from: "elvdal", sender: "Tor Inge, Elvdal", text: ["Mannen min trenger en kreftbehandling som bare finnes på noen få sykehus i landet. Fylkeskommunen sier at Nordland ikke har råd til å kjøpe den. I Trøndelag får de den.", "Skal det avhenge av hvilket fylke du bor i, om du får behandling?"],
+        marks: [["elvdal", "queue", "Venteliste"], ["storvik", "bad", "Mangler kreftlege"]] }
+    } },
+  { id: "grunnskole", r: 0, name: "Grunnskole", hint: "1. til 10. trinn", level: "kommune",
+    reason: "Barn skal gå på skole nær der de bor. Kommunen driver grunnskolen, mens staten bestemmer læreplanen og hvor mange timer elevene skal ha.",
+    ok: [["utskjaer", "Skole (6 elever)"], ["elvdal", "Skole"], ["storvik", "Skoler"]],
+    wrong: {
+      fylke: { from: "utskjaer", sender: "Kari, Utskjær", text: ["Fylkeskommunen har lagt ned skolen vår og vil at sjuåringene skal ta ferja til Storvik hver dag. Det er 45 minutter hver vei.", "De som bestemte det, sitter i Bodø og har aldri vært her."],
+        marks: [["utskjaer", "bad", "Skolen stengt"], ["elvdal", "ok", "Skole"], ["storvik", "ok", "Skoler"]] },
+      stat: { from: "elvdal", sender: "Mona, rektor i Elvdal", text: ["Taket på skolen lekker. Vi ringte departementet i Oslo. De har ansvaret for nesten 3000 skoler og sier at vi står i kø.", "Barna sitter med bøtter på pultene. Kommunen kan ikke gjøre noe, for skolen er ikke deres."],
+        marks: [["elvdal", "queue", "Kø i departementet"], ["utskjaer", "bad", "Venter på svar"]] }
+    } },
+  { id: "vgs", r: 0, name: "Videregående skole", hint: "Studiespesialisering og yrkesfag", level: "fylke",
+    reason: "En videregående skole trenger mange elever for å tilby mange utdanningsprogrammer. Fylkeskommunen driver skolene for hele fylket, og elevene kan gå på skole i en annen kommune enn den de bor i.",
+    ok: [["storvik", "Vgs"], ["elvdal", "Vgs"], ["utskjaer", "Elevene tar ferja"]],
+    wrong: {
+      kommune: { from: "utskjaer", sender: "Sander (16), Utskjær", text: ["Vi er fire ungdommer på øya mellom 16 og 19. Skal Utskjær kommune drive en videregående skole med tolv utdanningsprogrammer for fire elever?", "Storvik kommune vil ikke ta imot oss, for de betaler bare for sine egne ungdommer."],
+        marks: [["utskjaer", "bad", "Ingen vgs"], ["elvdal", "bad", "Bare to linjer"], ["storvik", "ok", "Vgs"]] },
+      stat: { from: "storvik", sender: "Lærerne på Storvik vgs", text: ["Departementet i Oslo har bestemt hvilke utdanningsprogrammer skolen vår skal ha. Vi fikk flyfag.", "Det bedriftene her trenger, er folk til fiske og havbruk. Hvem i Oslo kjenner arbeidslivet i Nordland?"],
+        marks: [["storvik", "bad", "Feil linjer"], ["elvdal", "bad", "Feil linjer"]] }
+    } },
+  { id: "universitet", r: 0, name: "Universitet", hint: "Høyere utdanning og forskning", level: "stat",
+    reason: "Universiteter er nasjonale. Alle skal kunne søke seg til utdanning i hele landet, og forskning trenger store fagmiljøer. Staten eier og finansierer universitetene og høgskolene.",
+    ok: [["storvik", "Universitet"]],
+    wrong: {
+      kommune: { from: "elvdal", sender: "Arne, Elvdal", text: ["Kommunestyret har vedtatt å bygge universitet i Elvdal. Det koster mer enn hele kommunebudsjettet i ti år.", "Hva skal vi legge ned for å betale for det? Sykehjemmet?"],
+        marks: [["elvdal", "build", "Universitet?"], ["utskjaer", "bad", "Universitet?"], ["storvik", "ok", "Universitet"]] },
+      fylke: { from: "storvik", sender: "Amira (18), Storvik", text: ["Jeg vil bli lege. Nordland fylkeskommune har ikke råd til medisinstudiet, og universitetet i Trøndelag tar bare inn studenter fra Trøndelag.", "Har ikke alle i Norge samme rett til å søke på utdanning?"],
+        marks: [["storvik", "bad", "Bare for nordlendinger"]] }
+    } },
+  { id: "sykehjem", r: 0, name: "Sykehjem og hjemmetjeneste", hint: "Eldreomsorg og hjelp hjemme", level: "kommune",
+    reason: "Eldreomsorg handler om folk i nærmiljøet, og behovene er forskjellige fra person til person. Kommunen har ansvaret for sykehjem og hjemmetjenester.",
+    ok: [["utskjaer", "Hjemmetjeneste"], ["elvdal", "Sykehjem"], ["storvik", "Sykehjem"]],
+    wrong: {
+      fylke: { from: "utskjaer", sender: "Liv, Utskjær", text: ["Mor er 89 og kan ikke bo hjemme lenger. Fylkeskommunen har samlet alle sykehjemsplassene i Storvik.", "Nå må hun flytte fra øya hun har bodd på hele livet, og vi kan bare besøke henne når ferja går."],
+        marks: [["utskjaer", "bad", "Ingen eldreomsorg"], ["storvik", "queue", "Fullt sykehjem"]] },
+      stat: { from: "elvdal", sender: "Jens, Elvdal", text: ["Hjemmetjenesten styres nå fra et direktorat i Oslo. De har bestemt at alle skal få besøk klokka 10.", "Far trenger hjelp til å stå opp klokka sju. Det kan ingen her endre på."],
+        marks: [["elvdal", "bad", "Besøk kl. 10 for alle"], ["utskjaer", "bad", "Ingen hjelp"]] }
+    } },
+  // ---------- RUNDE 2 ----------
+  { id: "politi", r: 1, name: "Politi", hint: "Etterforskning, beredskap, pass", level: "stat",
+    reason: "Loven skal håndheves likt overalt, og politiet skal ikke styres av lokalpolitikere som kan ha interesser i sakene. Politiet er statlig. Det er også politiet som utsteder pass.",
+    ok: [["storvik", "Politistasjon"], ["elvdal", "Politipatrulje"], ["utskjaer", "Politibåt"]],
+    wrong: {
+      kommune: { from: "elvdal", sender: "Hanne, Elvdal", text: ["Politiet i Elvdal er ansatt av kommunen. Ordførerens svoger kjørte i fylla og slapp med en advarsel. En mann i Storvik fikk fengsel for det samme.", "Er loven forskjellig fra kommune til kommune nå?"],
+        marks: [["elvdal", "bad", "Egne regler"], ["utskjaer", "bad", "Ingen politi"], ["storvik", "ok", "Politistasjon"]] },
+      fylke: { from: "utskjaer", sender: "Odd, fisker på Utskjær", text: ["Noen har stjålet båtmotorer langs hele kysten fra Nordland til Troms. Politiet i Nordland må be fylkestinget om penger for å samarbeide med politiet i Troms.", "Tyvene er i Finnmark før møtet er holdt."],
+        marks: [["utskjaer", "bad", "Motor stjålet"], ["storvik", "bad", "Stopper ved fylkesgrensa"]] }
+    } },
+  { id: "trygd", r: 1, name: "Trygd og pensjon", hint: "Alderspensjon, uføretrygd", level: "stat",
+    reason: "Trygd og pensjon skal være likt for alle i hele landet, og en fattig kommune skal ikke gi dårligere pensjon. Staten har ansvaret gjennom folketrygden og Nav.",
+    ok: [["utskjaer", "Pensjon utbetalt"], ["elvdal", "Pensjon utbetalt"], ["storvik", "Pensjon utbetalt"]],
+    wrong: {
+      kommune: { from: "utskjaer", sender: "Gunnar (71), Utskjær", text: ["Fiskebruket la ned, og kommunen fikk mindre skatteinntekter. Nå har ikke Utskjær råd til full alderspensjon i år. I Storvik får pensjonistene dobbelt så mye.", "Jeg har jobbet i 45 år, akkurat som dem."],
+        marks: [["utskjaer", "bad", "Halv pensjon"], ["elvdal", "bad", "Lavere pensjon"], ["storvik", "ok", "Full pensjon"]] },
+      fylke: { from: "elvdal", sender: "Bjørg, Elvdal", text: ["Jeg flyttet hit fra Telemark for å bo nær barnebarna. Uføretrygden min ble 3000 kroner lavere i måneden, fordi fylkestinget i Nordland har vedtatt andre satser.", "Er jeg mindre syk i Nordland?"],
+        marks: [["elvdal", "bad", "Andre satser"], ["storvik", "bad", "Andre satser"]] }
+    } },
+  { id: "barnehage", r: 1, name: "Barnehage", hint: "For barn fra 1 til 5 år", level: "kommune",
+    reason: "Barnehager må ligge nær der familiene bor, og kommunen vet hvor det bygges boliger og flytter inn folk. Kommunen har ansvaret. Staten bestemmer regler som makspris og hvor mange voksne det skal være per barn.",
+    ok: [["utskjaer", "Barnehage (3 barn)"], ["elvdal", "Barnehage"], ["storvik", "Barnehager"]],
+    wrong: {
+      fylke: { from: "elvdal", sender: "Sofie, Elvdal", text: ["Fylkeskommunen har samlet alle barnehageplassene i Storvik. Jeg kjører ettåringen 40 minutter hver morgen før jeg kan begynne på jobb i Elvdal.", "Barnehagen i bygda er stengt."],
+        marks: [["elvdal", "bad", "Barnehagen stengt"], ["utskjaer", "bad", "Ingen barnehage"], ["storvik", "queue", "Overfylt"]] },
+      stat: { from: "storvik", sender: "Ahmed, Storvik", text: ["Det står 140 barn i kø. Alle i Storvik vet at det er bygd et nytt boligfelt på Moen, men barnehagene planlegges av et direktorat som bruker tall fra i fjor.", "Datteren min fyller to år før hun får plass."],
+        marks: [["storvik", "queue", "Kø: 140 barn"], ["elvdal", "bad", "Feil sted"]] }
+    } },
+  { id: "byggesak", r: 1, name: "Byggesaker", hint: "Søknader om å bygge hus, hytte, garasje", level: "kommune",
+    reason: "Byggesaker handler om lokale forhold: hvor det passer å bygge, og hva naboene mener. Kommunen behandler byggesøknader og lager arealplaner. Er du uenig i vedtaket, kan du klage.",
+    ok: [["utskjaer", "Ny garasje"], ["elvdal", "Nytt hus"], ["storvik", "Nytt boligfelt"]],
+    wrong: {
+      fylke: { from: "utskjaer", sender: "Per, Utskjær", text: ["Jeg skal bygge en garasje. Søknaden har ligget i Bodø i ni måneder.", "Saksbehandleren ringte i går og spurte hvor Utskjær ligger."],
+        marks: [["utskjaer", "queue", "9 måneder ventetid"], ["elvdal", "queue", "Ventetid"]] },
+      stat: { from: "elvdal", sender: "Elvdal skiklubb", text: ["Et kontor i Oslo har godkjent et hyttefelt midt i skiløypa vår. Ingen der visste at løypa fantes.", "Vi som bor her, ble ikke spurt."],
+        marks: [["elvdal", "bad", "Hytter i skiløypa"], ["storvik", "queue", "Ventetid"]] }
+    } },
+  { id: "tannhelse", r: 1, name: "Tannhelse for barn og unge", hint: "Gratis tannlege til du er 18", level: "fylke",
+    reason: "En liten kommune er for liten til å ha egen tannklinikk, men tannlegen bør heller ikke være på den andre siden av landet. Fylkeskommunen har ansvaret for den offentlige tannhelsetjenesten. Voksne går stort sett til private tannleger og betaler selv.",
+    ok: [["storvik", "Tannklinikk"], ["elvdal", "Tannklinikk"], ["utskjaer", "Tannlege i Elvdal"]],
+    wrong: {
+      kommune: { from: "utskjaer", sender: "Marte, Utskjær", text: ["Utskjær kommune kan ikke ansette en tannlege for 40 barn. Tannlegen kommer ikke.", "Datteren min har hatt hull i tanna siden jul."],
+        marks: [["utskjaer", "bad", "Ingen tannlege"], ["storvik", "ok", "Tannklinikk"]] },
+      stat: { from: "storvik", sender: "Linnea (14), Storvik", text: ["Staten har samlet tannbehandlingen for barn på tre store klinikker i landet. Den nærmeste er i Trondheim.", "Jeg må ha fri fra skolen i to dager for å rette tannregulering."],
+        marks: [["storvik", "bad", "Klinikk i Trondheim"], ["elvdal", "bad", "Klinikk i Trondheim"]] }
+    } },
+  // ---------- RUNDE 3 ----------
+  { id: "fylkesvei", r: 2, name: "Fylkesveier", hint: "Veier som binder sammen kommunene i fylket", level: "fylke",
+    reason: "Veier som binder sammen kommunene i et fylke, er fylkesveier. Fylkeskommunen har ansvaret for å bygge, brøyte og vedlikeholde dem.",
+    ok: [["elvdal", "Fylkesvei brøytet"], ["storvik", "Fylkesvei"]],
+    wrong: {
+      kommune: { from: "elvdal", sender: "Trine, Elvdal", text: ["Veien gjennom dalen går videre til Storvik. Elvdal har brøytet sin del, men Storvik kommune vil ikke brøyte sin del, fordi det mest er folk fra Elvdal som bruker den.", "Veien er stengt ved kommunegrensa. Jeg jobber i Storvik."],
+        marks: [["elvdal", "bad", "Stengt ved grensa"], ["storvik", "bad", "Ikke brøytet"]] },
+      stat: { from: "utskjaer", sender: "Halvor, Utskjær", text: ["Veien ned til ferjekaia har hatt hull i tre år. Statens vegvesen sier at de prioriterer motorveiene først.", "Det er 200 meter vei. Den er ikke viktig for Norge, men den er viktig for oss."],
+        marks: [["utskjaer", "bad", "Hull i veien"], ["elvdal", "bad", "Ikke brøytet"]] }
+    } },
+  { id: "kollektiv", r: 2, name: "Buss og ferje", hint: "Kollektivtransport i fylket", level: "fylke",
+    reason: "Busser og ferjer krysser kommunegrensene. Fylkeskommunen planlegger og betaler for kollektivtransporten i hele fylket.",
+    ok: [["utskjaer", "Ferje hver time"], ["elvdal", "Buss"], ["storvik", "Bybuss"]],
+    wrong: {
+      kommune: { from: "utskjaer", sender: "Eli, Utskjær", text: ["Ferja går mellom Utskjær og Storvik. Utskjær har ikke råd til å drive den alene, og Storvik vil ikke betale for en ferje de ikke trenger.", "Nå går den bare på tirsdager. Barnebarnet mitt går på videregående i Storvik."],
+        marks: [["utskjaer", "bad", "Ferja går tirsdag"], ["elvdal", "bad", "Bussen stopper ved grensa"]] },
+      stat: { from: "elvdal", sender: "Jonas (17), Elvdal", text: ["Bussen fra Elvdal har fått ny rutetabell fra et kontor i Oslo. Den går nå klokka 10.15.", "Skolen min starter 08.30."],
+        marks: [["elvdal", "bad", "Buss kl. 10.15"], ["utskjaer", "bad", "Ferja innstilt"]] }
+    } },
+  { id: "vann", r: 2, name: "Vann og avløp", hint: "Drikkevann og kloakk", level: "kommune",
+    reason: "Vannrør og kloakk går til husene i kommunen. Kommunen har ansvaret for vann og avløp og tar betalt gjennom kommunale avgifter.",
+    ok: [["utskjaer", "Rent vann"], ["elvdal", "Rent vann"], ["storvik", "Rent vann"]],
+    wrong: {
+      fylke: { from: "storvik", sender: "Velforeningen på Moen", text: ["Kloakken renner rett ut i havna. Fylkeskommunen har ansvaret, men de har brukt pengene på et stort renseanlegg et helt annet sted i fylket.", "Vi som bor her, kan bare sende brev til Bodø."],
+        marks: [["storvik", "bad", "Kloakk i havna"], ["utskjaer", "bad", "Brunt vann"]] },
+      stat: { from: "elvdal", sender: "Randi, Elvdal", text: ["Vannet har vært brunt i tre uker. Vannverket vårt står på en liste i et direktorat sammen med over tusen andre vannverk.", "Vi koker vannet og venter."],
+        marks: [["elvdal", "bad", "Kokevarsel"], ["storvik", "queue", "Venter på reparasjon"]] }
+    } },
+  { id: "evei", r: 2, name: "Europaveier og riksveier", hint: "E6 og andre store veier", level: "stat",
+    reason: "Europaveier og riksveier binder sammen hele landet og går gjennom mange fylker. Staten har ansvaret gjennom Statens vegvesen.",
+    ok: [["elvdal", "E6"], ["storvik", "E6"]],
+    wrong: {
+      kommune: { from: "storvik", sender: "Lastebilsjåfør Lars", text: ["E6 går gjennom Storvik. Kommunestyret har vedtatt fartsgrense 30 og fartsdumper hele veien gjennom kommunen.", "Trailere fra hele Norden står i kø i to timer."],
+        marks: [["storvik", "queue", "Fartsdumper på E6"], ["elvdal", "bad", "Smal E6"]] },
+      fylke: { from: "elvdal", sender: "Knut, Elvdal", text: ["E6 er firefelts motorvei i Trøndelag. Når den kommer inn i Nordland, blir den til grusvei, fordi fylkestinget her prioriterte annerledes.", "Det er samme vei gjennom hele landet."],
+        marks: [["elvdal", "bad", "Grus på E6"], ["storvik", "bad", "Grus på E6"]] }
+    } },
+  { id: "klage", r: 2, name: "Klage på kommunens vedtak", hint: "Når du er uenig i et vedtak fra kommunen", level: "stat",
+    reason: "Er du uenig i et vedtak fra kommunen, for eksempel i en byggesak, kan du klage. Klagen går til statsforvalteren, som er statens kontor i fylket. Statsforvalteren er ikke det samme som fylkeskommunen, selv om begge har fylkesnavnet i navnet sitt.",
+    ok: [["elvdal", "Statsforvalteren svarer"]],
+    wrong: {
+      kommune: { from: "elvdal", sender: "Ole, Elvdal", text: ["Kommunen sa nei til byggesøknaden min. Jeg klaget. Klagen ble behandlet av de samme folkene som sa nei første gang.", "Svaret var nei igjen. For en overraskelse."],
+        marks: [["elvdal", "bad", "Klage avvist"]] },
+      fylke: { from: "utskjaer", sender: "Siri, Utskjær", text: ["Klagen min på kommunen skal behandles av fylkestinget. Fylkesordføreren er fra samme parti som ordføreren her, og hun skrev på Facebook at klagen min var tull, før saken var behandlet.", "Hvem passer på at kommunen og fylket følger loven?"],
+        marks: [["utskjaer", "bad", "Klage avvist"]] }
+    } }
+];
+
+// ---------- state ----------
+let S;
+function reset() {
+  S = { round: 0, year: 2027, runs: 3, sel: null, place: {}, status: {}, firstTry: {}, attempts: {}, letters: [], letterIdx: 0, letterFilter: null, done: 0 };
+  TASKS.forEach(t => { S.status[t.id] = "hand"; });
+}
+const roundTasks = () => TASKS.filter(t => t.r === S.round);
+const byId = id => TASKS.find(t => t.id === id);
+
+// ---------- render ----------
+function render() {
+  document.getElementById("roundPill").textContent = `Runde ${S.round + 1} av 3`;
+  document.getElementById("yearPill").textContent = `År ${S.year}`;
+  document.getElementById("donePill").textContent = `Vedtatt: ${S.done} av 15`;
+  document.getElementById("dots").innerHTML = [0,1,2].map(i => `<span class="dot ${i < S.runs ? "" : "used"}"></span>`).join(" ");
+
+  const hand = document.getElementById("hand");
+  hand.innerHTML = "";
+  roundTasks().filter(t => S.status[t.id] === "hand").forEach((t, i, arr) => {
+    const b = document.createElement("button");
+    b.className = "card" + (S.sel === t.id ? " sel" : "");
+    const mid = (arr.length - 1) / 2;
+    b.style.transform = `rotate(${(i - mid) * 4}deg) translateY(${Math.abs(i - mid) * 7}px)`;
+    b.innerHTML = `${t.name}<small>${t.hint}</small>`;
+    b.onclick = () => { S.sel = t.id; render(); };
+    hand.appendChild(b);
+  });
+
+  ["stat", "fylke", "kommune"].forEach(lv => {
+    const el = document.getElementById("chips-" + lv);
+    el.innerHTML = "";
+    TASKS.filter(t => S.status[t.id] !== "hand" && S.place[t.id] === lv).forEach(t => {
+      const st = S.status[t.id];
+      const c = document.createElement("span");
+      const old = t.r < S.round;
+      c.className = "chip " + (old ? (st === "missed" ? "missed" : "old") : (st === "ok" ? "ok" : st === "missed" ? "missed" : st === "wrong" ? "wrong" : ""));
+      c.textContent = t.name;
+      if (!old && (st === "placed" || st === "wrong")) {
+        c.title = "Trykk for å ta kortet tilbake";
+        c.onclick = (e) => { if (S.sel) return; e.stopPropagation(); S.status[t.id] = "hand"; S.sel = t.id; delete S.place[t.id]; render(); };
+      }
+      el.appendChild(c);
+    });
+  });
+  document.querySelectorAll(".tray").forEach(tr => tr.classList.toggle("armed", !!S.sel));
+
+  const left = roundTasks().filter(t => S.status[t.id] === "hand").length;
+  const hint = document.getElementById("hint");
+  hint.classList.remove("warn");
+  if (S.sel) hint.textContent = `Trykk på staten, fylkeskommunen eller kommunen for å legge «${byId(S.sel).name}» der.`;
+  else if (left > 0) hint.textContent = `Velg et kort. ${left} igjen å fordele.`;
+  else if (roundTasks().some(t => S.status[t.id] === "wrong")) hint.textContent = "Kort med ! fikk klager. Trykk på dem for å flytte dem.";
+  else hint.textContent = "Alle kortene er fordelt. Send reformen på høring.";
+
+  renderLetterPanel();
+  renderEnvelopes();
+}
+
+function renderEnvelopes() {
+  ["utskjaer", "elvdal", "storvik"].forEach(k => {
+    const n = S.letters.filter(l => l.from === k).length;
+    const el = document.getElementById("env-" + k);
+    el.className = "env " + (n ? "has" : "none");
+    el.innerHTML = `<svg viewBox="0 0 40 28"><rect x="1" y="1" width="38" height="26" rx="3" fill="#fffdf7" stroke="#22303a" stroke-width="2"/><path d="M2 3 L20 16 L38 3" fill="none" stroke="#22303a" stroke-width="2"/></svg>${n ? `<span class="n">${n}</span>` : ""}`;
+    el.onclick = () => { const i = S.letters.findIndex(l => l.from === k); if (i >= 0) { S.letterIdx = i; renderLetterPanel(); } };
+  });
+}
+
+function renderLetterPanel() {
+  const p = document.getElementById("panel");
+  if (!S.letters.length) {
+    const r = ROUNDS[S.round];
+    p.className = "panel memo";
+    p.innerHTML = `<div class="to"><span>Notat til utvalget · ${r.title}</span></div>
+      <div class="txt"><p>${r.intro}</p><p>Når alle kortene er lagt ut, sender du reformen på høring. Da går det et år, og innbyggerne sier fra hvis noe ikke fungerer. Hvert klagebrev har et merke som sier hva problemet er. Legg merke til dem: du får bruk for dem i valgkampen til slutt.</p></div>`;
+    return;
+  }
+  const l = S.letters[S.letterIdx];
+  p.className = "panel";
+  p.innerHTML = `<div class="to"><span>${l.to} · fra ${K[l.from].name}</span></div>
+    <div class="txt">${l.text.map(x => `<p>${x}</p>`).join("")}<p class="sig">${l.sender}</p></div>
+    <div class="probl">Problemet: ${prTag(l.p)} <span>${PR[l.p].d}</span></div>
+    <div class="stamp">KLAGE</div>
+    <div class="nav"><button id="prevL" aria-label="Forrige brev">‹</button><span>Brev ${S.letterIdx + 1} av ${S.letters.length} · gjelder «${byId(l.task).name}»</span><button id="nextL" aria-label="Neste brev">›</button></div>`;
+  const pv = document.getElementById("prevL"), nx = document.getElementById("nextL");
+  pv.disabled = S.letterIdx === 0; nx.disabled = S.letterIdx === S.letters.length - 1;
+  pv.onclick = () => { S.letterIdx--; renderLetterPanel(); };
+  nx.onclick = () => { S.letterIdx++; renderLetterPanel(); };
+}
+
+function renderMarks(list) {
+  const box = document.getElementById("marks");
+  box.innerHTML = "";
+  const used = { utskjaer: 0, elvdal: 0, storvik: 0 };
+  list.forEach(([k, kind, label], i) => {
+    const slot = K[k].slots[used[k]++];
+    if (!slot) return;
+    const m = document.createElement("div");
+    m.className = "mark " + (kind === "ok" ? "" : "bad");
+    m.style.left = (slot[0] / 1366 * 100) + "%";
+    m.style.top = (slot[1] / 450 * 100) + "%";
+    m.style.animationDelay = (i * 0.04) + "s";
+    const icon = kind === "ok" ? "✓" : kind === "bad" ? "✗" : "!";
+    const ppl = kind === "queue" ? `<div class="ppl">${"<i></i>".repeat(6)}</div>` : "";
+    m.innerHTML = `<div class="sign"><span aria-hidden="true">${icon}</span><span>${label}</span></div><div class="post"></div>${ppl}`;
+    box.appendChild(m);
+  });
+}
+
+// ---------- actions ----------
+document.querySelectorAll(".tray").forEach(tr => {
+  tr.addEventListener("click", () => {
+    if (!S.sel) return;
+    const lv = tr.dataset.level;
+    S.place[S.sel] = lv; S.status[S.sel] = "placed"; S.sel = null;
+    const next = roundTasks().find(t => S.status[t.id] === "hand");
+    if (next) S.sel = next.id;
+    render();
+  });
+});
+
+document.getElementById("send").addEventListener("click", () => {
+  if (S.fasit) { S.fasit = false; document.getElementById("send").textContent = "Send på høring"; roundEnd(); return; }
+  const left = roundTasks().filter(t => S.status[t.id] === "hand").length;
+  if (left) { const h = document.getElementById("hint"); h.textContent = `Du må fordele alle kortene først. ${left} igjen.`; h.classList.add("warn"); return; }
+  S.runs--; S.year++; S.letters = []; S.letterIdx = 0;
+  const marks = [];
+  roundTasks().forEach(t => {
+    if (S.status[t.id] === "ok") { t.ok.forEach(([k, l]) => marks.push([k, "ok", l])); return; }
+    S.attempts[t.id] = (S.attempts[t.id] || 0) + 1;
+    const lv = S.place[t.id];
+    if (lv === t.level) {
+      S.status[t.id] = "ok"; S.done++;
+      if (S.attempts[t.id] === 1) S.firstTry[t.id] = true;
+      t.ok.forEach(([k, l]) => marks.push([k, "ok", l]));
+    } else {
+      S.status[t.id] = "wrong";
+      const w = t.wrong[lv];
+      S.letters.push({ task: t.id, from: w.from, sender: w.sender, text: w.text, to: addressee(lv, w.from), p: LETTERP[t.id][lv] });
+      w.marks.forEach(m => marks.push(m));
+    }
+  });
+  // order marks: problems first so they get the best slots
+  marks.sort((a, b) => (a[1] === "ok") - (b[1] === "ok"));
+  renderMarks(marks);
+  const wrong = roundTasks().filter(t => S.status[t.id] === "wrong").length;
+  render();
+  if (!wrong) { setTimeout(roundEnd, 1400); return; }
+  const h = document.getElementById("hint");
+  if (S.runs === 0) {
+    roundTasks().forEach(t => { if (S.status[t.id] === "wrong") { S.status[t.id] = "missed"; S.place[t.id] = t.level; } });
+    h.textContent = "Høringsrundene er brukt opp. Les brevene, så ser du fasiten.";
+    setTimeout(() => { render(); document.getElementById("hint").textContent = "Høringsrundene er brukt opp."; showFasitButton(); }, 50);
+  } else {
+    h.textContent = `${roundTasks().filter(t => S.status[t.id] === "ok").length} vedtatt, ${wrong} fikk klager. Les brevene, og flytt kortene merket !`;
+  }
+});
+
+function showFasitButton() {
+  S.fasit = true;
+  document.getElementById("send").textContent = "Se fasit for runden";
+}
+
+// ---------- overlays ----------
+const ov = document.getElementById("overlay"), md = document.getElementById("modal");
+function modal(html) { md.innerHTML = html; ov.classList.remove("hidden"); md.scrollTop = 0; }
+function closeModal() { ov.classList.add("hidden"); }
+
+function intro() {
+  modal(`<div class="kicker">Reformutvalget</div>
+    <h1>Tre kommuner</h1>
+    <p>Norge har tre styringsnivåer: <b>staten</b>, <b>fylkeskommunen</b> og <b>kommunen</b>. Du sitter i et utvalg som skal bestemme hvem som skal ha ansvaret for 15 ulike oppgaver.</p>
+    <div class="three">
+      <div class="box stat"><b>Staten</b>Hele landet. Stortinget vedtar lover og budsjett, og regjeringen sørger for at de blir gjennomført.</div>
+      <div class="box fylke"><b>Fylkeskommunen</b>Ett fylke, her Nordland. Fylkestinget er det folkevalgte organet.</div>
+      <div class="box kommune"><b>Kommunen</b>Én kommune. Kommunestyret er det folkevalgte organet.</div>
+    </div>
+    <p>Reformen testes i tre kommuner i Nordland: storbyen <b>Storvik</b> med 52 000 innbyggere, bygda <b>Elvdal</b> med 6 400, og øya <b>Utskjær</b> med 230. Kommunene er oppdiktet, men fylket er ekte.</p>
+    <p><b>Slik spiller du:</b> Trykk på et kort, og trykk så på staten, fylkeskommunen eller kommunen. Når alle kortene i runden er fordelt, sender du reformen på høring. Da går det et år. Fungerer det ikke, kommer det klagebrev. Du har tre høringsrunder per runde.</p>
+    <div class="actions"><button class="primary" id="go">Start</button></div>`);
+  document.getElementById("go").onclick = () => { closeModal(); roundIntro(); };
+}
+
+function roundIntro() {
+  const r = ROUNDS[S.round];
+  S.letters = []; renderMarks([]);
+  const first = roundTasks()[0]; S.sel = null;
+  modal(`<div class="kicker">${r.title} av 3</div><h2>${roundTasks().map(t => t.name).join(", ")}</h2><p>${r.intro}</p>
+    <div class="actions"><button class="primary" id="go">Til utvalget</button></div>`);
+  document.getElementById("go").onclick = () => { closeModal(); S.sel = first.id; render(); };
+  render();
+}
+
+function roundEnd() {
+  const r = ROUNDS[S.round];
+  const rows = roundTasks().map(t => {
+    const tag = S.status[t.id] === "missed" ? `<em>ikke løst, fasit</em>` : S.firstTry[t.id] ? `<em class="first">riktig første gang</em>` : `<em>riktig etter klager</em>`;
+    return `<div><span class="lv ${t.level}">${LV[t.level].short}</span></div><div class="t"><b>${t.name}${tag}</b><div class="tags">Grunn: ${WHY[t.id].map(prTag).join(" ")}</div><span>${t.reason}</span></div>`;
+  }).join("");
+  const last = S.round === 2;
+  modal(`<div class="kicker">${r.title} ferdig</div><h2>${r.principleTitle}</h2>
+    <div class="principle">${r.principle}</div>
+    <div class="res">${rows}</div>
+    <div class="actions"><button class="primary" id="go">${last ? "Se hele reformen" : "Neste runde"}</button></div>`);
+  document.getElementById("go").onclick = () => {
+    if (last) { finale(); return; }
+    S.round++; S.runs = 3; closeModal(); roundIntro();
+  };
+}
+
+function finale() {
+  const first = Object.keys(S.firstTry).length;
+  const verdict = first >= 13 ? "Stortinget ville vært fornøyd med dette utvalget." : first >= 8 ? "Godt utvalgsarbeid, men en del innbyggere måtte skrive klagebrev før det ble riktig." : "Mange klagebrev. Prøv en gang til, og les brevene nøye: de forteller hva som er galt, og det sier noe om hvilket nivå som passer.";
+  const col = lv => `<div class="box ${lv}"><b>${LV[lv].name}</b><span style="font-size:13px;color:#5b6a73">${LV[lv].body} vedtar</span><ul>${TASKS.filter(t => t.level === lv).map(t => `<li>${t.name}</li>`).join("")}</ul></div>`;
+  modal(`<div class="kicker">Reformen er vedtatt</div>
+    <h2>Riktig ved første høring</h2>
+    <div class="score">${first} av 15</div>
+    <p>${verdict}</p>
+    <div class="three">${col("stat")}${col("fylke")}${col("kommune")}</div>
+    <h2 style="margin-top:16px">Fem grunner som avgjør hvor en oppgave hører hjemme</h2>
+    <div class="fem">${Object.keys(PR).map(k => `<div>${prTag(k)}<span>${PR[k].d}</span></div>`).join("")}</div>
+    <p class="note">Disse fem trenger du i valgkampen.</p>
+    <h2 style="margin-top:16px">Hvem bestemmer?</h2>
+    <div class="three">
+      <div class="box stat"><b>Stortinget</b>169 representanter, valgt hvert fjerde år. Vedtar lover og statsbudsjett. Regjeringen leder landet og må ha Stortingets tillit.</div>
+      <div class="box fylke"><b>Fylkestinget</b>Valgt ved fylkestingsvalget, samme dag som kommunevalget. Ledes av fylkesordføreren.</div>
+      <div class="box kommune"><b>Kommunestyret</b>Valgt ved kommunevalget. Minst 11 medlemmer i små kommuner som Utskjær. Ledes av ordføreren.</div>
+    </div>
+    <h2 style="margin-top:16px">Det spillet forenkler</h2>
+    <ul class="note">
+      <li><b>Statsforvalteren</b> er staten i fylket, ikke fylkeskommunen. Det er dit klager på kommunen går.</li>
+      <li>Noen oppgaver er <b>delt</b>. Nav-kontoret er et samarbeid: staten har trygd og pensjon, kommunen har sosialhjelp. Barnevernet er også delt mellom kommunen og staten.</li>
+      <li><b>Oslo</b> er både kommune og fylkeskommune.</li>
+      <li>Ikke alle styres på samme måte. Nordland fylkeskommune har for eksempel fylkesråd, en slags regjering for fylket.</li>
+      <li>Grensene flyttes: Stortinget kan bestemme at en oppgave skal flyttes fra ett nivå til et annet, slik det skjedde med sykehusene i 2002.</li>
+    </ul>
+    <div class="actions"><button class="secondary" id="again">Spill igjen</button><button class="primary" id="go">Til valgkampen</button></div>`);
+  document.getElementById("again").onclick = () => { reset(); render(); intro(); };
+  document.getElementById("go").onclick = startVK;
+}
+
+// ================= VALGKAMPEN =================
+const REASONS = PR;
+const GEN = { stat: "statens", fylke: "fylkeskommunens", kommune: "kommunens" };
+const PROMISE = { stat: "Dette skal jeg ta opp på Stortinget!", fylke: "Dette skal jeg få fylkestinget til å ordne!", kommune: "Dette må kommunestyret fikse, og det skal jeg sørge for!" };
+const VQ = [
+  { from: "Gunn, Elvdal", x: 150, topic: "brannvesenet", level: "kommune", ok: ["naer"],
+    q: "Det tar 40 minutter for brannbilen å komme fra Storvik til oss. Uthuset til naboen brant ned før de kom fram. Hvem har ansvaret for brannvesenet?",
+    ex: "Brannvesenet er kommunens ansvar. Det må være nær folk, for det haster når det brenner. Mange små kommuner samarbeider om et felles brann- og redningsvesen." },
+  { from: "Ivar, Utskjær", x: 690, topic: "Forsvaret", level: "stat", ok: ["hele", "stor"],
+    q: "Det har vært ukjente ubåter utenfor øya vår, sier de på nyhetene. Hvem har ansvaret for å forsvare Norge?",
+    ex: "Forsvaret er statens ansvar. Det skal forsvare hele landet, og det krever enorme summer og tusenvis av fagfolk. Ingen kommune eller fylkeskommune kunne hatt et eget forsvar." },
+  { from: "Kim, Storvik", x: 330, topic: "sosialhjelpen", level: "kommune", ok: ["naer"],
+    q: "Jeg mistet jobben, og pengene er brukt opp. Jeg har ikke råd til mat til ungene denne måneden. Hvem skal hjelpe meg?",
+    ex: "Økonomisk sosialhjelp er kommunens ansvar, og du søker på Nav-kontoret. Det kan virke rart, siden Nav også er statlig. Nav-kontoret er et samarbeid: staten har trygd og pensjon, kommunen har sosialhjelpen. Kommunen kjenner forholdene der du bor." },
+  { from: "Nina, Utskjær", x: 560, topic: "skoleskyssen", level: "fylke", ok: ["tvers"],
+    q: "Sønnen min på sju år må ta båt og buss til skolen i Storvik. Hvem har ansvaret for at han kommer seg dit?",
+    ex: "Mange blir overrasket: det er fylkeskommunen som har hovedansvaret for skoleskyssen, også for barn i grunnskolen. Skyssen henger sammen med bussene og båtene i fylket, og dem har fylkeskommunen. Kommunen har ansvaret for selve skolen." },
+  { from: "Thomas, Elvdal", x: 210, topic: "domstolene", level: "stat", ok: ["hele"],
+    q: "Naboen og jeg har kranglet om en tomtegrense i tre år. Nå skal saken for retten. Hvem har ansvaret for domstolene?",
+    ex: "Domstolene drives av staten, og loven skal tolkes likt i hele landet. Dommerne er uavhengige: verken Stortinget, regjeringen eller lokalpolitikerne kan bestemme hvordan en sak ender." },
+  { from: "Astrid, Storvik", x: 750, topic: "legevakten", level: "kommune", ok: ["naer"],
+    q: "Klokka tre i natt fikk datteren min høy feber. Det var to timers ventetid på legevakten. Hvem har ansvaret for legevakten?",
+    ex: "Legevakten er kommunens ansvar, akkurat som fastlegene. Mange kommuner samarbeider om en felles legevakt. Sykehusene, som tar seg av de alvorligste sakene, har staten." },
+  { from: "Martin (20), Elvdal", x: 420, topic: "fagskolene", level: "fylke", ok: ["stor", "tvers"],
+    q: "Jeg er ferdig fagarbeider og vil ta fagskole for å bli maskinist. Hvem sørger for at det finnes fagskoletilbud i Nordland?",
+    ex: "Fylkeskommunen har ansvaret for at det finnes fagskoleutdanning i fylket, tilpasset det arbeidslivet i regionen trenger. Én kommune har for få studenter, og behovene er forskjellige fra region til region." },
+  { from: "Rolf, Storvik", x: 620, topic: "skatteinnkrevingen", level: "stat", ok: ["hele"],
+    q: "Jeg har fått brev om at jeg skylder skatt. Hvem er det som krever inn skatten?",
+    ex: "Skatteetaten, som er statlig, krever inn skatten. Reglene skal være like for alle. En del av skatten du betaler, går likevel videre til kommunen og fylkeskommunen der du bor." },
+  { from: "Kim, Storvik", x: 330, topic: "klager på sosialhjelp", level: "stat", ok: ["kontroll"],
+    q: "Det er meg igjen. Kommunen sa nei til sosialhjelp, og jeg mener de tok feil. Hvem kan jeg klage til?",
+    ex: "Klagen går til statsforvalteren, som er statens kontor i fylket. Noen utenfor kommunen må kunne se på saken. Husk: statsforvalteren er staten, ikke fylkeskommunen." },
+  { from: "Berit, Utskjær", x: 120, topic: "søppeltømmingen", level: "kommune", ok: ["naer"],
+    q: "Søppelbilen har ikke vært her på tre uker, og måkene har tatt over. Hvem har ansvaret for å hente søppelet?",
+    ex: "Kommunen har ansvaret for å hente husholdningsavfallet, og du betaler for det gjennom de kommunale avgiftene. Mange kommuner samarbeider om et felles renovasjonsselskap." }
+];
+const LVNAME = { stat: "Staten", fylke: "Fylkeskommunen", kommune: "Kommunen" };
+let V;
+const vkEl = document.getElementById("vk");
+
+function drawCrowd(standX) {
+  const g = document.getElementById("crowd");
+  const cols = ["#c99a74", "#e0b48c", "#8d5f3e", "#f0c9a0", "#b07a55"];
+  const shirts = ["#2f6b4f", "#b5473a", "#6b4c8a", "#d9a441", "#5c7480", "#22303a"];
+  let out = "";
+  [[470, 0], [540, 30], [610, 0]].forEach(([y, off], r) => {
+    for (let x = 60 + off; x < 880; x += 62) {
+      if (standX !== null && r === 0 && Math.abs(x - standX) < 31) continue;
+      const i = (x + r * 7) % 5, j = (x / 2 + r) % 6 | 0;
+      out += `<path d="M${x - 24} ${y + 50} Q ${x - 24} ${y + 14} ${x} ${y + 14} Q ${x + 24} ${y + 14} ${x + 24} ${y + 50} Z" fill="${shirts[j]}" stroke="#22303a" stroke-width="1.5"/><circle cx="${x}" cy="${y}" r="16" fill="${cols[i]}" stroke="#22303a" stroke-width="1.5"/>`;
+    }
+  });
+  if (standX !== null) {
+    const x = 60 + Math.round((standX - 60) / 62) * 62, y = 410;
+    out += `<path d="M${x - 28} ${y + 90} Q ${x - 28} ${y + 22} ${x} ${y + 22} Q ${x + 28} ${y + 22} ${x + 28} ${y + 90} Z" fill="#e7b84a" stroke="#22303a" stroke-width="2.5"/><circle cx="${x}" cy="${y}" r="20" fill="#e0b48c" stroke="#22303a" stroke-width="2.5"/><line x1="${x + 22}" y1="${y + 40}" x2="${x + 38}" y2="${y - 4}" stroke="#22303a" stroke-width="5" stroke-linecap="round"/>`;
+    document.getElementById("vkStage").style.setProperty("--tail", (x / 900 * 100 - 8) + "%");
+  }
+  g.innerHTML = out;
+}
+
+function startVK() {
+  V = { i: 0, score: 0, level: null, reason: null, bet: null, log: [] };
+  closeModal(); vkEl.classList.remove("hidden");
+  vkIntro();
+}
+
+function vkTop() {
+  document.getElementById("vkQ").textContent = `Velger ${Math.min(V.i + 1, VQ.length)} av ${VQ.length}`;
+  document.getElementById("vkScore").textContent = `${(V.score * 1000).toLocaleString("nb-NO")} stemmer`;
+}
+
+function vkIntro() {
+  vkTop(); drawCrowd(null); document.getElementById("react").innerHTML = "";
+  document.getElementById("bubble").innerHTML = `<div class="who">Valgkampen</div>Det er valgår, og du stiller til valg til Stortinget. Salen i Storvik kulturhus er full. Velgerne vil vite hva du kan gjøre for dem.`;
+  document.getElementById("vkPanel").innerHTML = `
+    <h3>Slik fungerer folkemøtet</h3>
+    <p class="expl">Ti velgere stiller hvert sitt spørsmål. Ingen av sakene var med i reformen. Du må tenke selv.</p>
+    <p class="expl">For hvert spørsmål svarer du på tre ting:<br>
+    <b>1.</b> Hvem har ansvaret: staten, fylkeskommunen eller kommunen?<br>
+    <b>2.</b> Hvorfor ligger det der? Velg blant de fem grunnene fra klagebrevene i reformen.<br>
+    <b>3.</b> Hvor mye satser du: 1 000, 2 000 eller 3 000 stemmer?</p>
+    <p class="expl">Riktig nivå gir deg stemmene du satset. Riktig begrunnelse i tillegg gir dobbelt. Feil nivå koster stemmene du satset, og journalisten fra Storvik Avis skriver om det.</p>
+    <p class="expl"><b>Tips:</b> Er du usikker, sats lite. Den som gjetter og satser mye, taper valget.</p>
+    <div class="actions" style="text-align:left"><button class="primary" id="vkGo">Slipp inn første velger</button></div>`;
+  document.getElementById("vkGo").onclick = vkAsk;
+}
+
+function vkAsk() {
+  const q = VQ[V.i];
+  V.level = V.reason = V.bet = null;
+  vkTop(); drawCrowd(q.x); document.getElementById("react").innerHTML = "";
+  document.getElementById("bubble").innerHTML = `<div class="who">${q.from}</div>${q.q}`;
+  vkAnswerPanel();
+}
+
+function vkAnswerPanel() {
+  const p = document.getElementById("vkPanel");
+  p.innerHTML = `
+    <h3>1. Hvem har ansvaret?</h3>
+    <div class="opts three">${["stat", "fylke", "kommune"].map(l => `<button class="opt lv-${l} ${V.level === l ? "on" : ""}" data-l="${l}">${LVNAME[l]}</button>`).join("")}</div>
+    <h3>2. Hvorfor ligger det der?</h3>
+    <div class="opts">${Object.entries(REASONS).map(([k, r]) => `<button class="opt ${V.reason === k ? "on" : ""}" data-r="${k}"><b>${prTag(k)}</b><span>${r.d}</span></button>`).join("")}</div>
+    <h3>3. Hvor mye satser du?</h3>
+    <div class="opts three">${[1, 2, 3].map(b => `<button class="opt ${V.bet === b ? "on" : ""}" data-b="${b}">${b} 000</button>`).join("")}</div>
+    <div class="vk-err" id="vkErr"></div>
+    <div><button class="primary" id="vkSvar">Svar velgeren</button></div>`;
+  p.querySelectorAll("[data-l]").forEach(b => b.onclick = () => { V.level = b.dataset.l; vkAnswerPanel(); });
+  p.querySelectorAll("[data-r]").forEach(b => b.onclick = () => { V.reason = b.dataset.r; vkAnswerPanel(); });
+  p.querySelectorAll("[data-b]").forEach(b => b.onclick = () => { V.bet = +b.dataset.b; vkAnswerPanel(); });
+  document.getElementById("vkSvar").onclick = vkSubmit;
+}
+
+function vkSubmit() {
+  const err = document.getElementById("vkErr");
+  if (!V.level) { err.textContent = "Velg hvem som har ansvaret først."; return; }
+  if (!V.reason) { err.textContent = "Velg en begrunnelse."; return; }
+  if (!V.bet) { err.textContent = "Velg hvor mye du satser."; return; }
+  const q = VQ[V.i];
+  const lvOk = V.level === q.level, rOk = q.ok.includes(V.reason);
+  const delta = lvOk ? (rOk ? 2 * V.bet : V.bet) : -V.bet;
+  V.score += delta;
+  V.log.push({ topic: q.topic, lvOk, rOk, delta, level: q.level });
+  vkTop();
+  const react = document.getElementById("react");
+  react.innerHTML = `<div class="react ${lvOk ? "good" : "bad"}">${lvOk ? (rOk ? "Applaus i salen!" : "Høflig applaus") : "Mumling i salen"}</div>`;
+  const verdict = lvOk ? (rOk ? ["good", "Riktig, og godt begrunnet!"] : ["mid", "Riktig sted, men svak begrunnelse"]) : ["bad", "Feil adresse"];
+  const sign = delta > 0 ? "+" : "−";
+  const right = q.ok.map(prTag).join(" eller ");
+  const journo = lvOk ? "" : `<div class="journo"><b>Storvik Avis:</b> «Kandidaten lovet: ${PROMISE[V.level]} Men ${q.topic} er ikke ${GEN[V.level]} ansvar. Det er ${GEN[q.level]}.»</div>`;
+  document.getElementById("bubble").innerHTML = `<div class="who">Du svarer</div>${PROMISE[V.level]}`;
+  document.getElementById("vkPanel").innerHTML = `
+    <p class="verdict ${verdict[0]}">${verdict[1]}</p>
+    <div class="delta">${sign}${(Math.abs(delta) * 1000).toLocaleString("nb-NO")} stemmer</div>
+    ${journo}
+    <div class="expl"><b>${LVNAME[q.level]}</b> har ansvaret for ${q.topic}. ${q.ex}</div>
+    <div class="facts">Beste begrunnelse: ${right}${rOk ? "" : `. Du valgte ${prTag(V.reason)}`}</div>
+    <div><button class="primary" id="vkNext">${V.i + 1 < VQ.length ? "Neste velger" : "Til valgnatten"}</button></div>`;
+  document.getElementById("vkNext").onclick = () => { V.i++; if (V.i < VQ.length) vkAsk(); else vkEnd(); };
+}
+
+function vkEnd() {
+  const main = document.getElementById("vkMain");
+  const votes = V.score * 1000, elected = V.score >= 30;
+  const lv = V.log.filter(l => l.lvOk).length, both = V.log.filter(l => l.lvOk && l.rOk).length;
+  const rows = V.log.map(l => `<span class="r ${l.lvOk ? (l.rOk ? "good" : "mid") : "bad"}">${l.lvOk ? "✓" : "✗"}</span><span>${l.topic.charAt(0).toUpperCase() + l.topic.slice(1)} <span style="color:#5b6a73">· ${LVNAME[l.level]}</span></span><span class="r ${l.delta > 0 ? "good" : "bad"}">${l.delta > 0 ? "+" : "−"}${(Math.abs(l.delta) * 1000).toLocaleString("nb-NO")}</span>`).join("");
+  document.getElementById("vkQ").textContent = "Valgnatt";
+  main.innerHTML = `<div class="vk-end"><div class="modal">
+    <div class="kicker">Valgnatt</div>
+    <h1>${elected ? "Du er valgt inn på Stortinget!" : "Du kom ikke inn denne gangen"}</h1>
+    <div class="score">${votes.toLocaleString("nb-NO")} stemmer</div>
+    <p>${elected ? "Velgerne stoler på at du vet hvem som bestemmer hva." : "Du trengte 30 000. Velgerne ble usikre på om du vet hvem som bestemmer hva."}</p>
+    <div class="three">
+      <div class="box"><b>${lv} av 10</b>riktig nivå</div>
+      <div class="box"><b>${both} av 10</b>riktig nivå og begrunnelse</div>
+      <div class="box"><b>Ca. −5 000</b>det en elev som bare gjetter og satser 2 000 hver gang, får i snitt</div>
+    </div>
+    <div class="vk-list">${rows}</div>
+    <p class="note">Vis denne siden til læreren din.</p>
+    <div class="actions"><button class="secondary" id="vkAgain">Ta valgkampen på nytt</button><button class="primary" id="vkAll">Spill hele spillet på nytt</button></div>
+  </div></div>`;
+  document.getElementById("vkAgain").onclick = () => { location.hash = "valgkamp"; location.reload(); };
+  document.getElementById("vkAll").onclick = () => { location.hash = ""; location.reload(); };
+}
+
+
+function fitStage() { const st = document.getElementById("stage"); st.style.fontSize = (st.clientWidth / 1366 * 16) + "px"; }
+window.addEventListener("resize", fitStage);
+reset(); render(); fitStage();
+if (location.hash === "#valgkamp") startVK(); else intro();
+</script>
+</body>
+</html>
