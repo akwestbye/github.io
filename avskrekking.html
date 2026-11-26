@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Avskrekking – et spill om NATO</title>
+<style>
+:root{
+  --paper:#efe6d2; --paper2:#e5d9bf; --ink:#2b2620; --muted:#6f6455; --panel:#f7f0e0; --line:#d6c7a4;
+  --sea:#9fc3cf; --own:#e9d6a1; --own-d:#b08a2e; --foe:#c9775a; --foe-d:#8e4630;
+  --ally:#8fa9cf; --ally-d:#3f5f93; --blue:#2f5b9a; --gold:#d9a521; --gold-d:#9c7410;
+  --red:#c4432b; --green:#4f8a47; --teal:#2f7f7a; --sky:#4f86bd; --dark:#2f2a24; --amber:#d98a1c;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;color:var(--ink);background:#2c2a27;overflow:hidden}
+button{font:inherit;cursor:pointer;color:inherit}
+.serif{font-family:Georgia,"Times New Roman",serif}
+#app{width:100vw;height:100vh;display:grid;grid-template-rows:52px minmax(0,1fr);
+  background:radial-gradient(ellipse at 35% 40%,#f4ecdb 0%,var(--paper) 55%,var(--paper2) 100%)}
+/* topp */
+.top{display:flex;align-items:center;gap:20px;padding:0 20px;background:var(--dark);color:#f3ead6;border-bottom:3px solid #1d1a16;white-space:nowrap}
+.act{display:flex;flex-direction:column;line-height:1.05}
+.act small{font-size:10.5px;letter-spacing:.18em;color:#c8b994;text-transform:uppercase}
+.act b{font-family:Georgia,serif;font-size:20px}
+.round{font-size:13px;color:#c8b994}
+.spacer{flex:1}
+.stat{display:flex;align-items:center;gap:8px;font-size:12.5px}
+.coins{display:flex;gap:4px}
+.coin{width:15px;height:15px;border-radius:50%;background:var(--gold);box-shadow:inset 0 -2px 0 var(--gold-d)}
+.coin.off{background:#5a5145;box-shadow:none}
+.segs{display:flex;gap:3px}
+.segs i{width:18px;height:10px;border-radius:2px;background:#5a5145}
+.segs i.on{background:var(--red)}
+/* hoveddel */
+.main{display:grid;grid-template-columns:minmax(0,1fr) 300px;min-height:0}
+.board{position:relative;padding:8px 8px 8px 12px;min-height:0}
+.board>svg{width:100%;height:100%;display:block;filter:drop-shadow(0 6px 10px rgba(60,40,10,.18))}
+.board.picking .region{cursor:copy}
+.region{cursor:pointer;transition:filter .15s}
+.board.picking .region:hover{filter:brightness(1.07) drop-shadow(0 0 6px #fff)}
+.tokn{cursor:pointer}
+.tokn.sel circle{stroke:#ffde59;stroke-width:5}
+.hint{position:absolute;left:50%;top:14px;transform:translateX(-50%);background:var(--dark);color:#f3ead6;padding:7px 14px;border-radius:20px;font-size:13.5px;pointer-events:none;box-shadow:0 4px 10px rgba(0,0,0,.3);white-space:nowrap}
+.side{background:var(--panel);border-left:2px solid var(--line);display:flex;flex-direction:column;padding:12px 14px 12px;gap:10px;min-height:0;overflow:auto}
+.side h3{font-family:Georgia,serif;font-size:16px}
+.tray{display:flex;flex-wrap:wrap;gap:16px 18px;padding:6px 2px 14px;border-radius:10px;min-height:66px}
+.tray.drop{outline:2px dashed #b9a882;outline-offset:2px}
+.tk{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;font-weight:800;border:3px solid #fff;box-shadow:0 3px 7px rgba(0,0,0,.3);position:relative;flex:none}
+.tk.sel{outline:4px solid #ffde59;outline-offset:1px}
+.tk:disabled{opacity:.35;cursor:not-allowed;box-shadow:none}
+.tk small{position:absolute;bottom:-17px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--muted);font-weight:600;white-space:nowrap;pointer-events:none}
+.tk .c{position:absolute;top:-8px;right:-8px;width:19px;height:19px;border-radius:50%;background:var(--gold);color:#3a2a00;font-size:11px;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 -2px 0 var(--gold-d);pointer-events:none}
+.tk span{pointer-events:none}
+.empty{font-size:12px;color:var(--muted);align-self:center}
+.build{padding:8px 10px;border-radius:9px;border:2px dashed var(--own-d);background:#fffaf0;font-size:13px;font-weight:700;color:#6b5212;text-align:left}
+.build:disabled{opacity:.45;cursor:not-allowed}
+.belief{background:#fffaf0;border:2px solid #e0cf9a;border-radius:10px;padding:9px 11px;font-size:12.5px}
+.bbar{position:relative;height:14px;border-radius:7px;background:#e9e0c9;margin:7px 0 3px}
+.bbar i{position:absolute;top:0;bottom:0;border-radius:7px;background:linear-gradient(90deg,rgba(217,165,33,.35),rgba(217,165,33,1) 50%,rgba(217,165,33,.35))}
+.bbar .ticks{position:absolute;inset:0;display:flex;justify-content:space-between;font-size:9.5px;color:var(--muted);top:15px}
+.concepts{display:flex;flex-wrap:wrap;gap:4px}
+.chip{font-size:11px;padding:2px 7px;border-radius:9px;color:#fff;font-weight:600;cursor:help;white-space:nowrap}
+.chip.new{animation:pop .6s}
+@keyframes pop{0%{transform:scale(.4)}70%{transform:scale(1.15)}100%{transform:scale(1)}}
+.endrow{margin-top:auto;display:flex;flex-direction:column;gap:7px;position:sticky;bottom:0;background:var(--panel);padding-top:6px}
+.endbtn{padding:13px;border:0;border-radius:10px;background:var(--dark);color:#f3ead6;font-weight:700;font-size:15px;box-shadow:0 5px 0 #14110d}
+.endbtn:hover{background:#433b31}
+.undobtn{padding:6px;border-radius:8px;border:2px solid #b9a882;background:#fffaf0;font-size:13px;font-weight:600}
+.undobtn:disabled{opacity:.4;cursor:not-allowed}
+/* rådet */
+.council{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);min-height:0}
+.council .tablewrap{position:relative;min-height:0;padding:10px}
+.council .tablewrap svg{width:100%;height:100%}
+.offers{background:var(--panel);border-left:2px solid var(--line);padding:12px 16px;display:flex;flex-direction:column;gap:7px;min-height:0;overflow:auto}
+.offers h2{font-family:Georgia,serif;font-size:19px}
+.offers .sub{font-size:12.5px;color:var(--muted);margin-top:-4px}
+.offer{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border-radius:9px;border:2px solid #d8c9a6;background:#fffaf0;text-align:left}
+.offer:hover{border-color:#b9a882}
+.offer .box{width:20px;height:20px;border-radius:5px;border:2px solid #9d8c66;flex:none;margin-top:1px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff}
+.offer.on{border-color:var(--teal);background:#e9f4f2}
+.offer.on .box{background:var(--teal);border-color:var(--teal)}
+.offer b{font-size:13.5px;display:block}
+.offer span{font-size:12px;color:var(--muted)}
+.propose{margin-top:auto;padding:12px;border:0;border-radius:10px;background:var(--teal);color:#fff;font-weight:700;font-size:15px;box-shadow:0 5px 0 #1d5753}
+/* modal */
+.overlay{position:fixed;inset:0;background:rgba(30,25,18,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.modal{background:#fbf6ea;border-radius:14px;width:min(640px,94vw);max-height:94vh;display:flex;flex-direction:column;box-shadow:0 20px 50px rgba(0,0,0,.45);border-top:6px solid var(--dark);overflow:hidden}
+.modal.wide{width:min(860px,96vw)}
+.modal .body{padding:18px 26px 8px;overflow:auto}
+.modal h3{font-family:Georgia,serif;font-size:23px;margin-bottom:8px}
+.modal .kicker{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.modal p{font-size:15px;line-height:1.45;margin-bottom:9px}
+.modal ul{margin:0 0 10px 20px;font-size:14.5px;line-height:1.45}
+.modal .foot{padding:12px 26px 14px;display:flex;gap:10px;justify-content:flex-end;background:#f2ead8;border-top:1px solid #e0d4b8;flex-wrap:wrap}
+.mbtn{padding:11px 20px;border-radius:9px;border:2px solid var(--dark);background:#fffaf0;font-weight:700;font-size:14.5px}
+.mbtn.primary{background:var(--dark);color:#f3ead6}
+.quote{font-family:Georgia,serif;font-size:15.5px;font-style:italic;border-left:4px solid var(--red);padding:6px 12px;margin:6px 0 10px;background:#fff}
+.real{background:#eaf0f7;border-left:4px solid var(--blue);padding:8px 12px;margin:8px 0;font-size:14px;line-height:1.45}
+.real b{color:var(--blue)}
+.big{font-size:40px;font-weight:800;font-family:Georgia,serif}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0 12px}
+.tile{background:#fff;border-radius:10px;padding:10px 12px;border:2px solid #e2d6ba}
+.tile small{display:block;font-size:12px;color:var(--muted)}
+.scales{display:flex;gap:14px;justify-content:center;margin:2px 0 6px}
+.scales>div{flex:1;max-width:400px;text-align:center}
+.scales svg{width:100%;height:auto}
+.arm,.pan{transition:transform 1.1s cubic-bezier(.45,1.5,.5,1)}
+.res{font-weight:800;font-size:15px}
+.title-screen h3{font-size:38px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+"use strict";
+/* ===================== TILFELDIGHET (kan låses med ?seed=) ===================== */
+const qs=new URLSearchParams(location.search);
+let seed = +(qs.get('seed')||Date.now()%100000);
+function rnd(){ seed|=0; seed=seed+0x6D2B79F5|0; let t=Math.imul(seed^seed>>>15,1|seed); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }
+
+/* ===================== KONSTANTER ===================== */
+const OWN_W=2, ALLY_W=3, ART5_MAX=8, BAND=20, OVELSE_LOC=25, MAX_PER_REG=5;
+const C={own:'#b08a2e',foe:'#c9775a',foeD:'#8e4630',blue:'#2f5b9a',gold:'#d9a521',red:'#c4432b',green:'#4f8a47',teal:'#2f7f7a',sky:'#4f86bd',amber:'#d98a1c'};
+const REG={
+  nord:{name:'Nordkysten',poly:'330,30 520,0 575,90 564,110 351,110 340,100',lab:[352,24],slots:[[405,58],[445,58],[485,58],[525,58],[425,92],[465,92]],edge:[566,70],cy:60},
+  hoved:{name:'Hovedstaden',poly:'351,110 564,110 530,170 553,230 400,230 360,190 385,140',lab:[392,128],slots:[[470,140],[510,140],[425,200],[465,200],[505,200]],edge:[540,170],cy:170,city:[430,163]},
+  midt:{name:'Midtlandet',poly:'400,230 553,230 560,250 540,292 405,292 380,285',lab:[404,247],slots:[[440,270],[478,270],[516,268],[498,245],[532,248]],edge:[548,266],cy:262},
+  kvit:{name:'Kvitsund',poly:'405,292 540,292 520,330 455,410 405,385',lab:[0,0],slots:[[445,314],[482,314],[517,310],[466,348],[438,378]],edge:[522,322],cy:345,city:[422,345]},
+};
+const CONCEPTS={
+  avskrekking:{name:'Avskrekking',color:'#3d3122',tip:'Å gjøre et angrep så dyrt at det ikke lønner seg.'},
+  kollektivt:{name:'Kollektivt forsvar (art. 5)',color:C.gold,tip:'Et angrep på ett medlem regnes som et angrep på alle.'},
+  troverdighet:{name:'Troverdighet',color:'#b88a10',tip:'Avskrekking virker bare hvis motparten tror på løftet.'},
+  snubletrad:{name:'Snubletråd',color:C.blue,tip:'Allierte soldater på stedet gjør løftet sikkert: angriper du dem, angriper du alliansen.'},
+  konsensus:{name:'Konsensus',color:C.teal,tip:'Alle medlemmene må si ja. Det stemmes ikke i NATO.'},
+  radet:{name:'Nordatlantisk råd',color:C.teal,tip:'NATOs øverste politiske organ. Alle medlemsland er med.'},
+  art4:{name:'Konsultasjon (art. 4)',color:C.sky,tip:'Et medlem som føler seg truet, kan be rådet om konsultasjoner.'},
+  beroligelse:{name:'Beroligelse',color:C.green,tip:'Tiltak som skal vise naboen at man ikke planlegger angrep.'},
+  basepolitikk:{name:'Basepolitikk',color:C.own,tip:'Ingen faste utenlandske baser i fredstid, bare rotasjon og øvelser.'},
+  dilemma:{name:'Sikkerhetsdilemma',color:C.red,tip:'Når du ruster opp for å bli tryggere, kan naboen bli redd og ruste opp selv.'},
+  gjensidig:{name:'Gjensidig forpliktelse',color:'#1f4a85',tip:'Løftet gjelder begge veier: du må også hjelpe de andre.'},
+};
+const MOT={
+  dilemma:{t:'Sikkerhetsdilemmaet',d:'Opprustning og allierte styrker kan gjøre naboen redd, så spenningen stiger.'},
+  stormakt:{t:'Avhengig av en stormakt',d:'Når de store landene endrer kurs, svekkes tryggheten til de små.'},
+  andres:{t:'Trukket inn i andres kriger',d:'Medlemskap betyr at man må stille opp når andre blir angrepet.'},
+};
+/* runder: mål (region, gevinst, hovedangrep?) og hendelser */
+const ROUNDS={
+  1:[
+    {title:'Varnia varsler',text:'Varnia vil ha havna i Kvitsund. Samtidig sender de en patrulje mot Nordkysten for å se hva som skjer. Fordel bataljonene dine.',T:[['kvit',6,1],['nord',2,0]]},
+    {title:'Varnia vokser',text:'Varnia har åpnet en ny marinebase. Nå truer de to steder samtidig.',T:[['kvit',8,1],['midt',4,0]]},
+    {title:'For mange fronter',text:'Varnias forsvarsbudsjett er ti ganger så stort som Skjærlands.',T:[['hoved',9,1],['kvit',8,0]]},
+  ],
+  3:[
+    {title:'Første runde som medlem',text:'Mens dere forhandlet, rustet Varnia opp. Nå har dere én alliert bataljon på rotasjon. Der den står, er artikkel 5 sikker.',T:[['kvit',10,1],['nord',5,0]]},
+    {title:'Styrker ved grensa',text:'Varnia flytter brigader mot Midtlandet «for å øve».',T:[['midt',11,1],['kvit',7,0]]},
+    {title:'Valg i Vestmark',text:'Vestmarks nye president: «Hvorfor skal våre soldater forsvare små land langt unna?» Varnia lytter.',T:[['kvit',10,1],['hoved',8,0]],tr:-20,mot:'stormakt'},
+    {title:'Krenkelse av luftrommet',text:'Varnias jagerfly flyr inn over Nordkysten. Spørsmålet er om alliansen reagerer.',T:[['nord',10,1],['midt',8,0]],hint4:true},
+  ],
+  4:[
+    {title:'Sølvland er angrepet',text:'Zarkan har angrepet Sølvland, langt i sør. Rådet har slått fast at artikkel 5 gjelder. Varnia merker at alliansen er opptatt.',T:[['kvit',9,1],['midt',7,0]],decision:true},
+    {title:'Varnia presser på',text:'Varnia holder storøvelse ved Nordkysten.',T:[['nord',10,1],['kvit',8,0]]},
+    {title:'Siste test',text:'Varnias utenriksminister: «Spørsmålet er om Skjærlands venner er venner på ordentlig.»',T:[['midt',12,1],['hoved',7,0]]},
+  ],
+};
+const ACTS={1:{title:'Alene',rounds:3},2:{title:'Søknaden',rounds:0},3:{title:'Artikkel 5',rounds:4},4:{title:'Regningen',rounds:3}};
+
+/* ===================== TILSTAND ===================== */
+let S, uid=0;
+function fresh(){
+  return {screen:'title',act:1,round:1,budget:4,budgetBase:4,tr:0,sp:1,member:false,
+    tokens:[], ovelse:[], art4:false, berolig:false, sel:null, targets:[], flags:{nord:0,hoved:0,midt:0,kvit:0},
+    abroad:0, ovelseLocked:false, allyPerRound:0, promises:{}, offers:{}, council:null,
+    stats:{held:0,total:0,proposals:0,consensusTry:0,heldByAct:{1:0,3:0,4:0},totByAct:{1:0,3:0,4:0},send:null,unsure:0,unsureHeld:0},
+    concepts:[],newConcepts:[],mot:[],letter:null,history:[],hintTxt:'',flags1:0};
+}
+S=fresh();
+window.__game=()=>S;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const addTok=(kind,at=null)=>S.tokens.push({id:'t'+(++uid),kind,at});
+
+/* ===================== REGLER ===================== */
+function fear(st){ return Math.max(0,st.sp-2); }
+function countAt(st,r,kind){ return st.tokens.filter(t=>t.at===r&&(!kind||t.kind===kind)).length; }
+function evalTarget(st,t,u){
+  const [r,g0,main]=t;
+  const gain=g0+fear(st);
+  const own=countAt(st,r,'own')*OWN_W, ally=countAt(st,r,'ally')*ALLY_W;
+  let a5lo=0,a5hi=0,a5=null,sure=false;
+  if(st.member){
+    if(countAt(st,r,'ally')>0){ a5lo=a5hi=ART5_MAX; sure=true; }
+    else{
+      const loc=st.ovelse.includes(r)?OVELSE_LOC:0;
+      a5lo=Math.round(ART5_MAX*clamp(st.tr+loc-BAND,0,100)/100);
+      a5hi=Math.round(ART5_MAX*clamp(st.tr+loc+BAND,0,100)/100);
+    }
+    if(u!==undefined){ a5 = sure?ART5_MAX:Math.round(ART5_MAX*clamp(st.tr+(st.ovelse.includes(r)?OVELSE_LOC:0)+u,0,100)/100); }
+  } else if(u!==undefined) a5=0;
+  const lo=own+ally+a5lo, hi=own+ally+a5hi;
+  const status = gain<=lo ? 'hold' : gain>hi ? 'fall' : 'unsure';
+  return {r,gain,g0,main,own,ally,a5lo,a5hi,a5,sure,lo,hi,status,cost: a5===null?null:own+ally+a5};
+}
+function canAfford(c){ return S.budget>=c; }
+function snap(){ S.history.push(JSON.stringify({tokens:S.tokens,ovelse:S.ovelse,art4:S.art4,berolig:S.berolig,budget:S.budget,sp:S.sp,tr:S.tr,uid})); }
+function undo(){
+  const h=S.history.pop(); if(!h) return;
+  const o=JSON.parse(h); Object.assign(S,{tokens:o.tokens,ovelse:o.ovelse,art4:o.art4,berolig:o.berolig,budget:o.budget,sp:o.sp,tr:o.tr}); uid=o.uid;
+  S.sel=null; render();
+}
+function learn(k){ if(!S.concepts.includes(k)){S.concepts.push(k);S.newConcepts.push(k);} }
+function addMot(k){ if(!S.mot.includes(k)) S.mot.push(k); }
+function say(text,from,at){ S.letter={text,from,at:at||'kvit'}; }
+
+/* ===================== KART ===================== */
+function tokenSVG(t,x,y){
+  const own=t.kind==='own';
+  const sel=S.sel&&S.sel.type==='tok'&&S.sel.id===t.id;
+  return `<g class="tokn ${sel?'sel':''}" data-tok="${t.id}" filter="url(#sh)"><circle cx="${x}" cy="${y}" r="15" fill="${own?C.own:C.blue}" stroke="#fff" stroke-width="3"/>
+    <text x="${x}" y="${y+5}" text-anchor="middle" font-size="${own?13:12}" font-weight="800" fill="#fff" pointer-events="none">${own?'⛨':'B'}</text></g>`;
+}
+function threatCard(ev,i,y){
+  const reg=REG[ev.r];
+  const x=596;
+  const col=ev.status==='hold'?C.green:ev.status==='fall'?C.red:C.amber;
+  const stTxt=ev.status==='hold'?'HOLDER':ev.status==='fall'?'VARNIA ANGRIPER':'USIKKERT';
+  const unit=Math.min(6,68/Math.max(ev.gain,ev.hi,10));
+  const bx=100;
+  let o=`<g transform="translate(${x} ${y})" filter="url(#sh)" data-threat="${ev.r}">
+   <rect width="214" height="98" rx="10" fill="#fffaf0" stroke="${C.red}" stroke-width="${ev.main?3:1.6}" ${ev.main?'':'stroke-dasharray="6 3"'}/>
+   <text x="12" y="19" font-size="10.5" font-weight="800" fill="${C.red}" letter-spacing=".05em">${ev.main?'HOVEDANGREP':'PRØVETREKK'}: ${REG[ev.r].name.toUpperCase()}</text>
+   <text x="12" y="41" font-size="11" fill="#6e2f1d">Varnia vinner</text>
+   <rect x="${bx}" y="31" width="${ev.g0*unit}" height="14" rx="3" fill="${C.foe}"/>
+   ${fear(S)?`<rect x="${bx+ev.g0*unit}" y="31" width="${fear(S)*unit}" height="14" fill="${C.red}"/>`:''}
+   <text x="${Math.min(bx+ev.gain*unit+5,172)}" y="42" font-size="11.5" font-weight="800" fill="#6e2f1d">${ev.gain}</text>
+   <text x="12" y="64" font-size="11" fill="#23406d">Varnia taper</text>`;
+  let cx=bx;
+  if(ev.own){ o+=`<rect x="${cx}" y="54" width="${ev.own*unit}" height="14" fill="${C.own}"/>`; cx+=ev.own*unit; }
+  if(ev.ally){ o+=`<rect x="${cx}" y="54" width="${ev.ally*unit}" height="14" fill="${C.blue}"/>`; cx+=ev.ally*unit; }
+  if(S.member){
+    if(ev.sure) o+=`<rect x="${cx}" y="54" width="${ev.a5hi*unit}" height="14" fill="${C.gold}"/>`;
+    else{
+      o+=`<rect x="${cx}" y="54" width="${Math.max(ev.a5lo*unit,0)}" height="14" fill="${C.gold}"/>`;
+      o+=`<rect x="${cx+ev.a5lo*unit}" y="54" width="${(ev.a5hi-ev.a5lo)*unit}" height="14" fill="url(#fogg)"/>`;
+    }
+    cx+=ev.a5hi*unit;
+  }
+  o+=`<text x="${Math.min(Math.max(cx,bx)+5,172)}" y="65" font-size="11.5" font-weight="800" fill="#23406d">${ev.lo===ev.hi?ev.lo:ev.lo+'–'+ev.hi}</text>
+   <rect x="12" y="75" width="${ev.status==='fall'?118:ev.status==='hold'?62:76}" height="17" rx="8" fill="${col}"/>
+   <text x="20" y="87.5" font-size="10.5" font-weight="800" fill="#fff">${stTxt}</text>
+   ${ev.sure?`<text x="${ev.status==='fall'?138:ev.status==='hold'?82:96}" y="88" font-size="10.5" font-weight="700" fill="${C.blue}">★ snubletråd</text>`:''}
+  </g>`;
+  // pil
+  const [ex,ey]=reg.edge;
+  o=`<path d="M${x} ${y+60} C ${x-20} ${y+60} ${ex+40} ${ey} ${ex+8} ${ey}" fill="none" stroke="${C.red}" stroke-width="${ev.main?7:4}" stroke-dasharray="${ev.main?'14 8':'8 7'}" marker-end="url(#arr)" opacity=".9"/>`+o;
+  return o;
+}
+function boardSVG(){
+  const evs=S.targets.map(t=>evalTarget(S,t));
+  let o=`<svg viewBox="160 -22 660 470" preserveAspectRatio="xMidYMid meet" aria-label="Kart">
+  <defs>
+    <pattern id="waves" width="40" height="16" patternUnits="userSpaceOnUse"><path d="M0 8 q10 -6 20 0 t20 0" fill="none" stroke="#86adbb" stroke-width="1.4" opacity=".6"/></pattern>
+    <pattern id="hatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="10" stroke="#a9563b" stroke-width="2" opacity=".3"/></pattern>
+    <marker id="arr" markerUnits="userSpaceOnUse" markerWidth="22" markerHeight="22" refX="14" refY="11" orient="auto"><path d="M0 0 L22 11 L0 22z" fill="${C.red}"/></marker>
+    <filter id="sh" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="3" stdDeviation="2" flood-opacity=".33"/></filter>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="7"/></filter>
+    <linearGradient id="fogg" x1="0" x2="1"><stop offset="0" stop-color="${C.gold}" stop-opacity=".9"/><stop offset="1" stop-color="${C.gold}" stop-opacity=".08"/></linearGradient>
+  </defs>
+  <rect x="160" y="-22" width="660" height="470" fill="var(--sea)"/><rect x="160" y="-22" width="660" height="470" fill="url(#waves)"/>`;
+  // alliert land med rådet
+  const allyFill=S.member?'var(--ally)':'#b7c3d3';
+  o+=`<path d="M160 20 L215 40 L200 150 L232 240 L205 330 L240 410 L160 448 Z" fill="${allyFill}" stroke="var(--ally-d)" stroke-width="2.5"/>
+   <text x="168" y="62" class="serif" font-size="12" fill="#23406d" font-weight="700">Vestmark</text>
+   <text x="168" y="300" class="serif" font-size="12" fill="#23406d" font-weight="${S.act===4?800:400}">Sølvland</text>`;
+  o+=`<g class="region" data-target="radet" transform="translate(166 130)"><rect width="52" height="46" rx="6" fill="#fffaf0" stroke="${C.teal}" stroke-width="2"/>
+    <text x="26" y="20" text-anchor="middle" font-size="16">🏛</text><text x="26" y="38" text-anchor="middle" font-size="10" font-weight="800" fill="${C.teal}">RÅDET</text>
+    ${S.art4?`<circle cx="48" cy="4" r="10" fill="${C.sky}" stroke="#fff" stroke-width="2"/><text x="48" y="8" text-anchor="middle" font-size="11" fill="#fff" font-weight="800">4</text>`:''}</g>`;
+  if(S.act===4){
+    o+=`<path d="M190 445 L190 400" stroke="${C.red}" stroke-width="5" stroke-dasharray="9 6" marker-end="url(#arr)"/><text x="200" y="438" font-size="11" font-weight="700" fill="${C.red}">Zarkan</text>`;
+    for(let i=0;i<S.abroad;i++) o+=`<g filter="url(#sh)"><circle cx="${182+i*30}" cy="${345}" r="13" fill="${C.own}" stroke="#fff" stroke-width="3"/><text x="${182+i*30}" y="${350}" text-anchor="middle" font-size="12" fill="#fff">⛨</text></g>`;
+  }
+  // Varnia
+  o+=`<path class="region" data-target="varnia" d="M520 -22 L820 -22 L820 448 L470 448 L455 400 L520 330 L560 250 L530 170 L575 90 L520 0Z" fill="var(--foe)" stroke="var(--foe-d)" stroke-width="3"/>
+   <path d="M520 -22 L820 -22 L820 448 L470 448 L455 400 L520 330 L560 250 L530 170 L575 90 L520 0Z" fill="url(#hatch)" pointer-events="none"/>
+   <text x="700" y="438" text-anchor="middle" class="serif" font-size="24" font-weight="700" fill="#6e2f1d" opacity=".55" letter-spacing="5" pointer-events="none">VARNIA</text>`;
+  if(S.berolig) o+=`<g filter="url(#sh)" pointer-events="none"><circle cx="590" cy="210" r="14" fill="${C.green}" stroke="#fff" stroke-width="3"/><text x="590" y="215" text-anchor="middle" font-size="13" fill="#fff">✉</text></g>`;
+  // spenning som glød
+  o+=`<path d="M520 0 L575 90 L530 170 L560 250 L520 330 L455 400 L470 448" fill="none" stroke="${C.red}" stroke-width="22" opacity="${(S.sp/5*.85).toFixed(2)}" filter="url(#glow)" pointer-events="none"/>`;
+  // regioner
+  const threatR=new Set(S.targets.map(t=>t[0]));
+  for(const [k,R] of Object.entries(REG)){
+    const tgt=threatR.has(k);
+    o+=`<polygon class="region" data-target="${k}" points="${R.poly}" fill="${tgt?'#f6e3a8':'#ecdcae'}" stroke="var(--own-d)" stroke-width="${tgt?4:2.5}"/>`;
+  }
+  for(const [k,R] of Object.entries(REG)){
+    if(R.lab[0]) o+=`<text x="${R.lab[0]}" y="${R.lab[1]}" font-size="12.5" class="serif" font-weight="700" fill="#6b5212" pointer-events="none">${R.name}</text>`;
+    if(R.city) o+=`<circle cx="${R.city[0]}" cy="${R.city[1]}" r="${k==='kvit'?6:5}" fill="#fff" stroke="#3a2f1a" stroke-width="2.2" pointer-events="none"/>`;
+    if(S.ovelse.includes(k)) o+=`<g pointer-events="none"><rect x="${R.slots[0][0]-26}" y="${R.slots[0][1]-30}" width="52" height="15" rx="7" fill="${C.blue}"/><text x="${R.slots[0][0]}" y="${R.slots[0][1]-19}" text-anchor="middle" font-size="9.5" font-weight="800" fill="#fff">ØVELSE</text></g>`;
+    for(let f=0;f<S.flags[k];f++){ const [fx,fy]=[R.slots[R.slots.length-1][0]+18+f*10,R.slots[R.slots.length-1][1]-4];
+      o+=`<g pointer-events="none"><line x1="${fx}" y1="${fy}" x2="${fx}" y2="${fy-20}" stroke="#3a2f1a" stroke-width="2"/><path d="M${fx} ${fy-20} l14 4 l-14 4z" fill="var(--foe-d)"/></g>`; }
+  }
+  o+=`<rect x="352" y="337" width="60" height="17" rx="4" fill="#fffaf0" opacity=".92" pointer-events="none"/><text x="382" y="350" text-anchor="middle" font-size="11.5" font-weight="700" pointer-events="none">Kvitsund</text>`;
+  // brikker
+  for(const [k,R] of Object.entries(REG)){
+    S.tokens.filter(t=>t.at===k).forEach((t,i)=>{ const [x,y]=R.slots[i]; o+=tokenSVG(t,x,y); });
+  }
+  // Varnias styrker ved målene
+  evs.forEach(ev=>{
+    const n=Math.min(5,Math.ceil(ev.gain/3)); const y=REG[ev.r].cy;
+    for(let i=0;i<n;i++){ const x=650+ (i%3)*28 + (ev.main?0:6), yy=clamp(y,40,360)+70+Math.floor(i/3)*26 - (REG[ev.r].cy>300?150:0);
+      o+=`<g filter="url(#sh)" pointer-events="none"><rect x="${x-11}" y="${yy-11}" width="22" height="22" rx="5" fill="var(--foe-d)"/><text x="${x}" y="${yy+4}" text-anchor="middle" font-size="11" fill="#fff">▲</text></g>`; }
+  });
+  const order=evs.map((ev,i)=>({ev,y:clamp(REG[ev.r].cy-48,-14,342)})).sort((a,b)=>a.y-b.y);
+  for(let i=1;i<order.length;i++) if(order[i].y<order[i-1].y+106) order[i].y=order[i-1].y+106;
+  const over=order.length?order[order.length-1].y-342:0; if(over>0) order.forEach(c=>c.y-=over);
+  order.forEach((c,i)=>o+=threatCard(c.ev,i,c.y));
+  // status
+  o+= S.member
+    ? `<g transform="translate(330 -16)" opacity="${(0.3+0.7*S.tr/100).toFixed(2)}" pointer-events="none"><rect width="150" height="24" rx="12" fill="#fff7e0" stroke="${C.gold}" stroke-width="2"/><text x="75" y="16" text-anchor="middle" font-size="11.5" font-weight="800" fill="#7a5a00">★ Medlem: art. 5</text></g>`
+    : `<g transform="translate(345 -16)" pointer-events="none"><rect width="110" height="24" rx="12" fill="#f1ece2" stroke="#9d907a" stroke-width="2"/><text x="55" y="16" text-anchor="middle" font-size="11.5" font-weight="700" fill="#6f6455">Står alene</text></g>`;
+  // snakkeboble
+  if(S.letter){
+    const bx=166, by=186;
+    const lines=wrap(S.letter.text,25);
+    const h=lines.length*14+30;
+    o+=`<g transform="translate(${bx} ${by})" filter="url(#sh)" data-letter="1">
+      <rect width="158" height="${h}" rx="9" fill="#fff" stroke="#c9b98f"/>
+      ${lines.map((l,i)=>`<text x="10" y="${17+i*14}" font-size="11" class="serif">${l}</text>`).join('')}
+      <text x="10" y="${h-8}" font-size="9.5" fill="#6f6455">${S.letter.from}</text>
+      <g data-close="1" style="cursor:pointer"><rect x="138" y="2" width="18" height="18" fill="transparent"/><text x="147" y="15" text-anchor="middle" font-size="14" fill="#6f6455">×</text></g></g>`;
+  }
+  o+='</svg>';
+  return o;
+}
+function wrap(t,n){ const w=t.split(' '); const out=[]; let l=''; for(const x of w){ if((l+' '+x).trim().length>n){out.push(l.trim());l=x;} else l+=' '+x; } if(l.trim()) out.push(l.trim()); return out; }
+
+/* ===================== PANEL ===================== */
+function topHTML(){
+  const coins=Array.from({length:Math.max(S.budgetBase,5)},(_,i)=>`<i class="coin ${i<S.budget?'':'off'}"></i>`).join('');
+  const segs=Array.from({length:5},(_,i)=>`<i class="${i<S.sp?'on':''}"></i>`).join('');
+  const a=ACTS[S.act];
+  return `<header class="top"><div class="act"><small>Akt ${S.act} av 4</small><b>${a.title}</b></div>
+    <div class="round" data-testid="round">${a.rounds?`Runde ${S.round} av ${a.rounds}`:'Forhandlinger i rådet'}</div><div class="spacer"></div>
+    <div class="stat">Budsjett <div class="coins" data-testid="budget" data-v="${S.budget}">${coins}</div></div>
+    <div class="stat" title="${CONCEPTS.dilemma.tip}">Spenning <div class="segs" data-v="${S.sp}">${segs}</div>${fear(S)?`<span style="color:#f08a70">Varnia +${fear(S)} av frykt</span>`:''}</div></header>`;
+}
+function trayHTML(){
+  const own=S.tokens.filter(t=>t.at===null&&t.kind==='own'), ally=S.tokens.filter(t=>t.at===null&&t.kind==='ally');
+  const tk=(t)=>`<button class="tk ${S.sel&&S.sel.id===t.id?'sel':''}" data-tok="${t.id}" style="background:${t.kind==='own'?C.own:C.blue}" aria-label="${t.kind==='own'?'Egen bataljon':'Alliert bataljon'}"><span>${t.kind==='own'?'⛨':'B'}</span><small>${t.kind==='own'?'egen':'alliert'}</small></button>`;
+  const act=(id,ic,col,label,cost,ok)=>`<button class="tk ${S.sel&&S.sel.id===id?'sel':''}" data-act="${id}" style="background:${col}" ${ok?'':'disabled'} aria-label="${label}"><span>${ic}</span><small>${label}</small><span class="c">${cost}</span></button>`;
+  const ovOk=S.member&&!S.ovelseLocked&&canAfford(2);
+  return `<h3>Dine brikker</h3>
+   <div class="tray ${S.sel&&S.sel.type==='tok'&&S.tokens.find(t=>t.id===S.sel.id)?.at?'drop':''}" data-tray="1">
+     ${own.map(tk).join('')}${ally.map(tk).join('')}${!own.length&&!ally.length?'<span class="empty">Alle brikkene står på kartet. Klikk på en brikke for å flytte den.</span>':''}
+   </div>
+   <button class="build" data-testid="build" ${canAfford(3)?'':'disabled'}>+ Bygg ny bataljon <span style="font-weight:400">(3 mynter, +1 spenning)</span></button>
+   <h3>Tiltak</h3>
+   <div class="tray">
+     ${act('berolig','✉',C.green,'beroligelse',1,!S.berolig&&canAfford(1))}
+     ${act('ovelse','⇄',C.blue,'øvelse',2,ovOk)}
+     ${act('art4','4',C.sky,'art. 4',1,S.member&&!S.art4&&canAfford(1))}
+   </div>${S.member?'':'<div class="empty" style="margin-top:-4px">Øvelse og art. 4 krever medlemskap.</div>'}${S.ovelseLocked?'<div class="empty" style="margin-top:-4px">Ingen vil øve med dere etter at dere ikke stilte opp.</div>':''}`;
+}
+function beliefHTML(){
+  if(!S.member) return `<div class="belief"><b>Hva tror Varnia om alliansen?</b><br><span style="color:var(--muted)">Skjærland er ikke med i noen allianse. Ingen kommer.</span></div>`;
+  const lo=clamp(S.tr-BAND,0,100), hi=clamp(S.tr+BAND,0,100);
+  return `<div class="belief" title="${CONCEPTS.troverdighet.tip}"><b>Tror Varnia at alliansen kommer?</b>
+    <div class="bbar"><i style="left:${lo}%;width:${hi-lo}%"></i></div>
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted)"><span>de kommer ikke</span><span data-testid="belief">${lo}–${hi} %</span><span>de kommer</span></div>
+    <div style="color:var(--muted);margin-top:4px">Du vet ikke nøyaktig hva Varnia tror før runden er over. Troverdigheten synker litt hver runde.</div></div>`;
+}
+function chipsHTML(){
+  const o=S.concepts.map(k=>`<span class="chip ${S.newConcepts.includes(k)?'new':''}" style="background:${CONCEPTS[k].color}" title="${CONCEPTS[k].tip}">${CONCEPTS[k].name}</span>`).join('');
+  S.newConcepts=[]; return o;
+}
+const HINTS={tok:'Klikk på en region for å sette brikken der. Klikk på brikkefeltet for å legge den tilbake.',berolig:'Klikk på Varnia for å berolige naboen.',ovelse:'Klikk på regionen der dere skal øve med de allierte.',art4:'Klikk på RÅDET for å be om konsultasjoner.'};
+function render(){
+  if(S.screen==='council') return renderCouncil();
+  if(S.screen!=='map'){ app.innerHTML=''; return; }
+  const picking=!!S.sel;
+  const err=!!S.hintTxt; const hint=S.hintTxt||(S.sel?HINTS[S.sel.type==='tok'?'tok':S.sel.id]:'');
+  app.innerHTML=topHTML()+`<div class="main"><div class="board ${picking?'picking':''}">${boardSVG()}${hint?`<div class="hint" ${err?'style="background:#c4432b"':''}>${hint}</div>`:''}</div>
+    <aside class="side">${trayHTML()}${beliefHTML()}<div class="concepts">${chipsHTML()}</div>
+      <div class="endrow"><button class="endbtn" data-testid="end">Avslutt runden →</button><button class="undobtn" data-testid="undo" ${S.history.length?'':'disabled'}>↶ Angre</button></div></aside></div>`;
+}
+const app=document.getElementById('app');
+
+/* ===================== INTERAKSJON ===================== */
+app.addEventListener('click',e=>{
+  if(S.screen==='council'){
+    const off=e.target.closest('.offer'); if(off) return toggleOffer(off.dataset.offer);
+    if(e.target.closest('[data-testid=propose]')) return propose();
+    return;
+  }
+  if(S.screen!=='map') return;
+  if(e.target.closest('[data-close]')){ S.letter=null; return render(); }
+  if(e.target.closest('[data-testid=end]')) return endRound();
+  if(e.target.closest('[data-testid=undo]')) return undo();
+  if(e.target.closest('[data-testid=build]')) return build();
+  const act=e.target.closest('[data-act]');
+  if(act&&!act.disabled){ S.sel = (S.sel&&S.sel.id===act.dataset.act)?null:{type:'act',id:act.dataset.act}; return render(); }
+  const tok=e.target.closest('[data-tok]');
+  // Er noe valgt og brukeren klikker en brikke på kartet: plasser i den brikkens region
+  if(tok && S.sel && S.sel.type==='tok' && tok.closest('svg') && S.sel.id!==tok.dataset.tok){
+    const t=S.tokens.find(x=>x.id===tok.dataset.tok); return placeAt(t.at);
+  }
+  if(tok){ const id=tok.dataset.tok; S.sel=(S.sel&&S.sel.id===id)?null:{type:'tok',id}; return render(); }
+  if(e.target.closest('[data-tray]') && S.sel && S.sel.type==='tok'){
+    const t=S.tokens.find(x=>x.id===S.sel.id); if(t.at!==null){ snap(); t.at=null; } S.sel=null; return render();
+  }
+  const reg=e.target.closest('[data-target]');
+  if(reg && S.sel) return placeAt(reg.dataset.target);
+  if(S.sel && !e.target.closest('.side')){ S.sel=null; render(); }
+});
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&S.sel){S.sel=null;render();} });
+function flash(msg){ S.hintTxt=msg; render(); setTimeout(()=>{ if(S.hintTxt===msg){S.hintTxt='';render();} },2200); }
+function placeAt(target){
+  const sel=S.sel;
+  if(sel.type==='tok'){
+    if(!REG[target]) return flash('Bataljoner må stå i en region i Skjærland.');
+    const t=S.tokens.find(x=>x.id===sel.id);
+    if(t.at===target){ S.sel=null; return render(); }
+    if(countAt(S,target)>=MAX_PER_REG) return flash('Det er ikke plass til flere brikker der.');
+    snap(); t.at=target; S.sel=null;
+    if(t.kind==='ally'){ learn('snubletrad'); learn('basepolitikk'); }
+    return render();
+  }
+  if(sel.id==='berolig'){
+    if(target!=='varnia') return flash('Beroligelse er rettet mot Varnia. Klikk på Varnia.');
+    snap(); S.budget-=1; S.sp=clamp(S.sp-1,0,5); S.berolig=true; S.sel=null; learn('beroligelse');
+    if(!S._ber){S._ber=1; say('Endelig noen som ringer Varnia i stedet for å rope over grensa. Bestefar fisket på begge sider av fjorden.','Ole, fisker','nord');}
+    return render();
+  }
+  if(sel.id==='ovelse'){
+    if(!REG[target]) return flash('Øvelsen må holdes i en region i Skjærland.');
+    snap(); S.budget-=2; S.sp=clamp(S.sp+1,0,5); S.ovelse.push(target); S.sel=null; learn('troverdighet');
+    if(S.sp>=3){learn('dilemma');addMot('dilemma');}
+    return render();
+  }
+  if(sel.id==='art4'){
+    if(target!=='radet') return flash('Konsultasjoner skjer i Nordatlantisk råd. Klikk på RÅDET.');
+    snap(); S.budget-=1; S.tr=clamp(S.tr+10,0,100); S.art4=true; S.sel=null; learn('art4'); learn('radet');
+    return render();
+  }
+}
+function build(){
+  if(!canAfford(3)) return;
+  snap(); S.budget-=3; S.sp=clamp(S.sp+1,0,5); addTok('own'); learn('avskrekking');
+  if(S.sp>=3){ learn('dilemma'); addMot('dilemma'); if(!S._spl){S._spl=1; say('Varnias aviser skriver at vi forbereder angrep. Svigermor i Varnia ringer og gråter.','Hamid, Kvitsund','kvit');} }
+  render();
+}
+
+/* ===================== MODAL ===================== */
+function modal({kicker='',title,html,buttons,cls=''}){
+  closeModal();
+  const ov=document.createElement('div'); ov.className='overlay'; ov.id='overlay';
+  ov.innerHTML=`<div class="modal ${cls}" role="dialog" aria-modal="true"><div class="body">${kicker?`<div class="kicker">${kicker}</div>`:''}<h3>${title}</h3>${html}</div>
+    <div class="foot">${buttons.map((b,i)=>`<button class="mbtn ${b.primary?'primary':''}" data-mb="${i}" ${b.testid?`data-testid="${b.testid}"`:''}>${b.label}</button>`).join('')}</div></div>`;
+  document.body.appendChild(ov);
+  ov.querySelectorAll('[data-mb]').forEach(btn=>btn.addEventListener('click',()=>{ const b=buttons[+btn.dataset.mb]; closeModal(); b.onClick&&b.onClick(); }));
+  const p=ov.querySelector('.primary'); if(p) p.focus();
+  return ov;
+}
+function closeModal(){ document.getElementById('overlay')?.remove(); }
+
+/* ===================== FLYT ===================== */
+function titleScreen(){
+  S=fresh(); uid=0; render();
+  modal({cls:'title-screen',kicker:'Samfunnskunnskap · NATO',title:'Avskrekking',
+    html:`<p>Du er statsminister i <b>Skjærland</b>, et lite land ved havet. Naboen <b>Varnia</b> er en stormakt.</p>
+    <p>Du kan ikke vinne en krig mot Varnia. Du kan bare sørge for at et angrep <b>ikke lønner seg</b>. Hver runde varsler Varnia hvor de vil slå til. Du fordeler bataljonene dine, og Varnia regner på om det lønner seg.</p>
+    <p>Spillet har fire akter og tar omtrent 25 minutter.</p>`,
+    buttons:[{label:'Start spillet',primary:true,testid:'start',onClick:()=>startAct(1)}]});
+}
+function startAct(n){
+  S.act=n; S.round=1;
+  if(n===2) return startCouncil();
+  S.screen='map';
+  if(n===1){ for(let i=0;i<3;i++) addTok('own'); S.budgetBase=4; }
+  if(n===3){ S.member=true; S.tr=50; S.sp=Math.min(S.sp,2); S.budgetBase=4+(S.promises.A?1:0); S.allyPerRound=1;
+    while(S.tokens.filter(t=>t.kind==='own').length<4) addTok('own'); learn('kollektivt'); learn('troverdighet'); }
+  const intro={
+    1:`<p>Skjærland er ikke med i noen allianse. Du har tre bataljoner.</p>
+       <p><b>Slik spiller du:</b> Klikk på en bataljon i panelet til høyre, og klikk så på en region på kartet. Bataljoner kan flyttes når som helst før du avslutter runden.</p>
+       <p>De røde boksene viser Varnias regnestykke for hvert mål: det Varnia vinner, mot det angrepet koster. Står det <b>HOLDER</b>, lønner det seg ikke for Varnia.</p>
+       <p>Du har 4 mynter per runde. En ny bataljon koster 3.</p>`,
+    3:`<p>Skjærland er medlem. Artikkel 5 betyr at et angrep på ett medlem regnes som et angrep på alle.</p>
+       <p>Nå får Varnia et gull-lodd mot seg overalt: <b>artikkel 5</b>. Men loddet er bare så tungt som Varnia <i>tror</i> det er. Derfor vises det som et usikkert felt.</p>
+       <p>Hver runde får du én <b>alliert bataljon</b> (blå). Der den står, er artikkel 5 helt sikker: angriper Varnia der, angriper de alliansen. Den reiser hjem etter runden.</p>
+       <p>Du har ${S.budgetBase} mynter per runde${S.promises.A?' (én ekstra fordi dere lovet å bruke mer på forsvar)':''}.</p>`,
+    4:`<p>Artikkel 5 gjelder alle medlemmene, ikke bare Skjærland. Nå trenger et annet medlem hjelp.</p>`,
+  }[n];
+  render();
+  modal({kicker:`Akt ${n} av 4`,title:`Akt ${n}: ${ACTS[n].title}`,html:intro,buttons:[{label:'Videre',primary:true,testid:'next',onClick:beginRound}]});
+}
+function beginRound(){
+  const R=ROUNDS[S.act][S.round-1];
+  S.budget=S.budgetBase; S.ovelse=[]; S.art4=false; S.berolig=false; S.sel=null; S.history=[];
+  S.tokens=S.tokens.filter(t=>t.kind!=='ally');
+  for(let i=0;i<S.allyPerRound;i++) addTok('ally');
+  S.targets=R.T;
+  if(R.tr) S.tr=clamp(S.tr+R.tr,0,100);
+  if(R.mot) addMot(R.mot);
+  render();
+  let extra='';
+  if(R.tr) extra+=`<p>Troverdigheten faller med ${-R.tr} prosentpoeng.</p><div class="quote">Motstemme: «${MOT.stormakt.t}». ${MOT.stormakt.d}</div>`;
+  if(R.hint4) extra+=`<p style="color:var(--muted);font-size:14px">Et medlem som føler seg truet, kan be om konsultasjoner i rådet.</p>`;
+  modal({kicker:`Akt ${S.act} · runde ${S.round}`,title:R.title,html:`<p>${R.text}</p>${extra}`,
+    buttons:[{label:'Til kartet',primary:true,testid:'next',onClick:()=>{ if(R.decision) return sendDecision(); render(); }}]});
+}
+function sendDecision(){
+  learn('gjensidig'); addMot('andres');
+  const n=S.tokens.filter(t=>t.kind==='own').length;
+  modal({kicker:'Artikkel 5',title:'Hva sender Skjærland til Sølvland?',
+    html:`<p>Artikkel 5 sier at hvert medlem skal hjelpe med de tiltakene det selv mener er nødvendige. Skjærland bestemmer selv hvor mye.</p>
+      <p>Bataljonene dere sender, er borte hjemme resten av spillet. Dere har ${n} nå. De andre landene følger med på om Skjærland stiller opp.</p>
+      ${S.promises.B?'<p>Under forhandlingene lovet dere Sølvland å stille opp i sør.</p>':''}`,
+    buttons:[{label:'Ingen',testid:'send0',onClick:()=>doSend(0)},{label:'1 bataljon',testid:'send1',onClick:()=>doSend(1)},{label:'2 bataljoner',testid:'send2',primary:true,onClick:()=>doSend(2)}]});
+}
+function doSend(k){
+  S.stats.send=k; S.abroad=k;
+  for(let i=0;i<k;i++){ const own=S.tokens.filter(t=>t.kind==='own'); const t=own.find(x=>x.at===null)||own[own.length-1]; S.tokens=S.tokens.filter(x=>x!==t); }
+  if(k===0){ S.tr=clamp(S.tr-40,0,100); S.ovelseLocked=true; S.allyPerRound=0; S.tokens=S.tokens.filter(t=>t.kind!=='ally');
+    say('Vi husker hvem som kom, og hvem som ikke kom. Bretonia tar soldatene sine hjem.','Sølvlands ambassadør','midt'); }
+  else { S.tr=clamp(S.tr+10,0,100); S.allyPerRound=2; addTok('ally');
+    say(k===1?'Sønnen min er i bataljonen som reiser sørover. Jeg er stolt. Og livredd.':'Hvorfor skal våre soldater sloss for Sølvland? Jeg finner ikke engang Zarkan på kartet!',k===1?'Kari, mor':'Arne, pensjonist','hoved'); }
+  render();
+}
+/* ---------- avgjørelse ---------- */
+function bigScale(ev,u){
+  const G=ev.gain, K=ev.cost; const ang=clamp((K-G)*2.4,-16,16);
+  const unit=Math.min(7,130/Math.max(G,K,ART5_MAX+6));
+  const stack=(parts)=>{ let y=0,o=''; parts.forEach(p=>{ if(p.v<=0) return; const h=p.v*unit; o+=`<rect x="-46" y="${-y-h}" width="92" height="${h}" rx="3" fill="${p.c}" stroke="rgba(0,0,0,.2)"/>${h>=13?`<text x="0" y="${-y-h/2+4}" text-anchor="middle" font-size="10.5" font-weight="700" fill="#fff">${p.l} ${p.v}</text>`:''}`; y+=h; }); return o; };
+  const L=stack([{v:ev.g0,c:C.foe,l:'Gevinst'},{v:G-ev.g0,c:C.red,l:'Frykt'}]);
+  const Rr=stack([{v:ev.own,c:C.own,l:'Egne'},{v:ev.ally,c:C.blue,l:'Allierte'},{v:ev.a5||0,c:C.gold,l:'Art. 5'}]);
+  const rad=ang*Math.PI/180, A=120;
+  const lx=-A*Math.cos(rad), ly=-A*Math.sin(rad), rx=A*Math.cos(rad), ry=A*Math.sin(rad);
+  return `<svg viewBox="-200 -20 400 300" data-ang="${ang}"><g transform="translate(0 30)">
+    <path d="M0 0 L-24 210 L24 210Z" fill="#5b4a33"/><rect x="-60" y="208" width="120" height="10" rx="3" fill="#3d3122"/>
+    <g class="arm" style="transform:rotate(0deg)" data-final="rotate(${ang}deg)"><rect x="-${A}" y="-5" width="${2*A}" height="10" rx="5" fill="#3d3122"/></g>
+    <g class="pan" style="transform:translate(${-A}px,0px)" data-final="translate(${lx}px,${ly}px)"><line x1="0" y1="0" x2="-48" y2="120" stroke="#3d3122" stroke-width="1.6"/><line x1="0" y1="0" x2="48" y2="120" stroke="#3d3122" stroke-width="1.6"/><g transform="translate(0 120)">${L}</g><path d="M-56 120 Q0 138 56 120Z" fill="#8b7350"/><text x="0" y="156" text-anchor="middle" font-size="12" font-weight="800" fill="#6e2f1d">VINNER ${G}</text></g>
+    <g class="pan" style="transform:translate(${A}px,0px)" data-final="translate(${rx}px,${ry}px)"><line x1="0" y1="0" x2="-48" y2="120" stroke="#3d3122" stroke-width="1.6"/><line x1="0" y1="0" x2="48" y2="120" stroke="#3d3122" stroke-width="1.6"/><g transform="translate(0 120)">${Rr}</g><path d="M-56 120 Q0 138 56 120Z" fill="#8b7350"/><text x="0" y="156" text-anchor="middle" font-size="12" font-weight="800" fill="#23406d">TAPER ${K}</text></g>
+    <circle cx="0" cy="0" r="8" fill="${C.gold}" stroke="#3d3122" stroke-width="2"/></g></svg>`;
+}
+function endRound(){
+  if(S.screen!=='map') return;
+  S.sel=null;
+  const u=Math.round((rnd()*2-1)*BAND);
+  const evs=S.targets.map(t=>{ const pre=evalTarget(S,t); const ev=evalTarget(S,t,u); ev.pre=pre.status; return ev; });
+  const belief=clamp(S.tr+u,0,100);
+  let html='<div class="scales">', fallen=[];
+  evs.forEach(ev=>{
+    const held=ev.gain<=ev.cost;
+    if(S.act!==2){ S.stats.totByAct[S.act]++; if(held) S.stats.heldByAct[S.act]++; }
+    if(S.act>=3){ S.stats.total++; if(held) S.stats.held++; if(ev.pre==='unsure'){ S.stats.unsure++; if(held) S.stats.unsureHeld++; } }
+    if(!held){ S.flags[ev.r]++; fallen.push(ev); }
+    html+=`<div>${bigScale(ev,u)}<div class="res" style="color:${held?C.green:C.red}">${REG[ev.r].name}: ${held?'Varnia venter':'Varnia angriper'}</div></div>`;
+  });
+  html+='</div>';
+  if(S.member) html+=`<p style="text-align:center">Varnia trodde <b>${belief} %</b> på at alliansen ville komme${evs.some(e=>e.sure)?'. Der allierte soldater sto, var det ingen tvil':''}.</p>`;
+  if(fallen.length){
+    const f=fallen[0]; let diag;
+    if(!S.member) diag='Varnias statsminister: «Skjærland står alene. Hvem skulle komme og hjelpe dem?»';
+    else if(!f.sure && belief<40) diag='En varnisk general: «Vi regnet med at alliansen ikke ville komme. Løftet deres har ikke vært synlig på lenge.»';
+    else if(fear(S)>=2) diag='Varnias forsvarsminister: «Skjærland rustet opp ved grensa vår. Vi måtte handle før de gjorde det.»';
+    else diag=`Varnias utenriksminister: «Det ${REG[f.r].name} kunne koste oss, var mindre enn det vi kunne vinne.»`;
+    html+=`<div class="quote">${diag}</div><p>Varnia tok et område i ${fallen.map(e=>REG[e.r].name).join(' og ')}. Ingen ble drept, men flagget er byttet.</p>`;
+  } else html+=`<p style="text-align:center;color:var(--muted);font-size:14px">Ingenting skjer. Det er slik avskrekking ser ut når den virker.</p>`;
+  learn('avskrekking');
+  render();
+  const ov=modal({cls:'wide',kicker:`Akt ${S.act} · runde ${S.round}`,title:'Varnia regner',html,buttons:[{label:'Videre',primary:true,testid:'next',onClick:afterRound}]});
+  requestAnimationFrame(()=>requestAnimationFrame(()=>ov.querySelectorAll('[data-final]').forEach(g=>g.style.transform=g.dataset.final)));
+}
+function afterRound(){
+  if(S.member) S.tr=clamp(S.tr-10,0,100);
+  S.letter=null;
+  if(S.round>=ACTS[S.act].rounds) return endAct();
+  S.round++; beginRound();
+}
+const REAL={
+  1:`<div class="real"><b>I virkeligheten:</b> Norge gikk inn i NATO da alliansen ble grunnlagt i 1949, sammen med elleve andre land. Erfaringen fra 1940 var at nøytralitet ikke hadde beskyttet landet.</div>
+     <div class="real"><b>Men:</b> Finland og Sverige var alliansefrie i mange tiår og klarte seg. Spillet har gjort Varnia sterkere enn det trenger å være.</div>`,
+  2:`<div class="real"><b>I virkeligheten:</b> Finland og Sverige søkte om medlemskap i 2022. Alle medlemslandene måtte godkjenne. Tyrkia og Ungarn ventet lenge med å si ja. Finland ble medlem i april 2023 og Sverige i mars 2024.</div>
+     <div class="real"><b>Basepolitikken:</b> Da Norge gikk inn i NATO i 1949, lovet regjeringen at det ikke skulle åpnes baser for fremmede lands styrker så lenge Norge ikke var angrepet eller truet. Det skulle berolige Sovjetunionen.</div>`,
+  3:`<div class="real"><b>I virkeligheten:</b> Allierte styrker øver i Norge hvert år, blant annet for at løftet om hjelp skal være troverdig. Dagen Russland gikk til fullskala invasjon av Ukraina, 24. februar 2022, ba åtte medlemsland om konsultasjoner etter artikkel 4.</div>
+     <div class="real"><b>Avskrekking og beroligelse:</b> Norsk sikkerhetspolitikk har lenge vært en balanse mellom å avskrekke Russland og å berolige landet.</div>`,
+  4:`<div class="real"><b>I virkeligheten:</b> Artikkel 5 er brukt én gang, etter terrorangrepene mot USA 11. september 2001. Norge deltok i den internasjonale innsatsen i Afghanistan i mange år etterpå.</div>`,
+};
+function endAct(){
+  const n=S.act, h=S.stats.heldByAct[n], t=S.stats.totByAct[n];
+  let txt= n===1 ? `<p>Skjærland holdt ${h} av ${t} mål. Varnia kunne true flere steder samtidig, og Skjærland hadde ikke nok bataljoner til å dekke alle.</p>`
+                 : `<p>Skjærland holdt <b>${h} av ${t}</b> mål i denne akten.</p>`;
+  render();
+  modal({kicker:`Slutt på akt ${n}`,title:ACTS[n].title,html:txt+REAL[n],buttons:[{label:n===4?'Se resultatet':'Neste akt',primary:true,testid:'next',onClick:()=>n===4?endScreen():startAct(n+1)}]});
+}
+
+/* ===================== AKT 2: RÅDET ===================== */
+const NATIONS=[
+  {id:'vestmark',name:'Vestmark',x:250,y:95,col:'#3f5f93',start:'Velkommen, men vi trenger allierte som tar sin del av regningen.',
+    ev:o=>o.A?{yes:true,t:'Dere tar ansvar for egen sikkerhet. Ja.'}:{yes:false,t:'Nei. Vi skal ikke betale for forsvaret deres alene.'}},
+  {id:'bretonia',name:'Bretonia',x:430,y:120,col:'#5a77a8',start:'Skjærland er et demokrati. Vi er positive.',
+    ev:o=>o.C?{yes:false,t:'Nei! Dere vil selge våpen til Kastalia, som forfølger minoriteter? Ikke med vår stemme.'}:{yes:true,t:'Ja. Velkommen.'}},
+  {id:'nordvik',name:'Nordvik',x:500,y:250,col:'#6c8fbf',start:'Vi er naboer. Vi sier ja uansett.',ev:()=>({yes:true,t:'Ja, selvfølgelig.'})},
+  {id:'solvland',name:'Sølvland',x:430,y:380,col:'#4a6c9d',start:'Vi bor langt i sør. Hvorfor skal vi dras inn i en konflikt i nord?',
+    ev:o=>o.B?{yes:true,t:'Hvis dere stiller opp for oss i sør, stiller vi opp for dere. Ja.'}:{yes:false,t:'Nei. Ingen har lovet å hjelpe oss i sør. Hvorfor skal vi hjelpe dere i nord?'}},
+  {id:'ostria',name:'Ostria',x:250,y:400,col:'#7d97c2',start:'Vi er redde for at Varnia skal føle seg truet.',
+    ev:o=>o.D?{yes:false,t:'Nei. Faste baser rett ved Varnias grense er en provokasjon.'}:(o.F?{yes:true,t:'Ingen faste baser i fredstid. Det kan vi leve med. Ja.'}:{yes:false,t:'Vi trenger en garanti for at det ikke kommer faste utenlandske baser ved grensa.'})},
+  {id:'kastalia',name:'Kastalia',x:110,y:250,col:'#8c6fa8',start:'Kastalia vil ha noe igjen.',
+    ev:o=>(o.C||o.E)?{yes:true,t:o.E&&!o.C?'Dere støtter vår kandidat. Da sier vi ja.':'Embargoen er borte. Ja.'}:{yes:false,t:'Vi blokkerer så lenge Skjærland har våpenembargo mot oss. Eller dere kan hjelpe oss med noe annet: vi har en kandidat til generalsekretær.'}},
+];
+const OFFERS=[
+  {id:'A',t:'Bruke mer på forsvar',d:'Skjærland lover å øke forsvarsbudsjettet. Det betyr mindre til skoler og sykehus.'},
+  {id:'B',t:'Stille opp i sør',d:'Skjærland lover å hjelpe medlemmene i sør hvis de blir angrepet.'},
+  {id:'C',t:'Oppheve våpenembargoen mot Kastalia',d:'Skjærland har nektet å selge våpen til Kastalia på grunn av behandlingen av minoriteter.'},
+  {id:'D',t:'Faste allierte baser i Skjærland',d:'Allierte styrker får fast plass ved grensa mot Varnia.'},
+  {id:'E',t:'Støtte Kastalias kandidat',d:'Skjærland stemmer for Kastalias kandidat til ny generalsekretær.'},
+  {id:'F',t:'Basepolitikk',d:'Ingen faste utenlandske baser i fredstid. Allierte kommer bare på øvelse og rotasjon.'},
+];
+function startCouncil(){
+  S.screen='council'; S.offers={}; S.council=NATIONS.map(n=>({yes:null,t:n.start})); learn('konsensus'); learn('radet');
+  renderCouncil();
+  modal({kicker:'Akt 2 av 4',title:'Akt 2: Søknaden',html:`<p>Skjærland søker om medlemskap. Søknaden behandles i <b>Nordatlantisk råd</b>, der alle medlemsland sitter.</p>
+    <p>I NATO stemmes det ikke. Et vedtak krever <b>konsensus</b>: alle må si ja. Ett nei er nok til å stoppe søknaden.</p>
+    <p>Velg hva Skjærland skal love, og legg avtalen fram. Hvert land sier hva det mener.</p>`,buttons:[{label:'Til rådet',primary:true,testid:'next'}]});
+}
+function renderCouncil(){
+  const yesN=S.council.filter(c=>c.yes).length;
+  let svg=`<svg viewBox="0 0 640 500" preserveAspectRatio="xMidYMid meet"><ellipse cx="300" cy="250" rx="190" ry="150" fill="#7a5c3a" stroke="#4e3a24" stroke-width="6"/><ellipse cx="300" cy="250" rx="160" ry="122" fill="#8d6c46"/>
+    <text x="300" y="236" text-anchor="middle" class="serif" font-size="20" fill="#f3ead6" font-weight="700">Nordatlantisk råd</text>
+    <text x="300" y="260" text-anchor="middle" font-size="13" fill="#f3ead6">Ingen avstemning. Alle må si ja.</text>
+    <text x="300" y="286" text-anchor="middle" font-size="15" font-weight="800" fill="#fff" data-testid="yescount">${yesN} av ${NATIONS.length} sier ja</text>
+    <circle cx="300" cy="470" r="22" fill="${C.own}" stroke="#fff" stroke-width="3"/><text x="300" y="476" text-anchor="middle" font-size="14" fill="#fff">⛨</text><text x="330" y="476" font-size="13" font-weight="700">Skjærland (søker)</text>`;
+  NATIONS.forEach((n,i)=>{ const c=S.council[i], ring=c.yes===true?C.green:c.yes===false?C.red:'#bbb', mark=c.yes===true?'✓':c.yes===false?'✕':'?';
+    svg+=`<g data-nation="${n.id}"><circle cx="${n.x+50}" cy="${n.y}" r="27" fill="${n.col}" stroke="${ring}" stroke-width="6"/><text x="${n.x+50}" y="${n.y+6}" text-anchor="middle" font-size="19" fill="#fff" font-weight="800">${mark}</text><text x="${n.x+50}" y="${n.y+45}" text-anchor="middle" font-size="13" font-weight="700">${n.name}</text></g>`; });
+  svg+='</svg>';
+  const bubbles=NATIONS.map((n,i)=>{ const c=S.council[i], left=(n.x+50)/640*100, top=n.y/500*100, right=left>50;
+    const st=right?`left:calc(${left}% + 34px)`:`right:calc(${100-left}% + 34px)`; const bc=c.yes===true?C.green:c.yes===false?C.red:'#b9a882';
+    return `<div style="position:absolute;${st};top:calc(${top}% - 26px);max-width:205px;background:#fffaf0;border:2px solid ${bc};border-radius:10px;padding:6px 9px;font-size:12.3px;line-height:1.3;box-shadow:0 3px 8px rgba(0,0,0,.15)">${c.t}</div>`; }).join('');
+  app.innerHTML=topHTML()+`<div class="council"><div class="tablewrap"><div style="position:relative;height:100%;aspect-ratio:640/500;max-width:100%;margin:0 auto">${svg}${bubbles}</div></div>
+    <aside class="offers"><h2>Skjærlands tilbud</h2><div class="sub">Velg det dere vil love. Noen tilbud utelukker hverandre. Forsøk så langt: ${S.stats.proposals}.</div>
+     ${OFFERS.map(f=>`<button class="offer ${S.offers[f.id]?'on':''}" data-offer="${f.id}"><span class="box">${S.offers[f.id]?'✓':''}</span><span><b>${f.t}</b><span>${f.d}</span></span></button>`).join('')}
+     <div class="concepts">${chipsHTML()}</div>
+     <button class="propose" data-testid="propose">Legg fram for rådet</button></aside></div>`;
+}
+function toggleOffer(id){ S.offers[id]=!S.offers[id]; if(id==='D'&&S.offers.D) S.offers.F=false; if(id==='F'&&S.offers.F) S.offers.D=false; renderCouncil(); }
+function propose(){
+  S.stats.proposals++; const o=S.offers;
+  S.council=NATIONS.map(n=>n.ev(o)); if(o.F) learn('basepolitikk');
+  renderCouncil();
+  if(S.council.every(c=>c.yes)){
+    S.stats.consensusTry=S.stats.proposals; S.promises={...o};
+    setTimeout(()=>modal({kicker:'Konsensus',title:'Skjærland er tatt opp',html:`<p>Alle ${NATIONS.length} land sa ja${S.stats.proposals===1?' på første forsøk':` etter ${S.stats.proposals} forsøk`}. Skjærland er medlem.</p>
+      <ul>${o.A?'<li>Mer til forsvar: én ekstra mynt hver runde.</li>':''}${o.B?'<li>Stille opp i sør: det kan bli aktuelt.</li>':''}${o.F?'<li>Basepolitikk: allierte kommer bare på rotasjon og reiser hjem etter hver runde.</li>':''}${o.E?'<li>Kastalias kandidat er ny generalsekretær. Han heter Bertil.</li>':''}</ul>${REAL[2]}`,
+      buttons:[{label:'Neste akt',primary:true,testid:'next',onClick:()=>startAct(3)}]}),350);
+  }
+}
+
+/* ===================== SLUTT ===================== */
+function endScreen(){
+  S.screen='end'; render();
+  const sendTxt=['ingen','1 bataljon','2 bataljoner'][S.stats.send??0];
+  const flags=Object.values(S.flags).reduce((a,b)=>a+b,0);
+  modal({kicker:'Resultat',title:'Spillet er ferdig',html:`<p>Vis denne skjermen til læreren din.</p>
+    <div class="grid2">
+      <div class="tile"><small>Mål som holdt som medlem (akt 3 og 4)</small><span class="big" data-testid="held">${S.stats.held}</span> av ${S.stats.total}</div>
+      <div class="tile"><small>Forsøk før konsensus i rådet</small><span class="big" data-testid="tries">${S.stats.consensusTry}</span><small>1 er best</small></div>
+      <div class="tile"><small>Sendt til Sølvland</small><b>${sendTxt}</b></div>
+      <div class="tile"><small>Usikre mål du tok sjansen på</small><b>${S.stats.unsure}</b> (${S.stats.unsureHeld} holdt)</div>
+    </div>
+    <p><b>Begreper i spillet:</b></p><p>${S.concepts.map(k=>`<span class="chip" style="background:${CONCEPTS[k].color}">${CONCEPTS[k].name}</span>`).join(' ')}</p>
+    <p><b>Motstemmer du møtte.</b> Dette er argumenter som brukes mot NATO-medlemskap:</p><ul>${S.mot.map(k=>`<li><b>${MOT[k].t}:</b> ${MOT[k].d}</li>`).join('')}</ul>
+    <div class="real"><b>I Norge:</b> Rødt vil at Norge skal melde seg ut av NATO. SV har lenge hatt det samme standpunktet, men har diskutert å gå bort fra det. De fleste andre partiene på Stortinget støtter medlemskapet.</div>
+    <p><b>Det spillet forenkler:</b></p><ul>
+      <li>Ingen stat regner så nøyaktig som Varnia. Avskrekking handler også om frykt, stolthet og feilvurderinger.</li>
+      <li>NATO har 32 medlemmer, ikke seks. Landene, kandidaten og alle hendelsene er oppdiktet.</li>
+      <li>Artikkel 5 lover ikke automatisk militær hjelp. Hvert land gjør det det selv mener er nødvendig.</li>
+      <li>Snubletråden er forenklet: allierte soldater gjør løftet mye mer troverdig, men ingenting er helt sikkert.</li>
+      <li>Ved opptak må alle medlemslandene godkjenne, og deretter må hvert land godkjenne avtalen nasjonalt.</li>
+      <li>I akt 1 var det umulig å klare seg alene. I virkeligheten har alliansefrie land klart seg i lange perioder.</li></ul>`,
+    buttons:[{label:'Spill på nytt',testid:'restart',onClick:titleScreen}]});
+}
+titleScreen();
+</script>
+</body>
+</html>

@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Byggeplass Europa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;800&family=Barlow:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE: rett fram, som en god historielærer med humor
+   IDEA: EU som et bygg reist etasje for etasje fra 1950 til i dag
+   PICTURE: tegnet byggeplass med kran, etasjer merket med årstall, Norge som et eget lite hus ved siden av
+   COLOUR and TYPE: anleggsgul, asfalt, betonggrå, EU-blå som aksent. Barlow Condensed + Barlow
+   LAYOUT: bygget til venstre, oppgaven til høyre. Stables under 760px */
+:root{color-scheme:light dark;
+--bg:light-dark(#f4c20d,#1b1d20);--ink:light-dark(#1b1d20,#f2efe6);
+--panel:light-dark(#fffaf0,#26292d);--line:light-dark(#1b1d20,#4a4e54);
+--sky1:light-dark(#bfe3f2,#0f1c2e);--sky2:light-dark(#eaf6fb,#1d2c42);
+--ground:light-dark(#8a7a64,#3a342c);--block:light-dark(#c9c2b4,#8d8679);--blockEdge:light-dark(#9d9585,#5d574e);
+--eu:#1f3fb0;--ok:#1d7a3e;--bad:#c4321c;--muted:light-dark(#4b4b45,#b8b4aa)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Barlow,system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3{font-family:"Barlow Condensed",Barlow,sans-serif;line-height:1.05;margin:0;text-wrap:balance}
+h1{font-size:clamp(32px,5vw,48px);font-weight:800}
+h2{font-size:30px;font-weight:800}
+h3{font-size:22px}
+.top{padding:20px max(4vw,16px) 8px;display:flex;flex-wrap:wrap;gap:8px 24px;align-items:end;justify-content:space-between}
+.top p{margin:0;color:var(--muted);max-width:60ch}
+.hud{display:flex;gap:10px;flex-wrap:wrap}
+.chip{background:var(--ink);color:var(--bg);font:600 15px Barlow;padding:6px 12px;border-radius:4px;white-space:nowrap}
+.stripe{height:14px;background:repeating-linear-gradient(-45deg,#1b1d20 0 14px,#f4c20d 14px 28px)}
+main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:20px;padding:16px max(4vw,16px) 32px;max-width:1240px;margin:auto;align-items:start}
+@media(max-width:760px){main{grid-template-columns:minmax(0,1fr)}}
+.scene{position:relative;min-height:470px;border:3px solid var(--line);border-radius:6px;overflow:hidden;background:linear-gradient(var(--sky1),var(--sky2))}
+@media(min-width:761px){.scene{position:sticky;top:12px}}
+.scene svg.crane{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.tower{position:absolute;left:11%;bottom:46px;width:40%;display:flex;flex-direction:column-reverse;gap:3px}
+.floor{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;position:relative}
+.floor .yr{position:absolute;right:calc(100% + 6px);top:50%;transform:translateY(-50%);font:800 14px "Barlow Condensed";background:var(--ink);color:var(--bg);padding:0 5px;border-radius:2px;opacity:0;transition:opacity .4s;white-space:nowrap}
+.floor.done .yr{opacity:1}
+.floor.cur .b{border-color:var(--eu)}
+.b{height:36px;border-radius:2px;border:2px dashed light-dark(#0002,#fff2)}
+.b.on{background:linear-gradient(180deg,var(--block),var(--blockEdge));border:2px solid var(--blockEdge);box-shadow:inset 0 -5px 0 #0002}
+.b.on.w::after{content:"";display:block;margin:7px auto;width:55%;height:15px;background:light-dark(#7cc4e0,#f6d36b);border:2px solid var(--blockEdge)}
+.b.drop{animation:drop .55s cubic-bezier(.3,1.4,.6,1) both}
+@keyframes drop{from{transform:translateY(-260px)}to{transform:none}}
+.roofbox{position:relative;height:40px;opacity:0;transition:opacity .5s}
+.roofbox.on{opacity:1}
+.roofbox svg{position:absolute;inset:0;width:100%;height:100%}
+.norway{position:absolute;left:54%;bottom:46px;width:13%;max-width:80px;opacity:0;transition:opacity .6s}
+.norway.on{opacity:1}
+.norway svg{display:block;width:100%;height:auto}
+.groundbar{position:absolute;left:0;right:0;bottom:0;height:46px;background:var(--ground);border-top:3px solid var(--line)}
+.sign{position:absolute;left:11%;bottom:8px;font:800 15px "Barlow Condensed";background:#f4c20d;color:#1b1d20;padding:2px 10px;border:2px solid #1b1d20}
+.shake{animation:shake .4s}
+@keyframes shake{25%{transform:translateX(-8px) rotate(-1deg)}75%{transform:translateX(8px) rotate(1deg)}}
+@media(prefers-reduced-motion:reduce){.b.drop,.shake{animation:none}}
+.desk{display:flex;flex-direction:column;gap:14px}
+.panel{background:var(--panel);border:3px solid var(--line);border-radius:6px;padding:18px 20px}
+.panel p{margin:8px 0}
+.year{font:800 54px/1 "Barlow Condensed";color:var(--eu)}
+.role{font-weight:600;color:var(--muted);margin-top:4px}
+.opts{display:grid;gap:10px;margin-top:14px}
+.opt{font:inherit;text-align:left;cursor:pointer;min-height:54px;padding:12px 16px;border:3px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink)}
+.opt:hover{background:light-dark(#fff1c2,#33373c)}
+.opt.wrong{border-color:var(--bad);opacity:.6;text-decoration:line-through;cursor:default}
+.opt.right{border-color:var(--ok);background:light-dark(#e3f3e8,#1f3527)}
+.opt:disabled{cursor:default}
+.bins{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:14px}
+.bin{font:inherit;text-align:left;cursor:pointer;min-height:76px;padding:12px 14px;border:3px solid var(--line);border-radius:6px 6px 14px 14px;color:#fff;background:#3d4249}
+.bin strong{display:block;font:800 21px/1.05 "Barlow Condensed"}
+.bin span{display:block;font-size:14px;opacity:.9;margin-top:4px}
+.bin:nth-child(1){background:var(--eu)}.bin:nth-child(2){background:#5a4bb0}.bin:nth-child(3){background:#b2271b}.bin:nth-child(4){background:#2f6b4f}
+.bins.duo .bin:nth-child(2){background:#6b3c1f}
+.bin:hover{filter:brightness(1.12)}
+.bin:disabled{opacity:.5;cursor:default;filter:none}
+.card{font-size:19px;font-weight:600;padding:14px 16px;border:3px dashed var(--line);border-radius:6px;margin-top:10px}
+.counter{font-size:14px;color:var(--muted);margin-top:6px}
+.opt:focus-visible,.bin:focus-visible,.btn:focus-visible{outline:4px solid var(--ink);outline-offset:3px}
+.fb{border-radius:6px;padding:14px 18px;border:3px solid var(--line);background:var(--panel)}
+.fb.ok{border-color:var(--ok)}.fb.bad{border-color:var(--bad)}
+.fb.ok h3{color:var(--ok)}.fb.bad h3{color:var(--bad)}
+.fb p{margin:6px 0}
+.concept{border-left:6px solid var(--eu);padding:6px 12px;background:light-dark(#e8ecfb,#1f2540);border-radius:0 4px 4px 0}
+.btn{font:800 19px "Barlow Condensed";min-height:46px;padding:8px 22px;border-radius:4px;border:3px solid #1b1d20;background:#1b1d20;color:#f4c20d;cursor:pointer;margin-top:8px}
+.row{display:flex;flex-wrap:wrap;gap:10px}
+.big{font:800 40px/1 "Barlow Condensed";color:var(--eu)}
+.hidden{display:none!important}
+.note{font-size:13px;color:var(--muted);padding:0 max(4vw,16px) 24px;max-width:1240px;margin:auto}
+</style>
+</head>
+<body>
+<div class="stripe"></div>
+<header class="top">
+  <div>
+    <h1>Byggeplass Europa</h1>
+    <p>Bygg EU fra fundamentet i 1950 til i dag. Hver etasje er et vendepunkt, og du må forstå hvorfor det skjedde for å få den på plass.</p>
+  </div>
+  <div class="hud"><span class="chip" id="hudFloor">Ikke startet</span><span class="chip" id="hudScore">Første forsøk: 0</span></div>
+</header>
+<main>
+  <section class="scene" id="scene" aria-label="Bygget">
+    <svg class="crane" viewBox="0 0 400 470" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+      <g stroke="#1b1d20" stroke-width="3" fill="none"><path d="M330 424 V60 M350 424 V60"/></g>
+      <path d="M330 80 L350 100 L330 120 L350 140 L330 160 L350 180 L330 200 L350 220 L330 240 L350 260 L330 280 L350 300 L330 320 L350 340 L330 360 L350 380 L330 400 L350 420" stroke="#1b1d20" stroke-width="2" fill="none"/>
+      <rect x="120" y="52" width="270" height="14" fill="#f4c20d" stroke="#1b1d20" stroke-width="3"/>
+      <rect x="352" y="66" width="34" height="26" fill="#1b1d20"/>
+      <rect x="322" y="66" width="36" height="30" fill="#f4c20d" stroke="#1b1d20" stroke-width="3"/>
+      <rect x="328" y="72" width="22" height="12" fill="#7cc4e0"/>
+      <path d="M340 52 L340 26 L130 52" stroke="#1b1d20" stroke-width="2" fill="none"/>
+      <line x1="170" y1="66" x2="170" y2="120" stroke="#1b1d20" stroke-width="2"/><path d="M164 120 h12 v6 a6 6 0 1 1 -12 0z" fill="#1b1d20"/>
+    </svg>
+    <div class="tower" id="tower"></div>
+    <div class="norway" id="norway"><svg viewBox="0 0 90 80" aria-label="Norge, et eget hus koblet til EU med EØS"><path d="M5 38 L45 6 L85 38Z" fill="#7a2418" stroke="#1b1d20" stroke-width="2.5"/><rect x="12" y="36" width="66" height="42" fill="#b2271b" stroke="#1b1d20" stroke-width="2.5"/><rect x="38" y="52" width="14" height="26" fill="#fffaf0" stroke="#1b1d20" stroke-width="2"/><text x="45" y="47" text-anchor="middle" font-family="Barlow Condensed" font-weight="800" font-size="12" fill="#fffaf0">NORGE</text></svg><div style="font:800 13px 'Barlow Condensed';text-align:center;background:#1f3fb0;color:#fff;margin-top:2px;border-radius:2px">EØS</div></div>
+    <div class="groundbar"></div>
+    <div class="sign">EU</div>
+  </section>
+
+  <section class="desk">
+    <div class="panel" id="intro">
+      <h2>Hva er egentlig EU?</h2>
+      <p>EU er ikke bare en haug med regler. Det startet med et konkret problem etter andre verdenskrig, og har vokst etasje for etasje siden.</p>
+      <p>Du skal bygge sju etasjer, fra 1950 til Brexit. I hver etasje får du en rolle, en historisk person eller en vanlig borger, og må ta et valg. Velger du feil, får du se hva som skjedde da noen faktisk prøvde det, og så kan du prøve igjen.</p>
+      <p>Norge sa nei to ganger. Følg med på hvor Norge havner til slutt.</p>
+      <p><b>Hvilken linje går du på?</b> Noen deler handler om din linje.</p>
+      <div class="row">
+        <button class="btn" data-line="bygg">Bygg- og anleggsteknikk</button>
+        <button class="btn" data-line="st">Studiespesialisering</button>
+      </div>
+    </div>
+    <div id="stage" class="hidden"></div>
+  </section>
+</main>
+<p class="note">Laget for vg1. Forenklet: valgene i hver etasje er spisset for å vise hovedpoenget, og den virkelige historien hadde flere aktører og motiver.</p>
+<div class="stripe"></div>
+
+<script>
+{
+const FLOORS=[
+{year:'1951',name:'Fundamentet',steps:[
+ {type:'choice',role:'Du er Robert Schuman, Frankrikes utenriksminister, i 1950.',text:'Det er fem år siden andre verdenskrig. Frankrike og Tyskland har vært i krig mot hverandre tre ganger på 70 år. Nå bygger Vest-Tyskland opp industrien igjen, og kull og stål er det man trenger for å lage våpen. Hva gjør du?',opts:[
+  {t:'Krev at Tyskland holdes svakt, med strenge straffer og store krigserstatninger.',fb:'Det prøvde de etter første verdenskrig. Versaillesfreden skapte bitterhet i Tyskland, og den bitterheten utnyttet Hitler.'},
+  {t:'Bygg et kjempesterkt forsvar langs grensen mot Tyskland.',fb:'Det prøvde Frankrike også. Maginotlinjen var et enormt forsvarsverk, men Tyskland gikk rundt den gjennom Belgia i 1940.'},
+  {t:'Legg fransk og tysk kull og stål under en felles myndighet som ingen av landene styrer alene.',ok:true,fb:'Dette er Schuman-planen fra 9. mai 1950. Når ingen av landene alene kontrollerer krigsindustrien, blir krig mellom dem nesten umulig. I 1951 skriver seks land under: Frankrike, Vest-Tyskland, Italia, Belgia, Nederland og Luxembourg.'}]},
+ {type:'choice',role:'Kull- og stålfellesskapet får en felles ledelse, Høyautoriteten.',text:'Hva var det som gjorde Høyautoriteten så spesiell?',opts:[
+  {t:'Den var et møtested der landene kunne snakke sammen, men hvert land bestemte selv.',fb:'Det beskriver vanlig internasjonalt samarbeid, som i FN eller NATO. Høyautoriteten gikk lenger enn det.'},
+  {t:'Den kunne ta beslutninger som landene måtte følge, også når et land var uenig.',ok:true,fb:'Landene ga fra seg en del av makten sin til en felles myndighet over seg.',concept:'<b>Nytt begrep: overnasjonal.</b> Når land gir fra seg makt til en felles myndighet, er samarbeidet overnasjonalt. Når hvert land beholder makten selv, som i NATO og FN, er det mellomstatlig. At EU er overnasjonalt, er det som gjør EU spesielt.'},
+  {t:'Den ble styrt av Frankrike, som hadde vunnet krigen.',fb:'Nettopp ikke. Hele poenget var at ingen enkeltstat skulle styre alene.'}]}]},
+{year:'1957',name:'Det felles markedet',steps:[
+ {type:'choice',role:'Du forhandler for et av de seks landene i Roma.',text:'Samarbeidet om kull og stål fungerer, og handelen mellom de seks landene øker. Hva bør neste steg være?',opts:[
+  {t:'En felles hær for alle seks land.',fb:'Det ble faktisk foreslått, men nasjonalforsamlingen i Frankrike stemte det ned i 1954. Forsvar var for nær kjernen av hva en stat er.'},
+  {t:'Et felles marked der varer kan handles fritt, uten toll mellom landene.',ok:true,fb:'Roma-traktaten fra 1957 lager Det europeiske økonomiske fellesskap (EØF). Landene fjerner tollen seg imellom og får felles toll mot resten av verden.',concept:'<b>De fire frihetene:</b> fri flyt av varer, tjenester, personer og kapital. Dem møter du igjen når Norge kommer inn i bildet.'},
+  {t:'Felles valuta med en gang.',fb:'Altfor tidlig. Landene hadde svært ulik økonomi, og euroen kom først i 1999.'}]},
+ {type:'sort',intro:'Roma-traktaten lager også institusjonene som fortsatt styrer EU. Hvem gjør hva?',bins:[{k:'kom',t:'Kommisjonen'},{k:'rad',t:'Rådet'},{k:'par',t:'Parlamentet'},{k:'dom',t:'Domstolen'}],items:[
+  {a:'kom',q:'Foreslår nye EU-lover og passer på at landene følger dem.',e:'Kommisjonen har ett medlem fra hvert land, men de skal jobbe for EU som helhet, ikke for hjemlandet sitt.'},
+  {a:'rad',q:'Statsråder fra hvert land møtes og vedtar lover.',e:'I Rådet sitter regjeringene i medlemslandene. Her forsvarer hvert land sine egne interesser.'},
+  {a:'par',q:'Folkevalgte fra alle landene vedtar lover sammen med Rådet.',e:'Europaparlamentet har vært direkte valgt siden 1979, og det har fått mye mer makt siden starten.'},
+  {a:'dom',q:'Avgjør tvister og om landene følger EU-retten.',e:'EU-domstolen ligger i Luxembourg. Når det gjelder EU-rett, går dommene foran nasjonale domstoler.'}]}]},
+{year:'1972',name:'Norge sier nei',steps:[
+ {type:'choice',role:'Du er fisker i Lofoten høsten 1972.',text:'Norge skal stemme over medlemskap i EF. Du har bestemt deg for å stemme nei. Hva er den viktigste grunnen?',opts:[
+  {t:'Du er redd for at EF skal forby norsk fiskeeksport.',fb:'Tvert imot. Medlemskap ville gitt tollfri eksport av fisk til EF, og det var et ja-argument.'},
+  {t:'Du er redd for at fiskere fra andre land skal få fiske nær norskekysten.',ok:true,fb:'Fiskeriene var et av de sterkeste nei-argumentene langs kysten. Mange var også redde for at landbruket og bygdene skulle tape, og for å miste selvråderetten, bare 67 år etter at unionen med Sverige ble oppløst.'},
+  {t:'Du er redd for at Norge må melde seg ut av NATO.',fb:'Nei, flere EF-land var med i NATO, og EF hadde ikke noe med forsvar å gjøre.'}]},
+ {type:'choice',role:'Du er industriarbeider ved et aluminiumsverk på Vestlandet samme høst.',text:'Du stemmer ja. Hva er den viktigste grunnen?',opts:[
+  {t:'Du får høyere lønn, fordi EF bestemmer lønningene.',fb:'EF bestemte ikke lønninger. Det gjorde partene i arbeidslivet i hvert land.'},
+  {t:'Verket selger det meste til Europa, og uten medlemskap kan det bli dyrere å eksportere.',ok:true,fb:'For industrien handlet det om markedsadgang og arbeidsplasser. Mange på ja-siden mente også at Norge burde være med der beslutningene om Europa ble tatt.',after:'<p class="big">53,5 % nei</p><p>Norge stemmer nei. Statsminister Trygve Bratteli går av. 1. januar 1973 blir Danmark, Irland og Storbritannia med, uten Norge.</p>'},
+  {t:'Du kan slippe å betale skatt i Norge.',fb:'Nei, skatt er fortsatt hvert lands egen sak.'}]}]},
+{year:'1993',name:'Fra fellesskap til union',steps:[
+ {type:'choice',role:'Du er rådgiver for Frankrikes president i 1990.',text:'Berlinmuren falt i 1989, og Øst- og Vest-Tyskland skal bli ett land igjen. Det nye Tyskland blir det største landet i Vest-Europa. Hva bør Frankrike gjøre?',opts:[
+  {t:'Prøve å stoppe gjenforeningen.',fb:'Mange i Frankrike var skeptiske, men landet hadde ikke makt til å stoppe den, og tyskerne hadde rett til å bestemme selv.'},
+  {t:'Binde Tyskland enda tettere til resten av Europa.',ok:true,fb:'Samme tanke som i 1950. Med Maastricht-traktaten blir Fellesskapet til Den europeiske union i 1993, med samarbeid om utenrikspolitikk og politi og en plan for felles valuta. Tyskland gir etter hvert fra seg D-marken til fordel for euroen.'},
+  {t:'Inngå en militærallianse med Storbritannia mot Tyskland.',fb:'Det ville vært å gå tilbake til tenkningen fra før 1950, med allianser mot hverandre. Det var nettopp det samarbeidet skulle erstatte.'}]},
+ {type:'choice',role:'Maastricht innfører unionsborgerskap. Du er en 20 år gammel italiener i 1994.',text:'Hva betyr det for deg?',opts:[
+  {t:'Du mister det italienske statsborgerskapet.',fb:'Nei, unionsborgerskapet kommer i tillegg til det nasjonale.'},
+  {t:'Du må avtjene verneplikt i en felles EU-hær.',fb:'EU har ingen felles hær.'},
+  {t:'Du kan bo, jobbe og studere i andre EU-land, og stemme ved lokalvalg der du bor.',ok:true,fb:'Unionsborgerskapet gjør EU til noe mer enn et marked. Det gir rettigheter til folk, ikke bare til varer og bedrifter.'}]}]},
+{year:'1994',name:'Norges vei: EØS',norway:true,steps:[
+ {type:'choice',role:'Du er Gro Harlem Brundtland, statsminister, i 1992.',text:'Norge og de andre EFTA-landene forhandler med EU om en avtale som gir adgang til det indre markedet uten medlemskap. Hva er prisen?',opts:[
+  {t:'Norge må gi EU-land rett til å fiske i norske farvann.',fb:'Fiskeri ble i hovedsak holdt utenfor EØS. Det var en av grunnene til at avtalen var mulig å få til.'},
+  {t:'Norge må ta inn EUs regler for det indre markedet, uten å stemme over dem.',ok:true,fb:'EØS-avtalen trer i kraft 1. januar 1994. Norge er med i det indre markedet med de fire frihetene, men sitter ikke i Rådet, Kommisjonen eller Parlamentet.'},
+  {t:'Ingenting. Norge får adgang og stemmerett i saker om det indre markedet.',fb:'Det ønsket EFTA-landene, men EU sa nei. Stemmerett er forbeholdt medlemmene.'}]},
+ {type:'sort',intro:'I november 1994 stemmer Norge nei igjen, 52,2 %. Sverige, Finland og Østerrike blir med i 1995. EØS blir Norges vei. Hva betyr det for deg i dag?',bins:[{k:'eos',t:'Gjelder i Norge via EØS',s:'EU lager regelen, Norge følger den'},{k:'eu',t:'Bare for EU-land',s:'Norge står utenfor'},{k:'no',t:'Norge bestemmer selv',s:'Norsk regel'}],items:[
+  {a:'eu',q:'Renta på boliglånet til foreldrene dine blir bestemt av Den europeiske sentralbanken.',e:'Det gjelder bare land med euro. I Norge setter Norges Bank renta.'},
+  {a:'no',q:'Snus er lovlig å selge i Norge.',e:'Norge bestemmer selv. I EU er snus forbudt i alle land unntatt Sverige, som fikk unntak da det ble medlem.'},
+  {line:{bygg:{a:'eos',q:'Gipsplatene fra Tyskland er CE-merket, så de kan brukes uten nye tester.',e:'Byggevarereglene er felles i EØS. CE-merket viser at varen oppfyller kravene.'},st:{a:'eos',q:'Du kan studere i Danmark uten skolepenger, på samme vilkår som danske studenter.',e:'EØS-borgere skal behandles likt med landets egne borgere.'}}},
+  {line:{bygg:{a:'no',q:'Du tar fagbrev etter to år i skole og to år som lærling.',e:'Lærlingordningen er en norsk modell. EU har ingen felles regler for fagopplæring.'},st:{a:'no',q:'Stipendet og studielånet ditt fra Lånekassen.',e:'Lånekassen er norsk, og Stortinget bestemmer hvor mye du kan få.'}}}]}]},
+{year:'2004',name:'Østover',steps:[
+ {type:'choice',role:'Du er polsk diplomat på slutten av 1990-tallet.',text:'Polen var et kommunistisk diktatur fram til 1989. Nå vil landet inn i EU. Hva må Polen gjøre for å bli medlem?',opts:[
+  {t:'Ha like god økonomi som Tyskland og Frankrike.',fb:'Polen var mye fattigere. Kravet var en markedsøkonomi som tålte konkurransen, ikke at landet var rikt.'},
+  {t:'Være et stabilt demokrati med rettsstat og markedsøkonomi, og ta inn hele EU-retten.',ok:true,fb:'Dette er Københavnkriteriene fra 1993. Polen brukte mange år på å endre lover og rettsvesen. I 2004 blir ti land med samtidig: Polen, Tsjekkia, Slovakia, Ungarn, Slovenia, Estland, Latvia, Litauen, Malta og Kypros. For mange av dem handlet det om å sikre demokratiet og om å stå trygt overfor Russland.'},
+  {t:'Bli godkjent av NATO først.',fb:'EU og NATO er to forskjellige organisasjoner. Mange land er med i begge, men det ene er ikke et krav for det andre.'}]},
+ {type:'choice',
+  role:{bygg:'Du er formann på en byggeplass i Oslo i dag.',st:'Du vil bli lege, men snittet ditt er ikke høyt nok til å komme inn i Norge.'},
+  text:{bygg:'Tre tømrere fra Polen spør om jobb. Hva gjelder?',st:'Hva kan du gjøre?'},
+  opts:{bygg:[
+   {t:'De må søke arbeidstillatelse før de kan begynne.',fb:'Det gjaldt i en overgangsperiode etter 2004, men i dag kan EØS-borgere jobbe i Norge uten arbeidstillatelse.'},
+   {t:'De kan begynne uten arbeidstillatelse, og har krav på minstelønn etter den allmenngjorte tariffavtalen.',ok:true,fb:'Gjennom EØS kom mange fra de nye EU-landene til norske byggeplasser. Det ga flere hender, men også debatt om lønnspress og sosial dumping. Norge svarte blant annet med HMS-kort og allmenngjorte tariffavtaler.'},
+   {t:'Du kan betale dem polsk lønn, fordi de er polske.',fb:'Nei. Minstelønna i den allmenngjorte tariffavtalen gjelder alle på byggeplasser i Norge, uansett hvor de kommer fra.'}],
+  st:[
+   {t:'Ingenting. Legeutdanning fra utlandet blir ikke godkjent i Norge.',fb:'Feil. Etter felles EØS-regler blir legeutdanning fra EU-land godkjent i Norge.'},
+   {t:'Søke legeutdanning i et land som Polen eller Ungarn, og få den godkjent i Norge etterpå.',ok:true,fb:'Det gjør mange norske studenter i dag, blant annet i Polen, Tsjekkia, Slovakia og Ungarn. Utvidelsen i 2004 og EØS-reglene gjør det mulig.'},
+   {t:'Først bli polsk statsborger, og så søke.',fb:'Ikke nødvendig. Som EØS-borger kan du studere der uten å bytte statsborgerskap.'}]}}]},
+{year:'2020',name:'Brexit',steps:[
+ {type:'choice',role:'Du er rådgiver for den britiske regjeringen i 2017.',text:'I 2016 stemte 51,9 % av britene for å gå ut av EU. Slagordet var «Take back control». Noen foreslår en norsk løsning: Storbritannia går ut av EU, men blir med i EØS. Hvorfor sier regjeringen nei?',opts:[
+  {t:'EØS ville hindret Storbritannia i å lage egne handelsavtaler med USA.',fb:'Nei. EØS er ikke en tollunion, så Norge kan lage egne handelsavtaler med land utenfor EU.'},
+  {t:'Da måtte Storbritannia fortsatt følge EU-regler og ha fri flyt av arbeidskraft, men uten å stemme.',ok:true,fb:'Det var nettopp det britene ville bort fra. Se på argumentene: selvråderett, kontroll over grensene og fiskeriet. Mange av dem er de samme som fiskeren i Lofoten hadde i 1972.'},
+  {t:'Norge ville ikke ha dem med.',fb:'Det ble diskutert om Norge ville ønske det, men det var ikke dette som avgjorde saken.'}]},
+ {type:'choice',role:'Storbritannia går ut 31. januar 2020 og får en handelsavtale med EU.',text:'Hva skjedde med handelen?',opts:[
+  {t:'Ingenting endret seg, siden avtalen fjernet tollen.',fb:'Tollen ble stort sett borte, men bedriftene fikk tollkontroller, papirarbeid og ulike regler å forholde seg til.'},
+  {t:'Handelen ble vanskeligere, med mer papirarbeid og kontroll på grensen, selv om det fortsatt var lite toll.',ok:true,fb:'Det er prisen for å stå utenfor både EU og EØS. Samtidig fikk Storbritannia bestemme reglene sine selv, og det var det mange velgere ønsket.'},
+  {t:'Handelen med EU stoppet helt.',fb:'Nei, avtalen sørget for at handelen fortsatte, bare med flere hindre.'}]}]}
+];
+
+const $=id=>document.getElementById(id);
+const stage=$('stage'),tower=$('tower'),scene=$('scene');
+let line='bygg',fi=0,si=0,first=0,tries=0,queue=[];
+const pick=x=>(x&&typeof x==='object'&&x.bygg!==undefined)?x[line]:x;
+
+function buildTower(){
+  tower.innerHTML='';
+  FLOORS.forEach((f,i)=>{const d=document.createElement('div');d.className='floor';d.id='f'+i;d.innerHTML=`<span class="yr">${f.year}</span>`+'<div class="b"></div>'.repeat(4);tower.append(d)});
+  const r=document.createElement('div');r.className='roofbox';r.id='roof';r.innerHTML='<svg viewBox="0 0 100 40" preserveAspectRatio="none"><path d="M-3 40 L50 2 L103 40Z" fill="#1f3fb0" stroke="#1b1d20" stroke-width="1.5"/></svg>';tower.append(r);
+}
+function markCur(){document.querySelectorAll('.floor').forEach((f,i)=>f.classList.toggle('cur',i===fi))}
+function finishFloor(){
+  const f=$('f'+fi);f.classList.add('done');f.classList.remove('cur');
+  f.querySelectorAll('.b').forEach((b,j)=>{b.className='b on drop'+(j%2?' w':'');b.style.animationDelay=(j*0.12)+'s'});
+  if(FLOORS[fi].norway)$('norway').classList.add('on');
+}
+function hud(){
+  $('hudFloor').textContent=fi<FLOORS.length?`Etasje ${fi+1} av ${FLOORS.length}`:'Ferdig';
+  $('hudScore').textContent=`Første forsøk: ${first} av ${tries}`;
+}
+function shake(){scene.classList.remove('shake');void scene.offsetWidth;scene.classList.add('shake')}
+function head(f){return `<div class="year">${f.year}</div><h2>${f.name}</h2>`}
+
+function render(){
+  hud();markCur();
+  const f=FLOORS[fi],s=f.steps[si];
+  if(s.type==='choice')renderChoice(f,s);
+  else if(s.type==='sort')renderSort(f,s);
+  else renderInfo(f,s);
+  stage.scrollIntoView({block:'nearest'});
+}
+function nextBtn(label){return `<button class="btn" id="nx">${label||'Videre'}</button>`}
+function advance(){
+  si++;
+  if(si>=FLOORS[fi].steps.length){finishFloor();fi++;si=0;
+    if(fi>=FLOORS.length){end();return}}
+  render();
+}
+function renderChoice(f,s0){
+  let wrongs=0;
+  const s={...s0,role:pick(s0.role),text:pick(s0.text),opts:pick(s0.opts)};
+  const order=s.opts.map((o,i)=>i).sort(()=>Math.random()-.5);
+  const opts=order.map(i=>`<button class="opt" data-i="${i}">${s.opts[i].t}</button>`).join('');
+  stage.innerHTML=`<div class="panel">${head(f)}<p class="role">${s.role}</p><p>${s.text}</p><div class="opts">${opts}</div></div><div class="fb hidden" id="fb" aria-live="polite"></div>`;
+  stage.querySelectorAll('.opt').forEach(b=>b.addEventListener('click',()=>{
+    if(b.disabled)return;
+    const o=s.opts[b.dataset.i],fb=$('fb');
+    if(o.ok){
+      tries++;if(!wrongs)first++;hud();
+      b.classList.add('right');stage.querySelectorAll('.opt').forEach(x=>x.disabled=true);
+      fb.className='fb ok';fb.innerHTML=`<h3>Riktig vei</h3><p>${o.fb}</p>${o.concept?`<p class="concept">${o.concept}</p>`:''}${o.after||''}${nextBtn()}`;
+      $('nx').addEventListener('click',advance);$('nx').focus();
+    }else{
+      wrongs++;b.classList.add('wrong');b.disabled=true;shake();
+      fb.className='fb bad';fb.innerHTML=`<h3>Det holder ikke</h3><p>${o.fb} Prøv et annet valg.</p>`;
+    }
+  }));
+}
+function renderSort(f,s){
+  queue=s.items.map(it=>({...(it.line?it.line[line]:it),miss:false}));
+  const show=()=>{
+    const c=queue[0];
+    stage.innerHTML=`<div class="panel">${head(f)}<p>${s.intro}</p><div class="card">${c.q}</div><div class="counter">${queue.length} igjen</div><div class="bins${s.bins.length===2?' duo':''}">${s.bins.map(b=>`<button class="bin" data-k="${b.k}"><strong>${b.t}</strong>${b.s?`<span>${b.s}</span>`:''}</button>`).join('')}</div></div><div class="fb hidden" id="fb" aria-live="polite"></div>`;
+    stage.querySelectorAll('.bin').forEach(b=>b.addEventListener('click',()=>{
+      stage.querySelectorAll('.bin').forEach(x=>x.disabled=true);
+      const ok=b.dataset.k===c.a,fb=$('fb');queue.shift();
+      if(ok){tries++;if(!c.miss)first++;hud();fb.className='fb ok';fb.innerHTML=`<h3>Riktig</h3><p>${c.e}</p>`}
+      else{c.miss=true;queue.push(c);shake();fb.className='fb bad';fb.innerHTML=`<h3>Feil. Riktig er: ${s.bins.find(x=>x.k===c.a).t}</h3><p>${c.e} Kortet kommer tilbake senere.</p>`}
+      fb.innerHTML+=nextBtn(queue.length?'Neste':'Videre');
+      $('nx').addEventListener('click',()=>queue.length?show():advance());$('nx').focus();
+    }));
+  };
+  show();
+}
+function renderInfo(f,s){
+  stage.innerHTML=`<div class="panel">${head(f)}${pick(s.html)}${nextBtn()}</div>`;
+  $('nx').addEventListener('click',advance);$('nx').focus();
+}
+function end(){
+  $('roof').classList.add('on');hud();
+  const pct=tries?Math.round(first/tries*100):0;
+  stage.innerHTML=`<div class="panel" style="border-style:double;border-width:5px">
+  <div class="year">I dag</div><h2>Taket er ikke lagt ferdig</h2>
+  <p>EU har 27 medlemsland. Ukraina søkte om medlemskap fire dager etter at Russland gikk til fullskala angrep i februar 2022, og fikk status som kandidatland samme år. Norge står fortsatt i huset ved siden av, med EØS.</p>
+  <p>Du fikk ${first} av ${tries} riktig på første forsøk (${pct} %).</p>
+  <h3>Til diskusjon</h3>
+  <p>EU startet som et fredsprosjekt. Hvorfor vil et land i krig inn i EU i dag?</p>
+  <p>Norge har sagt nei to ganger, men følger mange EU-regler gjennom EØS. Er det et lurt kompromiss, eller det verste av to verdener?</p>
+  <button class="btn" id="again">Bygg på nytt</button></div>`;
+  $('again').addEventListener('click',start);
+}
+function start(){
+  fi=0;si=0;first=0;tries=0;buildTower();$('norway').classList.remove('on');
+  $('intro').classList.add('hidden');stage.classList.remove('hidden');render();
+}
+$('intro').querySelectorAll('[data-line]').forEach(b=>b.addEventListener('click',()=>{line=b.dataset.line;start()}));
+buildTower();
+}
+</script>
+</body>
+</html>
