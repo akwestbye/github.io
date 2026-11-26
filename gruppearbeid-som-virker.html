@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gruppearbeid som virker</title>
+<style>
+/* Versjon 2. Ingen eksterne skrifter: systemskrift brukes hvis Archivo/Source Sans ikke er installert. */
+:root{color-scheme:light;
+--bg:#ffffff;--ink:#15172b;--soft:#5a5e7a;--cob:#2f45d6;--cobText:#2f45d6;--cobInk:#ffffff;--tom:#c23a20;--yel:#ffcf3d;
+--ok:#1f7a4d;--line:#dfe1ee;--card:#ffffff;--paper:#fff8dc;--halfText:#7a5400}
+@supports (color: light-dark(#000,#fff)){
+:root{color-scheme:light dark;
+--bg:light-dark(#ffffff,#121426);--ink:light-dark(#15172b,#eef0ff);--soft:light-dark(#5a5e7a,#a9adcc);
+--cob:light-dark(#2f45d6,#26369e);--cobText:light-dark(#2f45d6,#a9b7ff);--tom:light-dark(#c23a20,#ff7a5c);
+--ok:light-dark(#1f7a4d,#5fd39a);--line:light-dark(#dfe1ee,#2c2f4d);--card:light-dark(#ffffff,#1a1d33);--paper:light-dark(#fff8dc,#2a2a22);--halfText:light-dark(#7a5400,#ffcf3d)}
+}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 "Source Sans 3","Segoe UI",system-ui,-apple-system,sans-serif;overflow-x:clip}
+h1,h2,h3{font-family:Archivo,"Segoe UI",system-ui,sans-serif;line-height:1.12;text-wrap:balance;margin:0}
+h2:focus{outline:none}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.band{padding:clamp(28px,4vw,56px) max(5vw,16px)}
+.top{background:var(--cob);color:var(--cobInk)}
+.topin{max-width:1040px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:32px;align-items:center}
+.top h1{font-size:clamp(32px,5vw,50px);font-weight:800}
+.top p{font-size:18px;max-width:34em;opacity:.95;margin:14px 0 0}
+.tag{display:inline-block;margin-top:16px;font-size:14px;background:rgba(255,255,255,.16);padding:4px 10px;border-radius:99px}
+.pic svg{width:100%;height:auto;display:block}
+main{max-width:760px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:clamp(20px,3vw,36px);box-shadow:0 10px 30px -18px rgba(20,25,80,.35)}
+.parts{display:grid;gap:14px;margin-top:18px}
+.part{display:block;width:100%;text-align:left;padding:18px 20px;border-radius:14px}
+.part b{display:block;font-family:Archivo,system-ui,sans-serif;font-size:20px}
+.part span{display:block;font-weight:400;color:var(--soft);margin-top:4px}
+.part .done{font-size:14px;font-weight:600;color:var(--ok)}
+.prog{display:flex;justify-content:space-between;gap:12px;font-size:14px;color:var(--soft);margin-bottom:10px;flex-wrap:wrap}
+.bar{height:6px;background:var(--line);border-radius:6px;overflow:hidden;margin-bottom:22px}
+.bar i{display:block;height:100%;background:var(--cob);transition:width .4s}
+.stmt{font-size:clamp(24px,3.4vw,32px);font-weight:600;margin:0}
+.task{background:var(--paper);border-radius:6px 14px 14px 6px;border-left:6px solid var(--yel);padding:18px 20px}
+.task .tsub{display:block;font-size:14px;color:var(--soft);font-weight:600;font-family:inherit}
+.task p{font-size:clamp(19px,2.6vw,23px);margin:6px 0 0;font-weight:600}
+.task ul{margin:8px 0 0;padding-left:20px}
+.step{margin-top:24px}
+.step h3{font-size:16px;font-weight:600;font-family:inherit;color:var(--soft);margin-bottom:10px}
+.opts{display:flex;flex-wrap:wrap;gap:10px}
+button{font:inherit;font-weight:600;min-height:46px;padding:10px 18px;border-radius:12px;border:2px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--cob)}
+button:focus-visible,textarea:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--yel);outline-offset:2px}
+button[aria-pressed=true]{background:var(--cob);border-color:var(--cob);color:#fff}
+button:disabled,button[aria-disabled=true]{cursor:default;opacity:.55}
+button[aria-disabled=true]:hover{border-color:var(--line)}
+button[aria-pressed=true][aria-disabled=true]{opacity:1;border-color:var(--cob)}
+.main{background:var(--tom);border-color:var(--tom);color:#fff}
+.main:hover{filter:brightness(1.08);border-color:var(--tom)}
+.opts button.is-right{opacity:1;background:var(--ok);border-color:var(--ok);color:#fff}
+.opts button.is-wrong{opacity:1;background:transparent;border-color:var(--tom);color:var(--tom);text-decoration:line-through}
+.opts button.is-half{opacity:1;background:transparent;border-color:#e0a800;color:var(--halfText)}
+.facit{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 14px;margin:14px 0 4px;font-size:18px}
+.facit dt{color:var(--soft)}.facit dd{margin:0;font-weight:600}
+.ans{margin-top:26px;border-top:1px solid var(--line);padding-top:22px}
+.verdict{font-family:Archivo,system-ui,sans-serif;font-weight:800;font-size:22px;margin:0}
+.right{color:var(--ok)}.wrong{color:var(--tom)}.half{color:var(--halfText)}
+.ans p{margin:10px 0}
+.fix{border:2px dashed var(--ok);border-radius:12px;padding:12px 16px;margin:14px 0}
+.fix b{color:var(--ok)}
+.mine{border-left:4px solid var(--line);padding:6px 12px;margin:12px 0;color:var(--soft)}
+.src{font-size:14px;color:var(--soft)}
+.sure{background:var(--yel);color:#1b1b1b;border-radius:10px;padding:10px 14px;font-size:15px;margin-top:12px}
+.row{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin-top:22px}
+.row.l{justify-content:flex-start}
+.score{font-family:Archivo,system-ui,sans-serif;font-weight:800;font-size:clamp(52px,9vw,84px);line-height:1;color:var(--cobText)}
+.list{list-style:none;padding:0;margin:14px 0 0}
+.list li{border-top:1px solid var(--line);padding:14px 0}
+.list b{display:block}
+.pill{display:inline-block;font-size:13px;font-weight:600;padding:2px 9px;border-radius:99px;margin-right:6px}
+.p-ok{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
+.p-no{background:color-mix(in srgb,var(--tom) 18%,transparent);color:var(--tom)}
+.p-neu{background:var(--line);color:var(--soft)}
+.p-half{background:color-mix(in srgb,#e0a800 22%,transparent);color:var(--halfText)}
+.p-sure{background:var(--yel);color:#1b1b1b}
+#sc button{display:block;width:100%;text-align:left}
+#sc button[aria-pressed=true] .src{color:#e6e9ff}
+.check{counter-reset:c;list-style:none;padding:0;margin:14px 0 0}
+.check li{counter-increment:c;position:relative;padding:10px 0 10px 44px;border-top:1px solid var(--line)}
+.check li::before{content:counter(c);position:absolute;left:0;top:9px;width:30px;height:30px;border-radius:50%;background:var(--yel);color:#1b1b1b;font-weight:800;display:grid;place-items:center}
+.clock{font-family:Archivo,system-ui,sans-serif;font-size:18px;margin-bottom:18px}.clock b{font-size:40px;color:var(--tom)}
+.room{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:10px}
+.tbl{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;padding:14px;border-radius:14px}
+.tbl svg{width:100%;max-width:130px;height:auto}
+.tbl b{font-family:Archivo,system-ui,sans-serif;font-size:19px}.tbl span{font-weight:400;font-size:14px;color:var(--soft)}
+.chat{display:grid;gap:8px;margin:16px 0}
+.b{max-width:85%;padding:8px 13px;border-radius:16px 16px 16px 4px;background:color-mix(in srgb,var(--cob) 10%,var(--card));border:1px solid var(--line)}
+.b small{display:block;font-weight:700;font-size:13px;color:var(--cobText)}
+.b.r{justify-self:end;border-radius:16px 16px 4px 16px;background:color-mix(in srgb,var(--yel) 18%,var(--card))}
+.b.q{font-size:15px;opacity:.85}
+.stage{font-style:italic;color:var(--soft);font-size:15px;margin:2px 0}
+.acts{display:grid;gap:10px}
+.acts button{text-align:left;font-weight:600;display:flex;justify-content:space-between;gap:12px;align-items:center}
+.acts em{font-style:normal;font-size:13px;color:var(--soft);white-space:nowrap;flex:none}
+textarea{width:100%;min-height:96px;font:inherit;padding:10px 12px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--ink)}
+label.lab{display:block;font-weight:600;color:var(--soft);font-size:16px;margin:20px 0 8px}
+.crit{display:grid;gap:8px;margin:10px 0}
+.crit label{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid var(--line);border-radius:10px}
+.crit input{width:20px;height:20px;margin-top:3px;flex:none}
+details{margin-top:18px}
+summary{cursor:pointer;font-weight:600}
+.refs{font-size:14px;color:var(--soft)}
+.refs li{margin:6px 0}
+.note{font-size:14px;color:var(--soft);margin-top:18px}
+.guide{font-size:15px}
+.guide p,.guide li{margin:6px 0}
+.guide h4{margin:16px 0 4px;font-size:16px}
+.pairtip{background:color-mix(in srgb,var(--cob) 10%,var(--card));border-left:4px solid var(--cob);border-radius:8px;padding:8px 12px;font-size:15px;margin:14px 0}
+.pchk{display:flex;gap:10px;align-items:center;margin:0 0 12px;font-size:16px}
+.pchk input{width:20px;height:20px}
+.pairbox{border:1px solid var(--line);border-radius:14px;padding:12px 16px;margin-top:18px}
+.pairbox .names{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:10px 0}
+.pairbox input[type=text]{font:inherit;padding:8px 10px;border-radius:10px;border:2px solid var(--line);background:var(--card);color:var(--ink);width:100%}
+@media(max-width:600px){.pairbox .names{grid-template-columns:1fr}}
+@media(max-width:700px){.room{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.topin{grid-template-columns:1fr}.pic{max-width:320px}.opts button{flex:1 1 auto}.acts button{flex-direction:column;align-items:flex-start}}
+@media(prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+</head>
+<body>
+<header class="band top">
+  <div class="topin">
+    <div>
+      <h1>Gruppearbeid som virker</h1>
+      <p>Et læringsspill for lærerstudenter. Svar først, og se så hva forskningen sier.</p>
+      <span class="tag">For grunnskolelærerutdanning 5–10</span>
+      <p class="byline" style="font-size:15px;margin-top:12px">Laget av Anne Katrine Westbye i samarbeid med Claude (Anthropic)</p>
+    </div>
+    <div class="pic" aria-hidden="true">
+      <svg viewBox="0 0 360 260">
+        <ellipse cx="180" cy="150" rx="150" ry="22" fill="#000" opacity=".18"/>
+        <rect x="70" y="70" width="220" height="130" rx="14" fill="#e9c58f"/>
+        <rect x="88" y="88" width="56" height="40" rx="4" fill="#fff" transform="rotate(-6 116 108)"/>
+        <rect x="210" y="140" width="56" height="40" rx="4" fill="#fff" transform="rotate(8 238 160)"/>
+        <rect x="160" y="112" width="44" height="30" rx="3" fill="#ffcf3d" transform="rotate(-3 182 127)"/>
+        <circle cx="120" cy="48" r="22" fill="#ef5b3a"/><circle cx="240" cy="48" r="22" fill="#ffcf3d"/>
+        <circle cx="120" cy="224" r="22" fill="#8fd3ff"/><circle cx="262" cy="230" r="22" fill="#c9b8ff"/>
+        <path d="M150 30 q30 -24 62 0" stroke="#fff" stroke-width="3" fill="none" stroke-dasharray="5 6"/>
+        <path d="M108 196 q-30 -60 0 -120" stroke="#fff" stroke-width="3" fill="none" stroke-dasharray="5 6"/>
+        <g transform="translate(296 186)"><rect width="52" height="30" rx="10" fill="#fff"/><text x="26" y="20" text-anchor="middle" font-size="16" fill="#2f45d6">...</text></g>
+      </svg>
+    </div>
+  </div>
+</header>
+
+<main class="band">
+  <section class="card" id="app" aria-label="Spillet"></section>
+  <div id="live" class="sr" aria-live="polite"></div>
+  <p class="note">Elevsamtalene og det som skjer etter valgene dine, er diktet opp for spillet. Fasiten er et utgangspunkt for diskusjon, ikke en endelig dom.</p>
+  <p class="note">Spillet er laget av Anne Katrine Westbye i samarbeid med Claude (Anthropic), 2026.</p>
+</main>
+
+<script>
+{
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=t=>String(Math.round(t*10)/10).replace('.',',');
+const shuffle=a=>{a=a.slice();for(let j=a.length-1;j>0;j--){const r=Math.floor(Math.random()*(j+1));[a[j],a[r]]=[a[r],a[j]]}return a};
+const app=$('#app'),live=$('#live');
+const say=t=>{live.textContent='';setTimeout(()=>{live.textContent=t},60)};
+let firstRender=true;
+function render(h){app.innerHTML=h;if(firstRender){firstRender=false;return}const f=app.querySelector('h2');if(f){f.setAttribute('tabindex','-1');f.focus({preventScroll:true})}app.scrollIntoView({block:'start'})}
+const off=b=>b.getAttribute('aria-disabled')==='true';
+const press=(sel,b)=>$$(sel+' button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
+
+/* Lagring av fremdrift (per nettleser) */
+const KEY='gruppearbeid-som-virker-v2';
+let done={1:null,2:null,3:null,4:null,5:null},log={},pair={on:false,names:['','','']};
+try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s){Object.assign(done,s.done||{});log=s.log||{};if(s.pair)pair=s.pair}}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify({done,log,pair}))}catch(e){}};
+const pn=n=>(pair.names[n]||'').trim()||('Spiller '+(n+1));
+const pcount=()=>Math.max(2,pair.names.filter(x=>x&&x.trim()).length);
+const tip=t=>pair.on?`<p class="pairtip"><b>Sammen:</b> ${t}</p>`:'';
+const who=()=>pair.on?'Spilt av: '+[...Array(pcount())].map((_,n)=>pn(n)).join(', ')+'\n':'';
+const du=(a,b)=>pair.on?b:a;
+function pairReflect(){return pair.on?`<h3 style="margin-top:28px;font-size:20px">Om samarbeidet deres</h3>
+ <ol class="check"><li>Hvem bestemte oftest hva dere svarte, og var det fordi den personen hadde rett?</li><li>Ble et riktig forslag fra en av dere oversett eller avvist?</li><li>Ble dere enige for fort, uten å sjekke hverandres begrunnelser?</li><li>Hvilket av grepene fra spillet ville gjort samarbeidet deres bedre?</li></ol>`:''}
+function copyBtn(){return `<button id="copy">Kopier svarene mine</button>`}
+function bindCopy(p){const b=$('#copy');if(!b)return;b.onclick=async()=>{const t=log[p]||'';
+  try{await navigator.clipboard.writeText(t);say('Svarene er kopiert.');b.textContent='Kopiert'}
+  catch(e){const ta=document.createElement('textarea');ta.value=t;ta.setAttribute('aria-label','Svarene dine');ta.style.marginTop='12px';b.after(ta);ta.select();say('Kopiering ble blokkert. Teksten er markert, kopier den selv.')}}}
+
+/* ---------- DEL 1 ---------- */
+const P1=[
+{s:"Elever som sitter sammen i grupper, samarbeider som regel om oppgaven.",v:"nei",
+ e:"Nei. Britiske klasseromsstudier fant at elever sjelden jobbet som grupper selv om de satt sammen. Når de snakket om oppgaven, handlet det mest om å utveksle informasjon og svar, ikke om å diskutere ideer. Å sitte i gruppe er ikke det samme som å jobbe som gruppe.",
+ k:"Blatchford mfl. (2003)"},
+{s:"Å samarbeide med medelever gir i snitt bedre læring enn å jobbe alene.",v:"ja",
+ e:"Ja, i snitt. En metaanalyse av 71 studier med barn og unge fra 4 til 18 år fant en liten, men meningsfull effekt av å samarbeide med medelever sammenlignet med å jobbe alene. De fleste studiene var korte forsøk med én økt og utrent samarbeid, ikke gruppearbeid i klasserommet over tid. EEF, som bygger på klasseromsstudier, anslår om lag fem måneders ekstra framgang over et skoleår, men vurderer evidensen som begrenset. «I snitt» skjuler store forskjeller mellom godt og dårlig organisert gruppearbeid.",
+ k:"Tenenbaum mfl. (2020), EEF Teaching and Learning Toolkit"},
+{s:"Elever lærer å samarbeide av å jobbe mye i grupper.",v:"nei",
+ e:"Ikke av seg selv. Elevene i de britiske klasseromsstudiene hadde sittet i grupper i årevis uten å lære å jobbe som gruppe. Det som hjalp, var opplæring. I SPRinG-prosjektet ble samarbeidet bedre etter at lærerne trente elevene i samarbeid over tid. I Thinking Together-studien med 9–10-åringer brukte elevene mer begrunnende språk og gjorde det bedre på en resonneringstest etter at klassen hadde lært og brukt felles samtaleregler.",
+ k:"Blatchford mfl. (2003), Blatchford mfl. (2006), Mercer, Wegerif & Dawes (1999)"},
+{s:"Et felles mål for gruppa er nok til at alle i gruppa lærer.",v:"nei",
+ e:"Nei. Slavin fant at samarbeidslæring ga best effekt når gruppa hadde et felles mål og gruppas resultat bygde på hva hver enkelt hadde lært, for eksempel summen av individuelle prøveresultater. Metoder der gruppa leverte ett felles produkt uten slik belønning, ga liten effekt. Med ett felles produkt kan én elev gjøre jobben for de andre.",
+ k:"Slavin (1996)"},
+{s:"Hvis minst én i gruppa har riktig svar, ender gruppa med riktig svar.",v:"nei",
+ e:"Nei. Barron analyserte samtalene i tolv grupper på tre elever fra 6. trinn. De mindre vellykkede gruppene oversåg eller avviste riktige forslag, mens de vellykkede diskuterte eller godtok dem. Verken elevenes tidligere prestasjoner eller hvor mange riktige ideer gruppa kom på, forklarte forskjellen. Det som skilte, var hvordan de tok imot hverandres forslag.",
+ k:"Barron (2003)"},
+{s:"Den som forklarer noe for de andre i gruppa, lærer selv av det.",v:"ja",
+ e:"Ja. Å gi utdypende forklaringer er en av de tydeligste sammenhengene med læring i forskningen på gruppearbeid. Å formulere en forklaring tvinger eleven til å ordne og sjekke sin egen forståelse.",
+ k:"Webb (1989), Webb (2009)"},
+{s:"Den som får en god forklaring av en medelev, lærer av den.",v:"kommer",
+ e:"Det kommer an på hva eleven gjør med forklaringen. Webbs forskning tyder på at det å få en forklaring henger sammen med læring når eleven bruker den selv, for eksempel ved å løse en lignende oppgave eller si forklaringen med egne ord. Å bare få svaret hjelper lite.",
+ k:"Webb, Troper & Fall (1995), Webb (2009)"},
+{s:"Elever med høy status får mer ordet i gruppa, uansett om de har rett.",v:"ja",
+ e:"Ja. Cohen og Lotan viste at status, både faglig og sosial, styrer hvem som snakker og blir hørt. Elever med høy status snakker mer, og forslagene deres blir oftere gruppas beslutning, også når de tar feil. Selv kunstig skapte statusforskjeller påvirker hvem som deltar.",
+ k:"Cohen & Lotan (2014), Webb (2009)"},
+{s:"Faste roller og samtalemanus gjør gruppearbeid bedre.",v:"kommer",acc:["ja"],
+ e:"Det kommer an på, men i snitt hjelper det. En metaanalyse av samarbeidsmanus i digitale læringsmiljøer fant en liten positiv effekt på fagkunnskap og en stor positiv effekt på samarbeidsferdigheter. Dillenbourg advarte likevel mot overstrukturering: når hvert steg er bestemt på forhånd, kan samarbeidet bli kunstig. Struktur hjelper særlig grupper som ikke kan samarbeide ennå, og bør trappes ned etter hvert. Både «stemmer» og «det kommer an på» kan forsvares her.",
+ k:"Vogel mfl. (2017), Dillenbourg (2002)"},
+{s:"Elever som sliter faglig, lærer mer i faglig blandede grupper enn i grupper med elever på samme nivå.",v:"ja",alt:["kommer"],
+ e:"Ja, i Lou mfl. sin metaanalyse. Men bildet er sammensatt. Samlet sett ga grupper med likt nivå en liten fordel. Middels presterende elever hadde mest utbytte av like grupper, og for høyt presterende gjorde det liten forskjell. Studien er fra 1996, og mange av studiene gjaldt lærerstyrt undervisning i smågrupper, ikke samarbeidslæring.",
+ k:"Lou mfl. (1996)"},
+{s:"Par fungerer omtrent like godt som grupper på 3–5 elever.",v:"nei",alt:["kommer"],
+ e:"Nei, ikke i snitt. EEF finner at de mest lovende tilnærmingene har grupper på 3–5 elever og et felles mål, med noe mindre effekter for par og for grupper større enn fem. Det er en tendens i dataene, ikke en regel. Til noen oppgaver, som å skrive en tekst sammen, kan par fungere bedre.",
+ k:"EEF Teaching and Learning Toolkit"},
+{s:"Når en gruppe står fast, bør læreren hjelpe dem videre.",v:"kommer",alt:["ja"],
+ e:"Det kommer an på hjelpen. God støtte er tilpasset det gruppa trenger akkurat nå, trappes ned og gir ansvaret tilbake til elevene. Studier av lærere som besøker grupper, fant at eksplisitt faglig hjelp og mange instrukser kunne redusere hvor mye gruppa fikk til, særlig når gruppa allerede var i gang. Spørsmål som bygget på elevenes egne strategier, ga mer forklaring fra elevene.",
+ k:"van de Pol, Volman & Beishuizen (2010), Webb (2009)"}
+];
+const L1={ja:"Stemmer",nei:"Stemmer ikke",kommer:"Det kommer an på"};
+const CONF=["Gjetter","Ganske sikker","Helt sikker"];
+
+/* ---------- DEL 2 ---------- */
+const R2={ingen:"Lav risiko, egner seg godt slik den står",alene:"Én elev kan gjøre jobben for gruppa",deling:"Elevene kan dele opp jobben uten å snakke sammen",tynn:"Lite å tenke sammen om"};
+const F2={ingen:"Bruk den som den er",uenig:"Gi noe å velge mellom og krav om begrunnet enighet",ansvar:"Gjør hver elev ansvarlig for å kunne forklare",mindre:"Mindre grupper og faste bytter av roller",regler:"Gå gjennom samtaleregler før start",alene:"La elevene jobbe alene i stedet"};
+const P2=[
+{f:"Samfunnsfag (historie), 9. trinn",t:"Lag en stor plakat med en tidslinje over andre verdenskrig. Ta med 15 viktige datoer fra boka.",r:["tynn","deling"],ra:["alene"],fx:["uenig"],fa:["alene"],
+ e:"Ser ut som en klassisk gruppeoppgave. Men å skrive av datoer er lite krevende, og grupper løser det typisk ved å dele lista mellom seg og pynte plakaten. Ingen trenger å tenke sammen med de andre. Et kontrollert forsøk med 15-åringer i biologi fant at grupper lærte mer effektivt enn individer på komplekse oppgaver, men ikke på enkle. Forsøket var kunstig og gjaldt en annen type oppgave, men peker i samme retning: gruppa lønner seg når oppgaven er for stor for én.",
+ fix:"Gi gruppa 25 hendelser og be dem velge de ti som forklarer best hvorfor krigen fikk det utfallet den fikk. Da må de diskutere og begrunne valgene sine. Skal elevene bare kunne datoene, kan de like gjerne jobbe alene.",
+ k:"Kirschner, Paas & Kirschner (2011)"},
+{f:"Samfunnsfag, 9. trinn",t:"Lag en felles presentasjon om et EU-land. Den skal ha fire deler: historie, økonomi, kultur og politikk. Presentasjonen vurderes samlet.",r:["deling"],fx:["ansvar"],fa:["uenig"],
+ e:"Fire deler og fire elever: de fleste grupper vil fordele delene og lime dem sammen. Hver elev lærer sin egen del, og ingen trenger å diskutere noe med de andre. Når presentasjonen vurderes samlet, er det også rom for gratispassasjerer.",
+ fix:"Gjør det til et puslespill (jigsaw): elevene blir eksperter på hver sin del i ekspertgrupper og lærer den bort i hjemmegruppa. Det viktigste er at hver elev må kunne svare på spørsmål om hele landet. Den opprinnelige jigsaw-metoden ga små effekter på læring, og det var varianter med individuelt ansvar som virket best.",
+ k:"Aronson & Patnoe (1997), Slavin (1996)"},
+{f:"Naturfag, 9. trinn",t:"Dere får tre forklaringer på hvorfor det er kaldere om vinteren. Bli enige om hvilken som er best.",r:["ingen"],fx:["ingen","regler"],
+ e:"Godt egnet, selv om den ser liten ut. Oppgaven har noe å være uenig om og kan ikke løses ved å slå opp ett svar. I Tenenbaum mfl. sin metaanalyse ga samarbeid klart mer læring når elevene fikk beskjed om å bli enige. Det gjaldt mest korte forsøk. Kan klassen lite om å diskutere, er samtaleregler først et godt tillegg, ellers vinner den som snakker høyest. Derfor er både «bruk den som den er» og «samtaleregler» godkjent.",
+ k:"Tenenbaum mfl. (2020), Mercer, Wegerif & Dawes (1999)"},
+{f:"Norsk, 9. trinn",t:"Skriv én novelle sammen i gruppa. Dere er fire og skriver i samme delte dokument.",r:["alene","deling"],fx:["mindre"],fa:["ansvar"],
+ e:"Samarbeidsskriving kan gi mye. I Graham og Perins metaanalyse var samarbeid om å planlegge, skrive, revidere og redigere blant tiltakene med størst effekt på skrivekvalitet. Men fire elever i ett dokument uten struktur ender gjerne med at én skriver og resten ser på, eller at hver skriver sitt avsnitt uten å lese de andres. Her er par et unntak fra tendensen om at grupper på 3–5 fungerer best: fire personer kan vanskelig skrive den samme setningen.",
+ fix:"Skriv i par i stedet for fire. Planlegg handlingen sammen, bytt på hvem som skriver og hvem som foreslår, og les høyt for hverandre underveis. Begge må kunne forklare valgene i teksten.",
+ k:"Graham & Perin (2007)"},
+{f:"Samfunnsfag, 10. trinn",t:"Kommunen har to millioner kroner: ny skatepark, bedre busstilbud eller flere helsesykepleiere. Lag en anbefaling til kommunestyret. Hver elev får et rollekort med informasjon de andre ikke har.",r:["ingen"],ra:["alene"],fx:["uenig","ansvar"],fa:["ingen"],
+ e:"En god oppgave med en svakhet. Rollekortene gjør at gruppa trenger alle, fordi ingen har all informasjonen. Johnson og Johnson kaller det positiv gjensidig avhengighet. Men i en liten studie med studenter ga avhengighet gjennom ressurser alene svakere resultater enn et felles mål som alle må nå. Oppgaven sier heller ikke hvordan gruppa skal bli enige, eller at alle må kunne forklare anbefalingen. Denne oppgaven møter du igjen i del 3.",
+ fix:"Krev at gruppa rangerer de tre forslagene og begrunner rangeringen før de skriver, og si at hvem som helst kan bli bedt om å forklare den.",
+ k:"Johnson & Johnson (2009), Johnson mfl. (1991)"},
+{f:"KRLE, 9. trinn",t:"Diskuter i gruppa: Er det noen gang greit å lyve?",r:["tynn"],fx:["uenig"],fa:["regler"],
+ e:"Ser ut som en perfekt gruppeoppgave, fordi den er åpen og alle har en mening. Uten noe konkret å tenke med blir det ofte en kort runde med synspunkter og så snakk om noe annet. Elevene trenger noe å resonnere om og en grunn til å begrunne.",
+ fix:"Gi gruppa fire konkrete situasjoner, for eksempel en hvit løgn til en venn og en løgn for å beskytte noen. De må bli enige om hvilke som er greie, og hver elev må kunne forklare gruppas begrunnelse. Gå gjennom samtalereglene først.",
+ k:"Mercer, Wegerif & Dawes (1999)"},
+{f:"Matematikk, 8. trinn",t:"Finn så mange måter som mulig å regne ut antall fliser i dette mønsteret. Forklar hvorfor alle måtene gir samme svar.",r:["ingen"],fx:["ingen"],fa:["regler","ansvar"],
+ e:"Godt egnet. Oppgaven har mange veier til svaret, og forklaringen er en del av oppgaven. Å gi utdypende forklaringer er en av de tydeligste sammenhengene med læring i forskningen på gruppearbeid.",
+ k:"Webb (1989)"},
+{f:"Naturfag, 8. trinn",t:"Gjør forsøket i boka steg for steg. Forklar resultatet i skjemaet.",r:["alene"],ra:["tynn"],fx:["uenig"],fa:["ansvar"],
+ e:"Slik den står, kan én elev gjøre hele forsøket mens de andre ser på. Oppskriften gir lite å tenke sammen om, og skjemaet kan fylles ut av den som gjorde jobben. At oppgaven ber om en forklaring, endrer ikke det.",
+ fix:"La hver elev skrive ned hva de tror vil skje før forsøket, og la gruppa diskutere hvorfor de tror forskjellig. Rullér hvem som gjør hva, og la hvem som helst i gruppa måtte forklare resultatet.",
+ k:"Slavin (1996), Mercer, Wegerif & Dawes (1999)"},
+{f:"Matematikk, 9. trinn",t:"Gruppa får én vanskelig problemløsningsoppgave og leverer ett felles svar med begrunnelse.",r:["alene"],fx:["ansvar"],fa:["uenig"],
+ e:"En god oppgave i feil ramme. Når gruppa bare leverer ett svar, er det ofte den sterkeste eleven som løser den, mens de andre skriver av. Et felles produkt uten individuelt ansvar gir svak effekt på læring.",
+ fix:"La alle prøve alene i fem minutter før gruppa starter. Si på forhånd at du trekker hvem som skal forklare løsningen, så hele gruppa må forstå den.",
+ k:"Slavin (1996), Webb (1989)"},
+{f:"Matematikk, 10. trinn",t:"Løs oppgave 3.1–3.20 i boka sammen i gruppa. Dere leverer hver for dere.",r:["tynn"],ra:["alene"],fx:["alene"],fa:["uenig"],
+ e:"Rutineoppgaver gir lite å diskutere. Elevene vil enten jobbe hver for seg ved samme bord eller kopiere fra den som er raskest. Til mengdetrening er det ofte bedre at elevene jobber alene og spør hverandre når de står fast.",
+ fix:"La elevene jobbe alene med oppgavene. Vil du ha samarbeid, velg to av oppgavene som kan løses på flere måter, og la paret sammenligne metodene sine.",
+ k:"Kirschner, Paas & Kirschner (2011)"}
+];
+
+/* ---------- Felles flyt for del 1 og 2 ---------- */
+let part=1,i=0,ans=[],cur={};
+function btns(L,a){return Object.keys(L).map(k=>`<button data-${a}="${k}" aria-pressed="false">${L[k]}</button>`).join('')}
+function startQ(p){part=p;i=0;ans=[];showQ()}
+function head(N){const right=ans.filter(a=>a.ok).length;return `<div class="prog"><span>Del ${part} · ${part===1?'Påstand':'Oppgave'} ${i+1} av ${N}</span><span>${right} riktige så langt</span></div><div class="bar"><i style="width:${i/N*100}%"></i></div>`}
+function showQ(){
+  cur={};
+  if(part===1){const q=P1[i];
+    render(`${head(P1.length)}<h2 class="stmt">${esc(q.s)}</h2>
+    ${tip('Svar hver for dere først, for eksempel ved å peke samtidig. Bli så enige før dere klikker.')}
+    <div class="step"><h3 id="h1">${du('Hva tror du?','Hva tror dere?')}</h3><div class="opts" id="o1" role="group" aria-labelledby="h1">${btns(L1,'k')}</div></div>
+    <div class="step" id="s2" hidden>${pair.on?'<label class="pchk"><input type="checkbox" id="dis1"> Vi var uenige før vi ble enige</label>':''}<h3 id="h2">${du('Hvor sikker er du?','Hvor sikre er dere?')}</h3><div class="opts" id="o2" role="group" aria-labelledby="h2">${CONF.map((c,n)=>`<button data-n="${n}" aria-pressed="false">${c}</button>`).join('')}</div></div>
+    <div id="res"></div>`);
+    $$('#o1 button').forEach(b=>b.onclick=()=>{if(cur.locked)return;cur.k=b.dataset.k;press('#o1',b);$('#s2').hidden=false});
+    $$('#o2 button').forEach(b=>b.onclick=()=>{if(cur.locked||!cur.k)return;cur.n=+b.dataset.n;press('#o2',b);reveal1()});
+  }else{const q=P2[i];
+    render(`${head(P2.length)}<div class="task"><h2 class="tsub">${esc(q.f)}</h2><p>«${esc(q.t)}»</p></div>
+    ${tip('Bli enige om begge valgene. Før dere sjekker svaret, skal begge kunne begrunne valget med egne ord.')}
+    <div class="step"><h3 id="h1">Hva er hovedrisikoen slik oppgaven står?</h3><div class="opts" id="o1" role="group" aria-labelledby="h1">${btns(R2,'k')}</div></div>
+    <div class="step"><h3 id="h3">Hva er den viktigste endringen?</h3><div class="opts" id="o3" role="group" aria-labelledby="h3">${btns(F2,'f')}</div></div>
+    <label class="lab" for="note2">${du('Skriv kort hvordan du selv ville endret oppgaven (valgfritt, før du ser fasit)','Skriv kort hvordan dere ville endret oppgaven (valgfritt, før dere ser fasit)')}</label>
+    <textarea id="note2"></textarea>
+    <div class="row"><button class="main" id="chk" aria-disabled="true">Sjekk svaret</button></div>
+    <div id="res"></div>`);
+    const upd=()=>$('#chk').setAttribute('aria-disabled',String(!(cur.k&&cur.f)));
+    $$('#o1 button').forEach(b=>b.onclick=()=>{if(cur.locked)return;cur.k=b.dataset.k;press('#o1',b);upd()});
+    $$('#o3 button').forEach(b=>b.onclick=()=>{if(cur.locked)return;cur.f=b.dataset.f;press('#o3',b);upd()});
+    $('#chk').onclick=()=>{if(cur.locked||!(cur.k&&cur.f)){if(!cur.locked)say('Velg både risiko og endring først.');return}reveal2()};
+  }
+}
+function lock(){cur.locked=true;$$('.opts button').forEach(x=>x.setAttribute('aria-disabled','true'));const c=$('#chk');if(c)c.remove();const n=$('#note2');if(n)n.readOnly=true}
+function mark(sel,attr,L,best,alt,picked){$$(sel+' button').forEach(x=>{const k=x.dataset[attr];
+  if(best.includes(k)){x.classList.add('is-right');x.textContent='✓ '+L[k]}
+  else if(k===picked)x.classList.add((alt||[]).includes(k)?'is-half':'is-wrong')})}
+function nextRow(N){return `<div class="row"><button class="main" id="nx">${i<N-1?(part===1?'Neste påstand':'Neste oppgave'):'Se resultatet'}</button></div>`}
+function bindNext1(N){const nx=$('#nx');nx.focus({preventScroll:true});nx.onclick=()=>{i++;i<N?showQ():endQ()}}
+function reveal1(){
+  const q=P1[i],best=[q.v,...(q.acc||[])],ok=best.includes(cur.k),half=!ok&&(q.alt||[]).includes(cur.k);
+  const dis=!!(pair.on&&$('#dis1')&&$('#dis1').checked);if($('#dis1'))$('#dis1').disabled=true;ans.push({k:cur.k,n:cur.n,ok,half,dis});lock();mark('#o1','k',L1,best,q.alt,cur.k);
+  const sure=!ok&&cur.n===2,vt=ok?'Riktig!':half?'Delvis riktig':'Her bommet du';
+  $('#res').innerHTML=`<div class="ans"><p class="verdict ${ok?'right':half?'half':'wrong'}">${vt}</p>
+   ${ok?`<p>Du svarte «${L1[cur.k].toLowerCase()}».</p>`:`<dl class="facit"><dt>Du svarte</dt><dd class="${half?'half':'wrong'}">${L1[cur.k]}</dd><dt>Beste svar</dt><dd class="right">${best.map(k=>L1[k]).join(' eller ')}</dd></dl>`}
+   <p>${esc(q.e)}</p><p class="src">Kilde: ${esc(q.k)}</p>
+   ${sure?'<div class="sure">Du var helt sikker her. Denne kommer tilbake på slutten.</div>':''}
+   ${nextRow(P1.length)}</div>`;
+  say(vt);bindNext1(P1.length);
+}
+function reveal2(){
+  const q=P2[i],pt=(k,m,a)=>m.includes(k)?1:(a||[]).includes(k)?.5:0;
+  const rp=pt(cur.k,q.r,q.ra),fp=pt(cur.f,q.fx,q.fa),tot=rp+fp,ok=tot>=2,half=!ok&&tot>=1;
+  const note=$('#note2').value.trim();
+  ans.push({k:cur.k,f:cur.f,ok,half,note});lock();
+  mark('#o1','k',R2,q.r,q.ra,cur.k);mark('#o3','f',F2,q.fx,q.fa,cur.f);
+  const vt=ok?'Riktig!':half?'Delvis riktig':'Her bommet du';
+  const cls=p=>p===1?'right':p>0?'half':'wrong';
+  $('#res').innerHTML=`<div class="ans"><p class="verdict ${ok?'right':half?'half':'wrong'}">${vt}</p>
+   <dl class="facit"><dt>Risiko, ditt svar</dt><dd class="${cls(rp)}">${R2[cur.k]}</dd><dt>Beste svar</dt><dd class="right">${q.r.map(k=>R2[k]).join(' eller ')}</dd>
+   <dt>Endring, ditt svar</dt><dd class="${cls(fp)}">${F2[cur.f]}</dd><dt>Beste svar</dt><dd class="right">${q.fx.map(k=>F2[k]).join(' eller ')}</dd></dl>
+   <p>${esc(q.e)}</p>
+   ${note?`<div class="mine"><b>${du('Ditt forslag:','Deres forslag:')}</b> ${esc(note)}</div>`:''}
+   ${q.fix?`<div class="fix"><b>Slik kan den bli bedre:</b> ${esc(q.fix)}</div>`:''}
+   <p class="src">Kilde: ${esc(q.k)}</p>${nextRow(P2.length)}</div>`;
+  say(vt);bindNext1(P2.length);
+}
+function endQ(){
+  const Q=part===1?P1:P2,right=ans.filter(a=>a.ok).length,halfN=ans.filter(a=>a.half).length;done[part]=right;
+  const msg=right>=Q.length-1?'Du kan mye om dette fra før.':right>=Q.length*0.6?'Et godt stykke på vei.':'Her er det mye å hente.';
+  let mid='';
+  if(part===1){
+    const sw=ans.map((a,n)=>({...a,idx:n})).filter(a=>!a.ok&&a.n===2);
+    mid=sw.length?`<h3 style="margin-top:28px;font-size:20px">Her var du helt sikker, men forskningen sier noe annet</h3>
+    <p class="src">Feil man er helt sikker på, ser ut til å være lettere å rette opp enn feil man gjettet på, når man får riktig svar etterpå (Butterfield & Metcalfe, 2001). Disse er verdt å diskutere.</p>
+    <ul class="list">${sw.map(a=>`<li><span class="pill p-sure">${CONF[a.n]}</span><b>${esc(P1[a.idx].s)}</b>Du svarte «${L1[a.k].toLowerCase()}». Beste svar: «${L1[P1[a.idx].v].toLowerCase()}».</li>`).join('')}</ul>`:'<p>Du hadde ingen feil du var helt sikker på.</p>';
+    const dl=ans.map((a,n)=>({...a,idx:n})).filter(a=>a.dis);
+    if(pair.on)mid+=dl.length?`<h3 style="margin-top:28px;font-size:20px">Her var dere uenige</h3><ul class="list">${dl.map(a=>`<li><span class="pill ${a.ok?'p-ok':'p-no'}">${a.ok?'Endte riktig':'Endte feil'}</span><b>${esc(P1[a.idx].s)}</b>Hvem fikk gjennomslag, og hadde den personen bedre begrunnelse?</li>`).join('')}</ul>`:'<p>Dere krysset ikke av for uenighet på noen påstand. Var dere virkelig enige hele veien?</p>';
+    log[1]=who()+`Del 1: ${right}/${Q.length}\n`+Q.map((q,n)=>`${n+1}. ${q.s} | Svar: ${L1[ans[n].k]} (${CONF[ans[n].n]})${ans[n].dis?' | uenige først':''} | ${ans[n].ok?'riktig':ans[n].half?'delvis':'feil'}`).join('\n');
+  }else{
+    mid=`<h3 style="margin-top:28px;font-size:20px">Spør deg selv før du sier «jobb i grupper»</h3>
+    <ol class="check"><li>Krever oppgaven at flere tenker sammen, eller kan én elev løse den alene?</li><li>Er det noe å være uenig om, eller bare ett svar å finne?</li><li>Trenger gruppa alle medlemmene, og har de et felles mål, ikke bare hver sin bit av informasjonen?</li><li>Hvordan blir hver enkelt holdt ansvarlig, ikke bare gruppa som helhet?</li></ol>`;
+    log[2]=who()+`Del 2: ${right}/${Q.length} (+${halfN} delvis)\n`+Q.map((q,n)=>`${n+1}. ${q.f}: ${q.t} | Risiko: ${R2[ans[n].k]} | Endring: ${F2[ans[n].f]}${ans[n].note?' | Eget forslag: '+ans[n].note:''} | ${ans[n].ok?'riktig':ans[n].half?'delvis':'feil'}`).join('\n');
+  }
+  save();
+  const L=part===1?L1:null;
+  render(`<div class="score" aria-hidden="true">${right}/${Q.length}</div><h2 style="font-size:28px;margin-top:10px"><span class="sr">${right} av ${Q.length} riktige. </span>${msg}</h2>${halfN?`<p class="src" style="margin:6px 0 0">pluss ${halfN} delvis riktig${halfN>1?'e':''}</p>`:''}
+  ${mid}
+  <h3 style="margin-top:28px;font-size:20px">${part===1?'Alle påstandene':'Alle oppgavene'}</h3>
+  <ul class="list">${Q.map((q,n)=>`<li><span class="pill ${ans[n].ok?'p-ok':ans[n].half?'p-half':'p-no'}">${ans[n].ok?'Riktig':ans[n].half?'Delvis':'Feil'}</span><b>${esc(part===1?q.s:q.t)}</b><span class="src">${part===1?L[q.v]:R2[q.r[0]]+' · '+F2[q.fx[0]]} · ${esc(q.k)}</span></li>`).join('')}</ul>
+  ${pairReflect()}
+  ${refsBlock()}
+  <div class="row l">${nextBtn()}${copyBtn()}<button id="again">Tilbake til start</button></div>`);
+  $('#again').onclick=home;bindNext();bindCopy(part);
+}
+
+/* ---------- DEL 3 ---------- */
+const WALK=.5,LISTEN=.5;
+const P3={min:10,
+task:"Kommunen har to millioner kroner: ny skatepark, bedre busstilbud eller flere helsesykepleiere. Lag en anbefaling til kommunestyret.",
+groups:[
+{id:"a",name:"Gruppe 1",title:"Et riktig forslag blir overkjørt",kids:["Adrian","Ella","Ingrid","Sander"],lateAt:5,
+ seen:"Én elev snakker mye. De andre skriver.",seenLate:"Rolig nå. Én elev skriver, de andre venter.",
+ lateNote:"Du kom etter at Ingrid hadde gitt opp og lagt fra seg kortet. At det da er vanskeligere å få forslaget inn igjen, er en vurdering, ikke et forskningsfunn.",
+ first:[["Adrian","Skatepark, ferdig. Alle vil ha det. Skriv det, Ella."],["Ella","Ok, skatepark da."],["Ingrid","Men det står på kortet mitt at",1],["Adrian","Ja ja, vi tar det på slutten."]],
+ more:[["Ingrid","Det står at det er seks ukers venting hos helsesøster.",1],["Sander","Hæ? Hva sa du?"],["Adrian","Ingenting. Vi er snart ferdige, a."],["*","Ingrid ser ned på kortet sitt igjen."]],
+ lateFirst:[["Adrian","Da er vi enige. Skatepark. Ella, skriv konklusjonen."],["Ella","Jeg holder på, chill."],["*","Ingrid har lagt fra seg rollekortet og sitter med armene i kors."]],
+ lateMore:[["Sander","Ingrid, hadde ikke du noe om helsesøster?"],["Ingrid","Glem det.",1],["*","Adrian leser høyt fra konklusjonen."]],
+ acts:[
+  {label:"Si til gruppa at Ingrid har opplysninger de ikke klarer seg uten, og be henne lese fra kortet.",cost:1.5,r:"god",follow:true,
+   out:"Ingrid leser opp ventetiden. Sander spør hvor mange elever det gjelder. Adrian sier «ok, men skateparken er fortsatt viktig», og nå diskuterer de faktisk.",
+   outLate:"Ingrid leser opp ventetiden, men kort og uten å se opp. Gruppa har allerede skrevet konklusjonen og legger til én setning om helsesøster. Adrian vil ikke begynne på nytt.",
+   revisit:"Adrian snakker igjen. Ingrid sitter stille med kortet foran seg.",
+   followLabel:"Spør Ingrid hva gruppa har gjort med opplysningen hennes, og vent på at hun svarer selv",
+   followOut:"Adrian svarer for henne, men du venter, og Ingrid forklarer selv. Sander bygger videre på det hun sier. Ventetiden står nå øverst i anbefalingen.",
+   noFollow:"Etter at du gikk, tok Adrian over igjen. Ventetiden står med, men som en bisetning. Statusforskjeller endres sjelden av ett lærerbesøk, grepet må gjentas.",
+   why:"Cohen og Lotan kaller dette å tildele kompetanse: læreren gjør det synlig for hele gruppa at en elev med lav status har noe verdifullt. Det endrer hvem som blir hørt, men gjerne bare mens det blir holdt ved like. Barron fant at grupper som overser riktige forslag, ender med dårligere løsninger.",
+   k:"Cohen & Lotan (2014), Barron (2003), Webb (2009)"},
+  {label:"Be Adrian holde litt igjen, så de andre i gruppa også slipper til.",cost:1,r:"blandet",
+   out:"Adrian blir stille og litt sur. Ella og Sander vet ikke hva de skal si. Ingrid sier noe kort, men ingen bygger videre på det, og etter et minutt tar Adrian over igjen.",
+   outLate:"Adrian trekker på skuldrene. «Vi er jo ferdige.» Ingen sier noe mer.",
+   why:"Å dempe den som dominerer, endrer ikke hvem gruppa tror har rett. Status sitter i forventningene elevene har til hverandre, ikke bare i hvor mye de snakker.",
+   k:"Cohen & Lotan (2014)"},
+  {label:"Minn gruppa på at anbefalingen skal bygge på alle fire rollekortene.",cost:1,r:"blandet",
+   out:"Ella spør Ingrid hva som står på kortet, og skriver ned ett tall. Anbefalingen blir fortsatt skatepark, men med én setning om helsesøster.",
+   outLate:"Ella legger til en setning om at «helsesøster også er viktig». Ingrid blir ikke spurt.",
+   why:"Kravet gjør gruppa avhengig av alle på papiret. Men uten at læreren løfter Ingrids bidrag, blir informasjonen hennes en fotnote.",
+   k:"Johnson & Johnson (2009), Cohen & Lotan (2014)"},
+  {label:"Gi Ingrid rollen som ordstyrer, så hun får bestemme hvem som snakker resten av tida.",cost:1.5,r:"svak",
+   out:"Ingrid blir ordstyrer, men ingen venter på henne. Adrian snakker når han vil, og Ingrid sier «ok, neste» uten å få sagt det som står på kortet hennes.",
+   outLate:"Ingrid blir ordstyrer for en gruppe som allerede er ferdig. Hun sier ingenting.",
+   why:"En rolle gir ikke status. Hvis gruppa ikke tror at Ingrid har noe å komme med, endrer ikke en ordstyrerrolle det. Cohen og Lotan anbefaler i stedet at læreren gjør synlig hva eleven faktisk kan.",
+   k:"Cohen & Lotan (2014)"}],
+ skip:{r:"svak",out:"Adrian skriver skatepark som anbefaling. Ingrids informasjon kommer aldri med.",outLate:"Adrian skriver skatepark som anbefaling. Ingrids informasjon kommer aldri med.",
+   why:"Denne gruppa trengte deg. Et riktig forslag ble oversett, og det er akkurat det som skilte svake fra sterke grupper i Barrons studie.",k:"Barron (2003)"}},
+{id:"b",name:"Gruppe 2",title:"Én gjør jobben",kids:["Amina","Kasper","Mathilde","Theo"],lateAt:7,
+ seen:"Rolig. Alle ser på skjermene sine.",seenLate:"Rolig. To elever er ferdige og sitter på mobilen.",
+ lateNote:"Du kom etter at alle hadde kopiert teksten til Amina. Grepene virker fortsatt, men nå må gruppa gå tilbake til noe de mener er ferdig.",
+ first:[["Amina","Jeg har skrevet hele anbefalingen. Dere kan bare kopiere."],["Kasper","Nice, da er vi ferdige."],["Theo","Hva valgte du?"],["Amina","Buss."]],
+ more:[["Theo","Men hvorfor er buss bedre enn helsesøster, liksom?"],["Amina","Det står i teksten. Bare kopier."],["Theo","Ok."],["*","Mathilde har allerede limt inn teksten og sitter på mobilen."]],
+ lateFirst:[["*","Alle fire har den samme teksten på skjermen."],["Kasper","Vi er ferdige. Kan vi gå på biblioteket?"],["Amina","Spør læreren da."]],
+ lateMore:[["Theo","Jeg skjønner fortsatt ikke helt hvorfor vi valgte buss."],["Mathilde","Det spiller ingen rolle, vi har levert."]],
+ acts:[
+  {label:"Si at du kommer til å trekke hvem i gruppa som skal forklare anbefalingen for klassen.",cost:1,r:"god",
+   out:"Theo ser på Amina. «Da må du forklare det for meg.» Amina sukker, men begynner å forklare hvorfor bussen hjelper flere enn skateparken. Mathilde legger fra seg mobilen.",
+   outLate:"Kasper stønner. Theo ber Amina forklare, og hun gjør det raskt. Det blir ingen diskusjon, men alle fire kan i det minste si hvorfor de valgte buss.",
+   why:"Individuelt ansvar gjør at alle må forstå, ikke bare levere. Slavins studier gjaldt gruppebelønning basert på hva hver enkelt lærte, så støtten for akkurat tilfeldig trekking er mer indirekte. Theo lærer av Aminas forklaring hvis han bruker den selv, for eksempel når han må forklare den for klassen.",
+   k:"Slavin (1996), Webb (2009)"},
+  {label:"Be Amina forklare for de andre hvordan hun tenkte, i stedet for å dele teksten.",cost:1,r:"blandet",
+   out:"Amina forklarer, litt utålmodig. Theo stiller et oppfølgingsspørsmål om helsesøster, og de blir uenige et øyeblikk. Når du går, tar Kasper fram mobilen igjen.",
+   outLate:"Amina forklarer, men Kasper og Mathilde hører ikke etter. De har jo allerede teksten.",
+   why:"Amina lærer av å forklare. De andre lærer bare hvis de bruker forklaringen selv, og ingenting i oppgaven krever det etter at du har gått.",
+   k:"Webb (2009)"},
+  {label:"Sett deg ned og forklar Theo selv hvorfor bussen kan være et godt valg.",cost:2,r:"svak",
+   out:"Theo nikker og skjønner argumentet om bussen. Amina og Mathilde sitter på mobilen mens du snakker. Når du går, kopierer de teksten som før.",
+   outLate:"Theo nikker. De tre andre venter på at du skal bli ferdig.",
+   why:"Du tok over tenkningen gruppa skulle gjøre, og det kostet to minutter. God støtte er tilpasset det elevene trenger, trappes ned og gir ansvaret tilbake til dem.",
+   k:"van de Pol, Volman & Beishuizen (2010), Webb (2009)"},
+  {label:"Del gruppa i to par, så Amina og Kasper skriver én tekst og Theo og Mathilde en annen.",cost:1,r:"svak",
+   out:"Amina skriver en tekst til, og Kasper ser på. Theo og Mathilde blir sittende og vente på å få se hva Amina har skrevet.",
+   outLate:"Theo og Mathilde har allerede Aminas tekst. De leverer den som sin.",
+   why:"Mindre grupper hjelper ikke når problemet er at én elev bærer alt. Det som mangler, er at hver elev må forstå og kunne forklare.",
+   k:"Slavin (1996)"}],
+ skip:{r:"svak",out:"Aminas tekst blir gruppas anbefaling. Tre av fire kan ikke forklare den.",outLate:"Aminas tekst blir gruppas anbefaling. Tre av fire kan ikke forklare den.",
+   why:"Et felles produkt uten individuelt ansvar gir rom for gratispassasjerer. Det så du her.",k:"Slavin (1996)"}},
+{id:"c",name:"Gruppe 3",title:"Sammen, men hver for seg",kids:["Emil","Nora","Ali","Vilde"],lateAt:3.5,
+ seen:"Helt stille. Alle skriver.",seenLate:"Stille. De ser ut til å være ferdige.",
+ lateNote:"Gruppa var raskt ferdig med å lime sammen delene sine. Da du kom, måtte de rive opp noe de mente var ferdig.",
+ first:[["*","Alle fire leser hvert sitt rollekort og skriver på hver sin PC."],["Emil","Er du ferdig?"],["Nora","Med min del, ja."]],
+ more:[["Vilde","Skal vi bare lime alt inn i ett dokument?"],["Ali","Ja, så er vi ferdige."],["*","Ingen har spurt hva som står på de andres kort."]],
+ lateFirst:[["Ali","Da er alt limt inn. Fire avsnitt."],["Vilde","Står det hva vi anbefaler, da?"],["Ali","Hver av oss anbefaler vel sitt eget."]],
+ lateMore:[["Emil","Vi kan bare skrive at alle tre er viktige."],["*","Nora nikker uten å se opp."]],
+ acts:[
+  {label:"Be dem bli enige om én rangering av de tre forslagene før de skriver noe mer.",cost:1,r:"god",
+   out:"Emil leser fra kortet sitt, og Nora protesterer. For første gang snakker de om innholdet og ikke bare om hvem som er ferdig.",
+   outLate:"«Men vi er jo ferdige», sier Ali. De begynner likevel å sammenligne kortene, og etter et minutt er Emil og Nora uenige om busstilbudet.",
+   why:"Tenenbaum mfl. fant at samarbeid ga mer læring når elevene ble bedt om å bli enige, i hovedsak i korte forsøk. Et krav om enighet tvinger elevene til å bruke hverandres informasjon.",
+   k:"Tenenbaum mfl. (2020)"},
+  {label:"Gi dem roller: ordstyrer, sekretær, tidtaker og djevelens advokat.",cost:1.5,r:"blandet",
+   out:"De fordeler rollene raskt. Ordstyreren spør om alle er ferdige med sin del. Det er de, så sekretæren limer sammen avsnittene.",
+   outLate:"De fordeler rollene. Ordstyreren spør om noen har mer å si. Det har de ikke.",
+   why:"Roller organiserer arbeidet, men skaper ikke noe å diskutere. Struktur hjelper mest når den er knyttet til selve samtalen om innholdet.",
+   k:"Vogel mfl. (2017), Dillenbourg (2002)"},
+  {label:"Si at de må huske å samarbeide mer med hverandre.",cost:1,r:"svak",
+   out:"«Ja da», sier Emil. De flytter stolene litt nærmere og fortsetter hver for seg.",
+   outLate:"«Vi har jo samarbeidet», sier Ali. «Vi har laget ett dokument.»",
+   why:"En generell oppfordring sier ikke hva de skal gjøre annerledes. Elever må lære hvordan man samarbeider, de lærer det ikke av å bli bedt om det.",
+   k:"Blatchford mfl. (2006)"},
+  {label:"Be hver av dem skrive mer om sitt eget forslag, så anbefalingen blir grundigere.",cost:1,r:"svak",
+   out:"De skriver videre hver for seg. Dokumentet blir lengre, men henger ikke mer sammen.",
+   outLate:"De legger til et par setninger hver og leverer.",
+   why:"Mer parallelt arbeid gir ikke samarbeid. Gruppa trengte en grunn til å bruke hverandres informasjon.",
+   k:"Blatchford mfl. (2003)"}],
+ skip:{r:"svak",out:"De leverer fire avsnitt som ikke henger sammen. Ingen vet hva de andre har skrevet.",outLate:"De leverer fire avsnitt som ikke henger sammen. Ingen vet hva de andre har skrevet.",
+   why:"Å sitte i gruppe er ikke det samme som å jobbe som gruppe. Uten noe som krevde samtale, jobbet de hver for seg.",k:"Blatchford mfl. (2003)"}},
+{id:"d",name:"Gruppe 4",title:"Høylytt, men det fungerer",kids:["Leah","Oskar","Ida","Mats"],lateAt:99,noNeed:true,
+ seen:"Høylytt. To elever er tydelig uenige.",seenLate:"Fortsatt livlig, men litt roligere.",
+ first:[["Oskar","Nei! Det er helt feil, a. Skateparken er det minst viktige."],["Leah","Hææ? Hvis bussen går oftere, kommer jo flere seg til skateparken også."],["Oskar","Ja, men på kortet mitt står det seks uker ventetid hos helsesøster. Det er jo helt syk."]],
+ more:[["Ida","Men hvorfor er det verre enn at folk ikke kommer seg hjem?"],["Oskar","Fordi hvis du har det skikkelig dårlig, kan du ikke vente i seks uker!"],["Mats","Ok, men da skriver vi det. At det er derfor."],["*","Leah skriver."]],
+ lateFirst:[["Leah","Ok, så helsesøster først, så buss. Er alle med?"],["Ida","Ja, men skriv at bussen også hjelper dem som skal til helsesøster."],["*","Mats skriver."]],
+ lateMore:[["Oskar","Skal vi ha med noe om skateparken?"],["Leah","At den kan vente til neste år. Og hvorfor."]],
+ acts:[
+  {label:"Be dem senke stemmen og diskutere litt roligere.",cost:1,r:"blandet",
+   out:"De senker stemmen. Oskar blir mer forsiktig, og Ida spør ikke oppfølgingsspørsmålet hun hadde på tunga.",
+   outLate:"De senker stemmen. Det gjorde ikke så mye, de var nesten ferdige.",
+   why:"Høy stemme er ikke det samme som dårlig samarbeid. Uenighet med begrunnelser er det Mercer kaller utforskende samtale, og den er produktiv. Å dempe den kan ta bort det som gjorde gruppa god.",
+   k:"Mercer, Wegerif & Dawes (1999)"},
+  {label:"Si at helsesøster er det beste valget, så de kommer videre.",cost:1,r:"svak",
+   out:"Diskusjonen stopper. Leah skriver «helsesøster», og ingen argumenterer mer.",
+   outLate:"De nikker. Begrunnelsen de holdt på med, blir ikke skrevet ferdig, for nå har jo læreren sagt det.",
+   why:"Studier av lærere som besøker grupper, fant at eksplisitt faglig hjelp kunne redusere hva gruppa fikk til, særlig når gruppa allerede var i gang. Du avsluttet akkurat den samtalen gruppearbeidet skulle skape.",
+   k:"Webb (2009)"},
+  {label:"Be dem stoppe og la hver elev si sin mening etter tur, så alle blir hørt.",cost:1.5,r:"svak",
+   out:"De tar runden. Ida sier det samme som Oskar, og Mats sier «enig». Når runden er ferdig, har de mistet tråden.",
+   outLate:"De tar runden. Alle er enige, og de var nesten ferdige uansett.",
+   why:"Alle deltok allerede. Struktur som ikke svarer på et behov, kan gjøre en god samtale stivere. Støtte skal tilpasses det gruppa trenger.",
+   k:"van de Pol, Volman & Beishuizen (2010), Dillenbourg (2002)"}],
+ skip:{r:"god",out:"Gruppa fortsetter å diskutere og skriver en begrunnet anbefaling.",outLate:"Gruppa skriver ferdig en begrunnet anbefaling.",
+   why:"Gruppa var høylytt, men uenigheten var begrunnet og handlet om innholdet. Den trengte deg ikke. I en studie fikk en lærer som trakk seg unna gruppene, mer felles løsninger og mer utfordrende samtale enn en som jobbet tett med dem.",
+   k:"van de Pol, Volman & Beishuizen (2010), Webb (2009)"},
+ unvisitedText:"Du lot gruppa være, og den skrev en begrunnet anbefaling uten deg."},
+{id:"e",name:"Gruppe 5",title:"Høylytt, og det går utover én elev",kids:["Jakob","Sofie","Yusuf","Maja"],lateAt:2.5,
+ seen:"Høylytt. To elever er tydelig uenige.",seenLate:"Stille nå. Én elev har flyttet stolen litt unna.",
+ lateNote:"Du kom etter at Yusuf hadde trukket seg ut. Når en elev først er blitt latterliggjort, tar det mer enn ett lærerbesøk å få hen med igjen.",
+ blindNote:"Du valgte uten å lytte. Fra kateteret og de første replikkene så gruppa ut som gruppe 4. Grepet traff, men du visste ikke hva som var problemet.",
+ first:[["Jakob","Nei, det er helt feil! Du skjønner ingenting."],["Sofie","Du skjønner ingenting selv!"],["*","Maja ser ned i bordet."]],
+ more:[["Jakob","Yusuf klarer jo ikke engang å lese opp kortet sitt uten å stotre, haha."],["Yusuf","Gidder ikke.",1],["Sofie","Slutt, Jakob, det er ikke morsomt."],["*","Ingen har sagt noe om hva som står på kortene."]],
+ lateFirst:[["*","Yusuf har flyttet stolen litt bort fra bordet og ser på mobilen."],["Jakob","Vi tar skatepark. Ferdig."],["Sofie","Whatever."]],
+ lateMore:[["Maja","Yusuf, skal du ikke være med?"],["Yusuf","Nei.",1]],
+ acts:[
+  {label:"Stopp kort, si at ingen snakker sånn om andre her, og la alle lese fra kortet sitt.",cost:1,r:"god",needsListen:true,
+   out:"Det blir stille. Jakob mumler «sorry». Yusuf leser kortet sitt, litt lavt. Maja stiller ham et oppfølgingsspørsmål, og gruppa er i gang med innholdet.",
+   outLate:"Jakob sier sorry. Yusuf flytter stolen inn igjen, men sier ingenting resten av timen.",
+   outBlind:"Du stopper gruppa uten å vite hva det handlet om. Jakob protesterer: «Vi diskuterte jo bare.» Du får dem i gang med kortene, men kommentaren om Yusuf blir aldri tatt opp.",
+   why:"Mercer skiller mellom utforskende samtale, der uenighet handler om innholdet og blir begrunnet, og disputerende samtale, der uenigheten blir personlig. Her var det det siste. Cohen og Lotan understreker at læreren må håndheve normer for hvordan elevene behandler hverandre. Fra kateteret lignet gruppa på gruppe 4. Forskjellen hørte du bare hvis du lyttet.",
+   k:"Mercer, Wegerif & Dawes (1999), Cohen & Lotan (2014)"},
+  {label:"Be dem senke stemmen og diskutere litt roligere.",cost:1,r:"blandet",
+   out:"De senker stemmen. Jakob hvisker noe til Sofie, og begge ler. Yusuf sier ingenting.",
+   outLate:"Det er allerede stille. Yusuf sitter fortsatt med mobilen.",
+   why:"Lydnivået var ikke problemet. Det var hva Jakob sa om Yusuf.",
+   k:"Mercer, Wegerif & Dawes (1999)"},
+  {label:"Flytt Yusuf til en annen gruppe, så får både han og gruppa arbeidsro.",cost:1.5,r:"svak",
+   out:"Yusuf flytter. Den nye gruppa har allerede fordelt kortene, og han sitter med et kort ingen trenger. Jakob ler.",
+   outLate:"Yusuf flytter uten å si noe. Gruppa han forlot, mangler nå informasjonen på kortet hans.",
+   why:"Du flyttet problemet over på eleven som ble rammet, og gruppa mistet informasjonen hans. Normen om hvordan man snakker til hverandre ble ikke tatt opp.",
+   k:"Cohen & Lotan (2014)"}],
+ skip:{r:"svak",out:"Jakob og Sofie krangler videre. Yusuf flytter stolen unna og tar fram mobilen.",outLate:"Yusuf sitter med mobilen resten av timen. Gruppa leverer en anbefaling uten informasjonen hans.",
+   why:"Uenighet om innholdet er produktivt, personangrep er det ikke. Denne gruppa trengte deg.",k:"Mercer, Wegerif & Dawes (1999)"}},
+{id:"f",name:"Gruppe 6",title:"Har ikke skjønt oppgaven",kids:["Hanna","Liam","Sara","Filip"],lateAt:8,
+ seen:"Rolig. Én elev rekker opp hånda.",seenLate:"Rolig. Alle skriver, men på hver sin måte.",
+ lateNote:"Du kom etter at gruppa hadde brukt tida på å skrive om alle tre forslagene. Da de forsto at de skulle velge, var det lite tid igjen til å diskutere.",
+ first:[["Hanna","Skal vi skrive én anbefaling eller tre?"],["Liam","Jeg trodde vi skulle skrive om alle tre."],["Sara","Kan ikke du bare si hva vi skal gjøre?"]],
+ more:[["Filip","Jeg har skrevet litt om skateparken. Er det feil?"],["Hanna","Vi vet jo ikke engang hva en anbefaling er."]],
+ lateFirst:[["Liam","Vi har skrevet et avsnitt om hver."],["Sara","Er det sånn det skal være?"]],
+ lateMore:[["Hanna","Vi skjønte ikke at vi skulle velge."]],
+ acts:[
+  {label:"Spør hva de tror oppgaven går ut på, og la dem si målet med egne ord før du går.",cost:1,r:"god",
+   out:"Liam sier «skrive om alle tre». Hanna sier «nei, velge én?». Du spør hva kommunestyret trenger. Sara: «Å vite hva de skal bruke pengene på.» De begynner å sammenligne.",
+   outLate:"De forstår at de skal velge, men har brukt mye av tida. Anbefalingen blir kort og tynt begrunnet.",
+   why:"Tilpasset støtte begynner med å finne ut hva elevene faktisk har forstått. Spørsmål som bygger på elevenes egen tenkning, gir mer forklaring fra elevene enn instrukser.",
+   k:"van de Pol, Volman & Beishuizen (2010), Webb (2009)"},
+  {label:"Les oppgaveteksten høyt for gruppa én gang til, langsomt og tydelig.",cost:1,r:"blandet",
+   out:"De nikker. Når du går, spør Liam: «Så skal vi skrive om alle tre?»",
+   outLate:"De nikker og leverer det de har.",
+   why:"Å gjenta oppgaven sjekker ikke om elevene har forstått den.",
+   k:"van de Pol, Volman & Beishuizen (2010)"},
+  {label:"Si at helsesøster er et godt valg, og at de kan begynne med å skrive om ventetida.",cost:1,r:"svak",
+   out:"De skriver om helsesøster. Ingen leser kortet om bussen. Gruppa har en anbefaling, men har ikke diskutert noe.",
+   outLate:"De bytter ut avsnittene med ett om helsesøster og leverer.",
+   why:"Du løste oppgaven for dem. Hjelp som gir gruppa svaret, tar over tenkningen deres.",
+   k:"Webb (2009)"}],
+ skip:{r:"svak",out:"De skriver ett avsnitt om hvert forslag og leverer uten anbefaling.",outLate:"De skriver ett avsnitt om hvert forslag og leverer uten anbefaling.",
+   why:"Gruppa sto fast på selve oppgaven og trengte en kort avklaring.",k:"van de Pol, Volman & Beishuizen (2010)"}}
+]};
+const R3={god:"Støttes av forskningen",blandet:"Delvis",svak:"Virket ikke"};
+const P3C={god:"p-ok",blandet:"p-half",svak:"p-no"};
+let t3=10,v3={},turns3=0;
+const el3=()=>P3.min-t3, G3=id=>P3.groups.find(x=>x.id===id);
+const isLate=g=>{const s=v3[g.id];const at=s&&s.arr!=null?s.arr:el3();return at>=g.lateAt};
+
+function startP3(){part=3;t3=P3.min;v3={};turns3=0;
+  render(`<div class="prog"><span>Del 3 · Ti minutter i klasserommet</span></div>
+  <h2 style="font-size:28px">Du er læreren</h2>
+  <p>10. trinn, samfunnsfag, 24 elever i seks grupper. Klassen har jobbet med denne oppgaven i fem minutter. Det er oppgave 5 fra del 2.</p>
+  <div class="task"><span class="tsub">Hver elev har et rollekort med informasjon de andre ikke har</span><p>«${esc(P3.task)}»</p></div>
+  <p>Du har <b>ti minutter</b> før du samler klassen. Fra kateteret ser du litt av hva som skjer i hver gruppe.</p>
+  <ul><li>Å gå bort til en gruppe tar et halvt minutt.</li><li>Å lytte litt lenger tar et halvt minutt.</li><li>Det du gjør, tar også tid.</li><li>Du kan gå tilbake til en gruppe senere for å følge opp.</li></ul>
+  ${tip('Dere har én skjerm, så bytt på hvem som styrer. Spillet sier fra om hvem som har tur ved hver gruppe. Den som ikke styrer, forklarer hva dere bør gjøre og hvorfor, før den som styrer klikker. Spilltiden går ikke mens dere snakker, så ta dere tid.')}
+  <p><b>Mens du står hos én gruppe, fortsetter de andre.</b> Kommer du sent, kan situasjonen ha endret seg. Du rekker neppe alt. Hva som virket, får du vite til slutt.</p>
+  <div class="row l"><button class="main" id="go3">Gå inn i klasserommet</button></div>`);
+  $('#go3').onclick=room;
+}
+function clock(){return `<div class="clock" role="status"><b>${fmt(t3)}</b> min igjen<div class="bar" style="margin:8px 0 0"><i style="width:${(t3/P3.min)*100}%"></i></div></div>`}
+function tblState(g){const s=v3[g.id];if(!s||!s.done)return esc(isLate(g)?g.seenLate:g.seen);return s.followed?'Fulgt opp':'Besøkt · du kan gå tilbake'}
+function room(){
+  if(t3<WALK)return end3();
+  render(`<div class="prog"><span>Del 3 · Klasserommet</span><span>Det du ser fra kateteret</span></div>${clock()}
+  <h2 style="font-size:22px">Hvor går du?</h2>
+  <div class="room">${P3.groups.map(g=>{const s=v3[g.id];const shut=s&&s.followed;return `<button class="tbl" data-g="${g.id}" ${shut?'aria-disabled="true"':''}>
+    <svg viewBox="0 0 120 70" aria-hidden="true"><rect x="20" y="18" width="80" height="34" rx="8" fill="#e9c58f"/>${[[34,10],[86,10],[34,62],[86,62]].map(([x,y],n)=>`<circle cx="${x}" cy="${y}" r="8" fill="${['#ef5b3a','#ffcf3d','#8fd3ff','#c9b8ff'][n]}"/>`).join('')}</svg>
+    <b>${g.name}</b><span>${tblState(g)}</span></button>`}).join('')}</div>
+  <div class="row"><button id="gather">Samle klassen nå</button></div>`);
+  $$('.tbl').forEach(b=>b.onclick=()=>{if(off(b))return;enter(b.dataset.g)});
+  $('#gather').onclick=end3;
+}
+function bubbles(lines,g){return lines.map(([w,t,q])=>w==='*'?`<p class="stage">${esc(t)}</p>`:`<div class="b ${g.kids.indexOf(w)%2?'r':''} ${q?'q':''}"><small>${esc(w)}</small>${esc(t)}</div>`).join('')}
+function enter(id){const g=G3(id),s=v3[id]||(v3[id]={});t3-=WALK;s.turn=turns3++%pcount();
+  if(s.done)return revisit(g,s);
+  s.arr=el3();grp(g,s);
+}
+function turnTip(s){if(!pair.on)return '';const me=pn(s.turn),rest=[...Array(pcount())].map((_,n)=>n).filter(n=>n!==s.turn).map(pn);
+  return tip(`Nå styrer ${esc(me)}. ${esc(rest.join(' og '))} forklarer hva dere bør gjøre, og hvorfor, før ${esc(me)} klikker.`)}
+function grp(g,s){
+  const late=s.arr>=g.lateAt;
+  render(`<div class="prog"><span>Del 3 · ${g.name}</span><span>${fmt(t3)} min igjen</span></div>
+  <h2 style="font-size:24px">Du stopper ved ${g.name.toLowerCase()}</h2>
+  ${turnTip(s)}<div class="chat">${bubbles(late?g.lateFirst:g.first,g)}${s.listened?bubbles(late?g.lateMore:g.more,g):''}</div>
+  <div class="step"><h3>Hva gjør du?</h3><div class="acts">
+   ${s.listened?'':`<button id="lis" ${t3<LISTEN?'aria-disabled="true"':''}>Lytt litt til <em>${fmt(LISTEN)} min</em></button>`}
+   ${(s.ord||(s.ord=shuffle(g.acts.map((_,n)=>n)))).map(n=>{const a=g.acts[n];return `<button data-a="${n}" ${a.cost>t3?'aria-disabled="true"':''}>${esc(a.label)} <em>${fmt(a.cost)} min${a.cost>t3?' · ikke nok tid':''}</em></button>`}).join('')}
+   <button id="skip">Gå videre uten å gripe inn <em>0 min</em></button>
+  </div></div>`);
+  const l=$('#lis');if(l)l.onclick=()=>{if(off(l))return;t3-=LISTEN;s.listened=true;grp(g,s)};
+  $$('[data-a]').forEach(b=>b.onclick=()=>{if(off(b))return;const a=g.acts[+b.dataset.a];t3-=a.cost;s.done=true;s.a=a;s.actEnd=el3();
+    const out=late?a.outLate:(a.needsListen&&!s.listened&&a.outBlind)?a.outBlind:a.out;after(g,out)});
+  $('#skip').onclick=()=>{s.done=true;s.a=null;s.actEnd=el3();after(g,late?g.skip.outLate:g.skip.out)};
+}
+function revisit(g,s){
+  const st=s.a&&s.a.revisit?s.a.revisit:'Gruppa jobber videre.';
+  const lab=s.a&&s.a.followLabel?s.a.followLabel:'Spør en av elevene hva gruppa har bestemt, og hvorfor';
+  render(`<div class="prog"><span>Del 3 · ${g.name}</span><span>${fmt(t3)} min igjen</span></div>
+  <h2 style="font-size:24px">Du går tilbake til ${g.name.toLowerCase()}</h2>${turnTip(s)}<p style="font-size:19px">${esc(st)}</p>
+  <div class="step"><h3>Hva gjør du?</h3><div class="acts">
+   <button id="fol" ${t3<.5?'aria-disabled="true"':''}>${esc(lab)} <em>0,5 min</em></button>
+   <button id="leave">Gå videre <em>0 min</em></button></div></div>`);
+  $('#fol').onclick=()=>{if(off($('#fol')))return;t3-=.5;s.followed=true;
+    const early=el3()-s.actEnd<2;s.followOk=!early;
+    const out=early?'Det er for tidlig å se om grepet har satt seg. Gruppa har knapt rukket å jobbe siden sist.':(s.a&&s.a.followOut)||'Eleven forklarer kort. Gruppa jobber videre som før.';
+    after(g,out)};
+  $('#leave').onclick=room;
+}
+function after(g,out){
+  render(`<div class="prog"><span>Del 3 · ${g.name}</span><span>${fmt(t3)} min igjen</span></div>
+  <h2 style="font-size:24px">Det som skjer</h2><p style="font-size:19px">${esc(out)}</p>
+  <div class="row"><button class="main" id="back">${t3>=WALK?'Tilbake til klasserommet':'Samle klassen'}</button></div>`);
+  $('#back').onclick=room;
+}
+function res3(g){const s=v3[g.id]||{};
+  if(!s.done){return g.noNeed?{r:'god',visited:false,text:g.unvisitedText,why:g.skip.why,k:g.skip.k,notes:[]}:{r:'svak',visited:false,text:'Du rakk ikke denne gruppa. '+g.skip.outLate,why:g.skip.why,k:g.skip.k,notes:[]}}
+  const a=s.a,base=a||g.skip,notes=[];let r=base.r;const late=s.arr>=g.lateAt;
+  if(r==='god'&&a&&a.needsListen&&!s.listened){r='blandet';notes.push(g.blindNote)}
+  if(r==='god'&&a&&late){r='blandet';notes.push(g.lateNote)}
+  else if(late&&g.lateNote&&r!=='god')notes.push(g.lateNote);
+  if(r==='god'&&a&&a.follow&&!(s.followed&&s.followOk)){r='blandet';notes.push(a.noFollow)}
+  if(r==='god'&&a&&a.follow)notes.push('Du fulgte opp, og grepet holdt.');
+  return {r,visited:true,s,why:base.why,k:base.k,notes,chosen:a?a.label:'Gå videre uten å gripe inn'};
+}
+function end3(){
+  const G=P3.groups,res=G.map(g=>({g,...res3(g)}));
+  const good=res.filter(x=>x.r==='god').length,lis=Object.values(v3).filter(s=>s.listened).length,fol=Object.values(v3).filter(s=>s.followed).length,used=P3.min-t3;
+  done[3]=good;
+  log[3]=who()+`Del 3: ${good}/${G.length} grupper der valget støttes av forskningen. Brukte ${fmt(used)} min, lyttet i ${lis} grupper, fulgte opp ${fol} ganger.\n`+res.map(x=>`${x.g.name} (${x.g.title}): ${x.visited?'kom etter '+fmt(x.s.arr)+' min, valgte: '+x.chosen:'ikke besøkt'} | ${R3[x.r]}`).join('\n');
+  save();
+  render(`<div class="score" aria-hidden="true">${good}/${G.length}</div>
+  <h2 style="font-size:28px;margin-top:10px"><span class="sr">${good} av ${G.length}. </span>grupper der valget ditt støttes av forskningen</h2>
+  <p>Du brukte ${fmt(used)} av ${P3.min} minutter, lyttet lenger i ${lis} ${lis===1?'gruppe':'grupper'} og fulgte opp ${fol} ${fol===1?'gang':'ganger'}. Med seks grupper og ti minutter er det nesten umulig å få til alt. Det handler om hva du prioriterer.</p>
+  <ul class="list">${res.map(x=>{const g=x.g;
+    const best=g.acts.filter(a=>a.r==='god').map(a=>a.label+(a.follow?' Følg opp etter et par minutter.':'')+(a.needsListen?' Lytt først, så du vet hva problemet er.':'')).concat(g.skip.r==='god'?['La gruppa være, eller gå videre uten å gripe inn.']:[]);
+    return `<li><span class="pill ${P3C[x.r]}">${x.visited?R3[x.r]:(x.r==='god'?'Ikke besøkt, og det var riktig':'Ikke besøkt')}</span><b>${g.name}: ${esc(g.title)}</b>
+    ${x.visited?`<p class="src" style="margin:6px 0">Du kom etter ${fmt(x.s.arr)} min${x.s.listened?', lyttet,':''} og valgte: ${esc(x.chosen)}</p>`:`<p style="margin:6px 0">${esc(x.text)}</p>`}
+    <p style="margin:6px 0">${esc(x.why)}</p>${x.notes.map(n=>`<p class="sure">${esc(n)}</p>`).join('')}<p class="src">Kilde: ${esc(x.k)}</p>
+    ${x.r!=='god'?`<div class="fix"><b>Det forskningen peker mot:</b> ${best.map(esc).join(' Eller: ')}</div>`:''}</li>`}).join('')}</ul>
+  <h3 style="margin-top:28px;font-size:20px">Til diskusjon</h3>
+  <ol class="check"><li>Gruppe 4 og 5 så like ut fra kateteret. Når fant du ut hva som skilte dem, og hva var det?</li><li>Hvilken gruppe valgte du bort, og hvorfor?</li><li>Hvem i gruppene fikk lav status, og hva i situasjonen ga dem det?</li><li>Oppgaven var vurdert som god i del 2. Hvorfor gikk det likevel galt i flere grupper, og hva kunne du gjort før timen?</li></ol>
+  ${pairReflect()}
+  <p class="note">Det som skjer etter valgene dine, er diktet opp for spillet. Forskningen sier hvilke grep som pleier å virke, ikke hva akkurat disse elevene ville gjort.</p>
+  ${refsBlock()}
+  <div class="row l">${nextBtn()}${copyBtn()}<button id="again3">Spill del 3 på nytt</button><button id="home3">Tilbake til start</button></div>`);
+  $('#again3').onclick=startP3;$('#home3').onclick=home;bindNext();bindCopy(3);
+}
+
+/* ---------- DEL 4 ---------- */
+const P4={max:3,
+scaf:[
+{id:"regler",label:"Samtaleregler du deler ut og går gjennom i starten av timen",desc:"For eksempel: alle deler det de vet, vi spør etter begrunnelser, ingen snakker nedsettende om andre.",fx:{a:1,c:1,e:1},
+ why:"Thinking Together-studiene viste at felles samtaleregler ga mer begrunnende samtale, og SPRinG viste at samarbeidet ble bedre når elevene ble trent i det. I begge prosjektene ble dette bygget opp over flere uker. Regler som gjennomgås samme dag, gir sannsynligvis mindre, derfor bare delvis effekt her.",
+ k:"Mercer, Wegerif & Dawes (1999), Blatchford mfl. (2006)"},
+{id:"kompetanse",label:"Si at gruppa trenger alle fire rollekortene, og at oppgaven krever ulike evner",desc:"Ingen gruppe kan lage en god anbefaling uten informasjonen på alle kortene.",fx:{a:1,c:1,e:1},
+ why:"Cohen og Lotan beskriver hvordan læreren kan motvirke statusproblemer ved å gjøre det tydelig at oppgaven krever mange ulike evner, og at hver elev har noe gruppa trenger. Effekten bygges over tid: jo oftere læreren snakker om de ulike evnene, jo mer deltar elever med lav status. Én gang før timen gir derfor bare delvis effekt.",
+ k:"Cohen & Lotan (2014), Webb (2009)"},
+{id:"trekk",label:"Hvem som presenterer, trekkes tilfeldig",desc:"Si på forhånd at du trekker én elev fra hver gruppe som skal forklare anbefalingen.",fx:{a:1,b:2,c:1},
+ why:"Individuelt ansvar: når hvem som helst kan bli spurt, må alle forstå begrunnelsen. Slavin fant at felles mål kombinert med individuelt ansvar ga best effekt, men i studiene hans var ansvaret knyttet til individuelle prøver. Støtten for tilfeldig trekking er mer indirekte.",
+ k:"Slavin (1996)"},
+{id:"enighet",label:"Krav om én felles rangering før de skriver",desc:"Gruppa må bli enige om rekkefølgen på de tre forslagene, og begrunne den, før de begynner å skrive.",fx:{a:1,b:1,c:2},
+ why:"Tenenbaum mfl. fant at samarbeid ga mer læring når elevene ble bedt om å bli enige. Kravet gjør det umulig å bare lime sammen hver sin del.",
+ k:"Tenenbaum mfl. (2020)"},
+{id:"mal",label:"Be hver gruppe si målet med oppgaven med egne ord før de starter",desc:"Du går en rask runde: Hva skal dere levere, og hva skal kommunestyret bruke det til?",fx:{f:2},
+ why:"Tilpasset støtte begynner med å sjekke hva elevene har forstått. Det tar et par minutter i starten og sparer en gruppe for å jobbe med feil oppgave.",
+ k:"van de Pol, Volman & Beishuizen (2010)"},
+{id:"manus",label:"Faste roller med manus for hva hver skal si",desc:"Hver elev får en rolle og et ark som sier hva de skal si, og i hvilken rekkefølge.",fx:{a:1,b:1,c:1},
+ why:"Samarbeidsmanus har i snitt positiv effekt, særlig på samarbeidsferdigheter. Men et detaljert manus kan gjøre samarbeidet stivere for grupper som fungerte fra før, og det løser ikke at en elev blir latterliggjort eller at en gruppe har misforstått oppgaven.",
+ k:"Vogel mfl. (2017), Dillenbourg (2002)"},
+{id:"pass",label:"Gå innom hver gruppe hvert andre minutt",desc:"Du sirkulerer tett og sjekker at alle er i gang.",fx:{a:1,e:1,f:1,d:-2},
+ hurt:"Gruppa stopper opp hver gang du kommer, og begynner å vente på at du skal si hva som er riktig.",
+ why:"Tett oppfølging fanger opp problemer tidligere. Men i en studie fikk en lærer som trakk seg unna gruppene, mer felles løsninger enn en som jobbet tett med dem. Og det forebygger lite: det er fortsatt brannslukking, bare oftere.",
+ k:"Webb (2009), van de Pol, Volman & Beishuizen (2010)"},
+{id:"husk",label:"Si «husk å samarbeide godt» før de starter",desc:"En tydelig oppfordring til hele klassen.",fx:{},
+ why:"En generell oppfordring sier ikke hva elevene skal gjøre. Samarbeid må læres og legges til rette for, det kommer ikke av å bli bedt om det.",
+ k:"Blatchford mfl. (2003)"}
+],
+out:{
+ a:{løser:"Ingrid leser fra kortet sitt tidlig, fordi alle vet at gruppa trenger det. Adrian vil fortsatt ha skatepark, men må forholde seg til ventetiden.",delvis:"Ingrid får sagt det som står på kortet, men Adrian styrer fortsatt hva som blir skrevet.",ingen:"Adrian bestemmer, og Ingrids informasjon kommer ikke med."},
+ b:{løser:"Amina skriver et utkast, men alle vet at hvem som helst kan bli spurt. Theo og Mathilde spør til de skjønner begrunnelsen.",delvis:"De andre leser Aminas tekst og stiller et par spørsmål, men det er fortsatt hennes anbefaling.",ingen:"Amina skriver, og de andre kopierer."},
+ c:{løser:"De må bli enige før de skriver, så de leser opp kortene for hverandre og blir uenige om bussen.",delvis:"De snakker litt sammen før de limer inn hver sin del.",ingen:"Alle skriver sin del, og dokumentet blir fire avsnitt som ikke henger sammen."},
+ d:{ingen:"Gruppa diskuterer høylytt og begrunnet, som før. Den trengte ikke noe ekstra."},
+ e:{løser:"Jakob prøver seg på en kommentar, men Maja viser til det dere ble enige om i starten. Yusuf leser kortet sitt, og diskusjonen handler om innholdet.",delvis:"Det blir færre stikk, men Yusuf sier lite. Jakob og Sofie diskuterer mest seg imellom.",ingen:"Etter to minutter kommer Jakob med en kommentar om Yusuf, og Yusuf trekker seg ut."},
+ f:{løser:"Gruppa sier målet med egne ord før de starter: velge ett forslag og begrunne det. De kommer raskt i gang.",delvis:"De er usikre i starten, men finner ut av det etter hvert.",ingen:"Etter to minutter rekker Hanna opp hånda: «Skal vi skrive om alle tre?»"}
+}};
+const E4={løser:["Problemet oppstår ikke","p-ok"],delvis:["Bedre, men ikke løst","p-half"],ingen:["Som før","p-neu"],skader:["Verre enn før","p-no"]};
+let pick4=[],ord4=[];
+function startP4(){part=4;pick4=[];ord4=shuffle(P4.scaf.map(s=>s.id));pickView()}
+function pickView(keep){
+  const h=`<div class="prog"><span>Del 4 · Forbered timen</span><span id="cnt">${pick4.length} av ${P4.max} valgt</span></div>
+  <h2 style="font-size:28px">Samme klasse, men nå får du forberede deg</h2>
+  <p>Du kjenner klassen fra del 3. I morgen skal de jobbe med en lignende oppgave. Velg <b>tre</b> grep du gjør før eller i starten av timen. Grepene kan virke sammen. Så ser du hva som skjer i de seks gruppene.</p>
+  ${tip('Hver av dere velger først ett grep alene og begrunner det for de andre. Bli så enige om de tre. Denne delen passer godt for tre.')}
+  <div class="acts" id="sc">${ord4.map(id=>P4.scaf.find(x=>x.id===id)).map(s=>{const on=pick4.includes(s.id),dis=!on&&pick4.length>=P4.max;return `<button data-s="${s.id}" aria-pressed="${on}" ${dis?'aria-disabled="true"':''}><span><b>${esc(s.label)}</b><br><span class="src">${esc(s.desc)}</span></span></button>`}).join('')}</div>
+  <div class="row"><button class="main" id="run4" ${pick4.length<P4.max?'aria-disabled="true"':''}>Start timen</button></div>`;
+  if(keep){const id=keep;app.innerHTML=h;const b=$(`#sc [data-s="${id}"]`);if(b)b.focus()}else render(h);
+  $$('#sc button').forEach(b=>b.onclick=()=>{if(off(b))return;const id=b.dataset.s;pick4=pick4.includes(id)?pick4.filter(x=>x!==id):pick4.concat(id);pickView(id);say(`${pick4.length} av ${P4.max} valgt`)});
+  $('#run4').onclick=()=>{if(off($('#run4'))){say('Velg tre grep først.');return}end4()};
+}
+function resolve4(gid){
+  const ch=P4.scaf.filter(s=>pick4.includes(s.id));
+  const hurt=ch.find(s=>(s.fx[gid]||0)<0);if(hurt)return{e:'skader',by:[hurt],t:hurt.hurt};
+  const by=ch.filter(s=>(s.fx[gid]||0)>0),sum=by.reduce((n,s)=>n+s.fx[gid],0);
+  const e=sum>=2?'løser':sum===1?'delvis':'ingen';
+  return{e,by,t:P4.out[gid][e]};
+}
+function end4(){
+  const G=P3.groups,res=G.map(g=>({g,...resolve4(g.id)}));
+  const okd=r=>r.e==='løser'||(r.g.noNeed&&r.e==='ingen');
+  const good=res.filter(okd).length;done[4]=good;
+  const ch=P4.scaf.filter(s=>pick4.includes(s.id)),not=P4.scaf.filter(s=>!pick4.includes(s.id));
+  log[4]=who()+`Del 4: ${good}/${G.length} grupper fungerte. Grep: ${ch.map(s=>s.label).join('; ')}\n`+res.map(r=>`${r.g.name}: ${r.g.noNeed&&r.e==='ingen'?'Fungerer fortsatt':E4[r.e][0]}`).join('\n');
+  save();
+  render(`<div class="score" aria-hidden="true">${good}/${G.length}</div>
+  <h2 style="font-size:28px;margin-top:10px"><span class="sr">${good} av ${G.length}. </span>grupper som fungerer uten at du må gripe inn</h2>
+  <p>Ingen kombinasjon av tre grep løser alt i denne klassen. Det er meningen: du må velge hva som er viktigst, og planlegge hvor du skal gå først i timen.</p>
+  <h3 style="margin-top:24px;font-size:20px">Det som skjer i gruppene</h3>
+  <ul class="list">${res.map(r=>{const fine=r.g.noNeed&&r.e==='ingen';return `<li><span class="pill ${fine?'p-ok':E4[r.e][1]}">${fine?'Fungerer fortsatt':E4[r.e][0]}</span><b>${r.g.name}: ${esc(r.g.title)}</b><p style="margin:6px 0">${esc(r.t)}</p>${r.by.length?`<p class="src">Grep som virket inn: ${r.by.map(s=>esc(s.label)).join(' + ')}</p>`:''}</li>`}).join('')}</ul>
+  <h3 style="margin-top:28px;font-size:20px">Grepene du valgte</h3>
+  <ul class="list">${ch.map(s=>`<li><b>${esc(s.label)}</b><p style="margin:6px 0">${esc(s.why)}</p><p class="src">Kilde: ${esc(s.k)}</p></li>`).join('')}</ul>
+  <details><summary>Grepene du ikke valgte</summary><ul class="list">${not.map(s=>`<li><b>${esc(s.label)}</b><p style="margin:6px 0">${esc(s.why)}</p><p class="src">Kilde: ${esc(s.k)}</p></li>`).join('')}</ul></details>
+  <h3 style="margin-top:28px;font-size:20px">Til diskusjon</h3>
+  <ol class="check"><li>Hvilke grupper valgte du å ikke forebygge for, og hvordan ville du håndtert dem i timen?</li><li>Hvilke av grepene dine ville du fjernet når klassen har blitt flinkere til å samarbeide? Stillas skal trappes ned.</li><li>Samtaleregler og arbeid med status virker bedre over tid. Hvordan ville du bygget dem opp de neste ukene?</li></ol>
+  ${pairReflect()}
+  <p class="note">Hvilke grep som virker på hvilke problemer, er forenklet for spillet. I et ekte klasserom virker grepene sammen og sjeldnere så rent.</p>
+  ${refsBlock()}
+  <div class="row l">${nextBtn()}${copyBtn()}<button id="again4">Prøv andre grep</button><button id="home4">Tilbake til start</button></div>`);
+  $('#again4').onclick=startP4;$('#home4').onclick=home;bindNext();bindCopy(4);
+}
+
+/* ---------- DEL 5: Test deg selv ---------- */
+const T5=[
+{h:"Gjør om en oppgave",f:"Engelsk, 10. trinn",
+ t:"Lag en quiz med 20 spørsmål om romanen dere har lest. Bytt quiz med en annen gruppe.",
+ q:"Hva er den største risikoen med oppgaven slik den står? Skriv om oppgaven med høyst to endringer.",
+ crit:["Jeg pekte på at arbeidet lett kan deles opp (fem spørsmål hver) eller at spørsmålene kan bli rene huskespørsmål.","Endringen min gir gruppa noe å være uenig om og et krav om å bli enige, for eksempel å rangere spørsmålene etter om de tester forståelse eller hukommelse og begrunne rangeringen.","Endringen min gjør hver elev ansvarlig, for eksempel at hvem som helst må kunne forklare svaret på et hvilket som helst spørsmål.","Jeg nøyde meg ikke med å dele ut roller eller be dem samarbeide godt."],
+ model:"Risiko: fire elever lager fem spørsmål hver, og ingen trenger å snakke sammen. Endring 1: Gruppa lager 30 spørsmål, men må velge ut de ti som best tester om man har forstått romanen, og begrunne valget. Endring 2: Når quizen byttes, trekker du en elev fra den andre gruppa til å forklare et av svarene."},
+{h:"En gruppe som ser ideell ut",f:"Matematikk, 8. trinn",
+ lines:[["Eline","Jeg tror det er 24."],["Tobias","Ja, enig."],["Noah","Ja, 24."],["Eline","Skal vi skrive det?"],["Tobias","Ja, bare skriv. Neste."],["*","Svaret er 36. Gruppa er rolig og holder seg til oppgaven hele tida."]],
+ q:"Hva ser du i denne gruppa? Skriv nøyaktig hva du sier til dem.",
+ crit:["Jeg så at gruppa sier seg enig uten å prøve ut eller begrunne forslaget. Mercer kaller dette kumulativ samtale.","Det jeg sier, ber om begrunnelse eller alternativer, for eksempel «Hvordan kom dere fram til 24? Finnes det en annen måte å telle på?»","Jeg ga ikke gruppa svaret eller sa at 24 er feil på en måte som avslutter tenkningen.","Jeg la merke til at en rolig gruppe som holder seg til oppgaven, likevel kan trenge læreren."],
+ model:"Gruppa er enig for raskt. Ingen sjekker Elines forslag. Jeg sier: «Dere ble fort enige. Noah, kan du vise hvordan du ville telt for å sjekke 24? Hvis dere finner to måter som gir forskjellig svar, må dere finne ut hvorfor.»"},
+{h:"Seks grupper, åtte minutter",f:"Naturfag, 8. trinn",
+ list:["Gruppe A: Latter og prat. To elever ser på noe på én mobil.","Gruppe B: Helt stille. Alle fire skriver.","Gruppe C: Én elev står og forklarer, de andre noterer.","Gruppe D: Høylytt. Én elev slår hånda i bordet.","Gruppe E: Rolig. To elever har hendene oppe.","Gruppe F: Livlig. Alle peker på det samme arket og snakker i munnen på hverandre."],
+ q:"I hvilken rekkefølge går du til gruppene, og hvilke lar du være? Begrunn kort.",
+ crit:["Jeg skilte mellom det jeg ser fra kateteret og det jeg vet. Jeg planla å lytte før jeg griper inn der observasjonen kan tolkes på flere måter (for eksempel B, C og D).","Jeg valgte bevisst bort minst én gruppe og begrunnet det (for eksempel F, som ser ut til å diskutere innholdet sammen).","Jeg planla å gå tilbake til minst én gruppe for å følge opp.","Jeg lot ikke håndsopprekking alene bestemme rekkefølgen."],
+ model:"D først: høylytt kan være god uenighet eller en konflikt, så jeg lytter før jeg gjør noe. Så B og C: stillhet og én som forklarer kan bety at de jobber hver for seg eller at én gjør jobben. A: kort sjekk av om de er i gang. E: hendene oppe kan vente et minutt, kanskje kan de hjelpe hverandre. F lar jeg være foreløpig. Jeg går tilbake til D eller den gruppa der jeg grep inn, for å se om det holdt."}
+];
+let i5=0,ans5=[];
+function startP5(){part=5;i5=0;ans5=[];render(`<div class="prog"><span>Del 5 · Test deg selv</span></div>
+  <h2 style="font-size:28px">Test deg selv</h2>
+  <p>Tre nye situasjoner, med nye fag og nye elever. Her skriver du svarene selv, og så vurderer du dem mot kriterier. Det er ingen alternativer å velge mellom.</p>
+  ${pair.on?'<p class="sure"><b>Denne delen gjør dere hver for dere</b>, på hver deres maskin eller på papir. Den skal vise hva hver enkelt kan bruke. Sammenlign svarene etterpå.</p>':''}
+  <p>Delen fungerer best hvis du tar den noen dager etter resten av spillet, og hvis du sammenligner svarene dine med en medstudent etterpå.</p>
+  <div class="row l"><button class="main" id="go5">Start</button></div>`);$('#go5').onclick=show5}
+function show5(){const q=T5[i5];let ctx='';
+  if(q.lines)ctx=`<div class="chat">${bubbles(q.lines,{kids:q.lines.map(l=>l[0]).filter((v,n,a)=>a.indexOf(v)===n)})}</div>`;
+  render(`<div class="prog"><span>Del 5 · Oppgave ${i5+1} av ${T5.length}</span></div>
+  <h2 style="font-size:26px">${esc(q.h)}</h2>
+  ${q.t?`<div class="task"><span class="tsub">${esc(q.f)}</span><p>«${esc(q.t)}»</p></div>`:''}
+  ${q.list?`<div class="task"><span class="tsub">${esc(q.f)}. Det du ser fra kateteret:</span><ul>${q.list.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`:''}
+  ${q.lines?`<p class="src">${esc(q.f)}</p>`+ctx:''}
+  <label class="lab" for="a5">${esc(q.q)}</label><textarea id="a5"></textarea>
+  <div class="step"><h3 id="hc">Hvor sikker er du på svaret ditt?</h3><div class="opts" id="o5" role="group" aria-labelledby="hc">${CONF.map((c,n)=>`<button data-n="${n}" aria-pressed="false">${c}</button>`).join('')}</div></div>
+  <div class="row"><button class="main" id="see">Se vurderingskriteriene</button></div><div id="res"></div>`);
+  let conf=null;
+  $$('#o5 button').forEach(b=>b.onclick=()=>{if(off(b))return;conf=+b.dataset.n;press('#o5',b)});
+  $('#see').onclick=()=>{const txt=$('#a5').value.trim();
+    if(!txt){say('Skriv et svar først.');$('#a5').focus();return}
+    if(conf===null){say('Velg hvor sikker du er.');return}
+    $('#a5').readOnly=true;$$('#o5 button').forEach(x=>x.setAttribute('aria-disabled','true'));$('#see').remove();
+    $('#res').innerHTML=`<div class="ans"><h3 style="font-size:20px">Hvilke kriterier oppfyller svaret ditt?</h3><p class="src">Vær streng. Kryss bare av når svaret ditt faktisk sier dette.</p>
+     <div class="crit">${q.crit.map((c,n)=>`<label><input type="checkbox" data-c="${n}"><span>${esc(c)}</span></label>`).join('')}</div>
+     <details><summary>Se et eksempel på et godt svar</summary><p>${esc(q.model)}</p></details>
+     <div class="row"><button class="main" id="nx5">${i5<T5.length-1?'Neste oppgave':'Se resultatet'}</button></div></div>`;
+    const first=$('#res input');if(first)first.focus();
+    $('#nx5').onclick=()=>{const got=$$('#res input').filter(x=>x.checked).length;ans5.push({txt,conf,got,tot:q.crit.length});i5++;i5<T5.length?show5():end5()};
+  };
+}
+function end5(){
+  const got=ans5.reduce((n,a)=>n+a.got,0),tot=ans5.reduce((n,a)=>n+a.tot,0);done[5]=got;
+  log[5]=`Del 5: ${got}/${tot} kriterier\n`+T5.map((q,n)=>`${q.h} (${CONF[ans5[n].conf]}, ${ans5[n].got}/${ans5[n].tot}): ${ans5[n].txt}`).join('\n');save();
+  const mism=ans5.map((a,n)=>({a,n})).filter(x=>x.a.conf===2&&x.a.got<x.a.tot/2);
+  render(`<div class="score" aria-hidden="true">${got}/${tot}</div><h2 style="font-size:28px;margin-top:10px"><span class="sr">${got} av ${tot}. </span>kriterier oppfylt, etter din egen vurdering</h2>
+  ${mism.length?`<p class="sure">Du var helt sikker på ${mism.map(x=>'«'+esc(T5[x.n].h)+'»').join(' og ')}, men oppfylte under halvparten av kriteriene. Den er verdt å diskutere med noen.</p>`:''}
+  <ul class="list">${T5.map((q,n)=>`<li><span class="pill p-neu">${ans5[n].got}/${ans5[n].tot}</span><b>${esc(q.h)}</b><p class="mine">${esc(ans5[n].txt)}</p></li>`).join('')}</ul>
+  <p class="note">Selvvurdering er usikker. Kopier svarene og la en medstudent eller lærerutdanneren vurdere dem mot de samme kriteriene.</p>
+  <div class="row l">${nextBtn()}${copyBtn()}<button id="home5">Tilbake til start</button></div>`);
+  $('#home5').onclick=home;bindNext();bindCopy(5);
+}
+
+/* ---------- Felles ---------- */
+const REFS=[
+"Aronson, E. & Patnoe, S. (1997). The jigsaw classroom: Building cooperation in the classroom (2. utg.). Longman.",
+"Barron, B. (2003). When smart groups fail. Journal of the Learning Sciences, 12(3), 307–359.",
+"Blatchford, P., Kutnick, P., Baines, E. & Galton, M. (2003). Toward a social pedagogy of classroom group work. International Journal of Educational Research, 39, 153–172.",
+"Blatchford, P., Baines, E., Rubie-Davies, C., Bassett, P. & Chowne, A. (2006). The effect of a new approach to group work on pupil-pupil and teacher-pupil interactions. Journal of Educational Psychology, 98(4), 750–765.",
+"Butterfield, B. & Metcalfe, J. (2001). Errors committed with high confidence are hypercorrected. Journal of Experimental Psychology: Learning, Memory, and Cognition, 27(6), 1491–1494.",
+"Cohen, E. G. & Lotan, R. A. (2014). Designing groupwork: Strategies for the heterogeneous classroom (3. utg.). Teachers College Press.",
+"Dillenbourg, P. (2002). Over-scripting CSCL: The risks of blending collaborative learning with instructional design. I P. A. Kirschner (red.), Three worlds of CSCL: Can we support CSCL? (s. 61–91). Open Universiteit Nederland.",
+"Education Endowment Foundation. Collaborative learning approaches. Teaching and Learning Toolkit.",
+"Graham, S. & Perin, D. (2007). Writing next: Effective strategies to improve writing of adolescents in middle and high schools. Alliance for Excellent Education.",
+"Johnson, D. W. & Johnson, R. T. (2009). An educational psychology success story: Social interdependence theory and cooperative learning. Educational Researcher, 38(5), 365–379.",
+"Johnson, D. W., Johnson, R. T., Ortiz, A. E. & Stanne, M. (1991). The impact of positive goal and resource interdependence on achievement, interaction, and attitudes. Journal of General Psychology, 118(4), 341–347.",
+"Kirschner, F., Paas, F. & Kirschner, P. A. (2011). Task complexity as a driver for collaborative learning efficiency: The collective working-memory effect. Applied Cognitive Psychology, 25(4), 615–624.",
+"Lou, Y., Abrami, P. C., Spence, J. C., Poulsen, C., Chambers, B. & d'Apollonia, S. (1996). Within-class grouping: A meta-analysis. Review of Educational Research, 66(4), 423–458.",
+"Mercer, N., Wegerif, R. & Dawes, L. (1999). Children's talk and the development of reasoning in the classroom. British Educational Research Journal, 25(1), 95–111.",
+"Slavin, R. E. (1996). Research on cooperative learning and achievement: What we know, what we need to know. Contemporary Educational Psychology, 21(1), 43–69.",
+"Tenenbaum, H. R., Winstone, N. E., Leman, P. J. & Avery, R. E. (2020). How effective is peer interaction in facilitating learning? A meta-analysis. Journal of Educational Psychology, 112(7), 1303–1319.",
+"van de Pol, J., Volman, M. & Beishuizen, J. (2010). Scaffolding in teacher–student interaction: A decade of research. Educational Psychology Review, 22(3), 271–296.",
+"Vogel, F., Wecker, C., Kollar, I. & Fischer, F. (2017). Socio-cognitive scaffolding with computer-supported collaboration scripts: A meta-analysis. Educational Psychology Review, 29(3), 477–511.",
+"Webb, N. M. (1989). Peer interaction and learning in small groups. International Journal of Educational Research, 13(1), 21–39.",
+"Webb, N. M. (2009). The teacher's role in promoting collaborative dialogue in the classroom. British Journal of Educational Psychology, 79(1), 1–28.",
+"Webb, N. M., Troper, J. D. & Fall, R. (1995). Constructive activity and learning in collaborative small groups. Journal of Educational Psychology, 87(3), 406–423."
+];
+function refsBlock(){return `<details><summary>Kildeliste</summary><ol class="refs">${REFS.map(r=>`<li>${esc(r)}</li>`).join('')}</ol></details>`}
+function nextBtn(){const p=[1,2,3,4,5].find(x=>x!==part&&done[x]===null);return p?`<button class="main" id="nextp" data-p="${p}">Gå til del ${p}</button>`:''}
+function bindNext(){const b=$('#nextp');if(b)b.onclick=()=>goPart(+b.dataset.p)}
+function goPart(p){if(p===3)return startP3();if(p===4)return startP4();if(p===5)return startP5();startQ(p)}
+function home(){part=0;
+  const d=(p,t)=>done[p]!==null?`<span class="done">Fullført: ${t}</span>`:'';
+  render(`<h2 style="font-size:28px">Velg en del</h2>
+  <p>Delene følger gangen i et gruppearbeid: hva du vet, hvordan du velger oppgave, hva du gjør mens elevene jobber, og hvordan du forebygger neste gang. Del 5 tester om du kan bruke det i nye situasjoner. Du kan ta delene i hvilken rekkefølge du vil, og fremdriften lagres i denne nettleseren.</p>
+  <div class="parts">
+   <button class="part" data-p="1"><b>Del 1: Hva vet du om gruppearbeid?</b><span>${P1.length} påstander. Svar, si hvor sikker du er, og se hva forskningen sier.</span>${d(1,`${done[1]}/${P1.length}`)}</button>
+   <button class="part" data-p="2"><b>Del 2: Bør dette være et gruppearbeid?</b><span>${P2.length} oppgaver fra ungdomstrinnet. Finn hovedrisikoen og den viktigste endringen.</span>${d(2,`${done[2]}/${P2.length}`)}</button>
+   <button class="part" data-p="3"><b>Del 3: Ti minutter i klasserommet</b><span>Seks grupper som jobber samtidig, og ti minutter. Gå rundt, lytt, grip inn og følg opp.</span>${d(3,`${done[3]}/${P3.groups.length} gode valg`)}</button>
+   <button class="part" data-p="4"><b>Del 4: Forbered timen</b><span>Samme klasse, ny time. Velg tre grep som skal forebygge problemene fra del 3.</span>${d(4,`${done[4]}/${P3.groups.length} grupper fungerte`)}</button>
+   <button class="part" data-p="5"><b>Del 5: Test deg selv</b><span>Tre nye situasjoner der du skriver svarene selv og vurderer dem mot kriterier.</span>${d(5,`${done[5]} kriterier`)}</button>
+  </div>
+  <details class="pairbox" ${pair.on?'open':''}><summary>Spiller dere sammen?</summary>
+   <label class="pchk" style="margin-top:10px"><input type="checkbox" id="pon" ${pair.on?'checked':''}> Ja, vi spiller i par eller tre (parmodus)</label>
+   <p class="src" style="margin:0">Parmodus gir råd om hvordan dere samarbeider i del 1–4, og sier fra om hvem som styrer i del 3. Del 5 gjør dere hver for dere.</p>
+   <div class="names">${[0,1,2].map(n=>`<label><span class="src">Navn ${n+1}${n===2?' (hvis tre)':''}</span><input type="text" data-pn="${n}" value="${esc(pair.names[n]||'')}" autocomplete="off"></label>`).join('')}</div>
+  </details>
+  <details class="guide"><summary>For lærerutdannere</summary>
+   <p>Forslag til et seminar på 90 minutter:</p>
+   <ol><li>Del 1 i par med parmodus (15 min). Samle i plenum de påstandene flest var helt sikre på og bommet på, og dem parene var uenige om.</li><li>Del 2 i par (20 min). Oppgave 3, 5 og 9 gir ofte uenighet om fasiten, og det er en del av poenget.</li><li>Del 3 i par, med bytte av hvem som styrer (20 min). Bruk diskusjonsspørsmålene.</li><li>Del 4 i grupper på tre (15 min). La gruppene argumentere for kombinasjonen sin.</li><li>Samarbeidet (10 min). La studentene analysere sitt eget samarbeid med spørsmålene på resultatsidene.</li><li>Del 5 hver for seg, som arbeidskrav eller ved neste seminar.</li></ol>
+   <h4>Å spille sammen</h4>
+   <p>Spillet egner seg som gruppeoppgave, men bare hvis dere gjør det spillet selv sier at virker. Ber dere studentene bare spille to og to, får dere lett det spillet advarer mot: én styrer, de andre ser på.</p>
+   <ul>
+    <li><b>Del 1:</b> Hver svarer alene først, så blir de enige. Felles krav om enighet er det Tenenbaum mfl. fant at virker, men da blir sikkerhetsvurderingen felles, og den med høyest status kan bestemme. Parmodus har derfor en avkrysning for «vi var uenige», og resultatsiden viser hvor paret var uenige.</li>
+    <li><b>Del 2:</b> Den delen som passer best for par. Valgene kan forsvares på flere måter, og tekstfeltet gir paret noe å formulere sammen. Krev at begge kan begrunne valget.</li>
+    <li><b>Del 3:</b> Én skjerm og én mus gjør at den som klikker, lett styrer alt. Parmodus sier fra om hvem som har tur ved hver gruppe, og den andre skal forklare valget før det gjøres. Spilltiden går ikke mens de snakker, så det er rom for å diskutere.</li>
+    <li><b>Del 4:</b> Passer best for tre. Tre av åtte grep med samspill og avveininger gir gode grunner til uenighet.</li>
+    <li><b>Del 5:</b> Hver for seg. Delen skal vise hva hver enkelt kan bruke, og individuelt ansvar forsvinner hvis den gjøres i par.</li>
+   </ul>
+   <p>Par eller tre: EEF finner litt bedre effekt av grupper på 3–5 enn av par, men med én skjerm blir den tredje lett passiv. Bruk gjerne par i del 1–3 og tre i del 4, eller tre med to skjermer.</p>
+   <p>Den største gevinsten kommer kanskje når studentene analyserer sitt eget samarbeid med begrepene fra spillet. Hvem bestemte? Ble riktige forslag oversett? Ble de enige for fort? Da blir spillet både innhold og eksempel.</p>
+   <p>Fremdrift og svar ligger i nettleseren på maskinen de spiller på. Be paret kopiere svarene til et felles dokument, så alle har dem.</p>
+   <p>Om kildene: oppsummeringene er korte. Noen kilder er sjekket i fulltekst (Tenenbaum mfl. 2020, Kirschner mfl. 2011, Webb 2009), andre bare i sammendrag eller omtaler. Bøkene (Cohen & Lotan, Aronson & Patnoe) og noen av artiklene er ikke kontrollert. Sjekk påstandene før dere bruker spillet som pensumgrunnlag.</p>
+   <p>Fremdriften lagres bare i nettleseren til den enkelte. Spillet sender ingen data noe sted.</p>
+  </details>
+  ${refsBlock()}`);
+  $$('.part').forEach(b=>b.onclick=()=>goPart(+b.dataset.p));
+  $('#pon').onchange=e=>{pair.on=e.target.checked;save();say(pair.on?'Parmodus er slått på.':'Parmodus er slått av.')};
+  $$('[data-pn]').forEach(x=>x.oninput=()=>{pair.names[+x.dataset.pn]=x.value;save()});
+}
+home();
+}
+</script>
+</body>
+</html>
